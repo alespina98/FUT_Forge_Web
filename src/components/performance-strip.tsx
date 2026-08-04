@@ -1,2 +1,0 @@
-const metrics=[{value:"12K+",label:"player profiles"},{value:"35",label:"advanced attributes"},{value:"Live",label:"market signals"},{value:"< 50ms",label:"local response"}];
-export function PerformanceStrip(){return <section className="metrics-wrap section-reveal" data-reveal aria-label="Product capabilities"><div className="metrics-inner">{metrics.map((metric,index)=><div className="metric" key={metric.label}><span className="metric-number">{metric.value}</span><span className="metric-label">{metric.label}</span>{index<metrics.length-1&&<i/>}</div>)}</div></section>}
