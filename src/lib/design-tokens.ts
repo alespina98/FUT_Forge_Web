@@ -1,0 +1,1 @@
+export const designTokens = { colors: { ink: "#070908", surface: "#0d100f", lime: "#c8ff3d", mint: "#8dff7a", text: "#f4f7f1", muted: "#969e96" }, radius: { sm: "12px", md: "20px", lg: "32px", pill: "999px" }, shadow: { glow: "0 0 80px rgba(200,255,61,.16)" }, motion: { fast: "180ms", base: "320ms", slow: "700ms" } } as const;
