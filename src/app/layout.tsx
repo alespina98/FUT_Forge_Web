@@ -1,12 +1,27 @@
 ﻿import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { I18nProvider } from "@/components/i18n-provider";
-import { siteCopy } from "@/lib/copy";
+import { PRODUCT, siteCopy } from "@/lib/copy";
 import "./globals.css";
 
 const geist = Geist({ variable: "--font-geist", subsets: ["latin"] });
 const mono = Geist_Mono({ variable: "--font-mono", subsets: ["latin"] });
-const siteUrl = new URL("https://futforge.app");
+const siteUrl = new URL(siteCopy.url);
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: PRODUCT.desktopName,
+  applicationCategory: "GameApplication",
+  operatingSystem: "Windows 10, Windows 11",
+  softwareVersion: PRODUCT.version,
+  description: siteCopy.description,
+  url: siteCopy.url,
+  offers: {
+    "@type": "Offer",
+    price: "0",
+    priceCurrency: "EUR",
+  },
+};
 
 export const metadata: Metadata = {
   metadataBase: siteUrl,
@@ -50,13 +65,13 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${geist.variable} ${mono.variable}`}>
-      <body><I18nProvider>{children}</I18nProvider></body>
+      <body>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
+        />
+        <I18nProvider>{children}</I18nProvider>
+      </body>
     </html>
   );
 }
-
-
-
-
-
-
