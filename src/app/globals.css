@@ -57,3 +57,13 @@
 @media(max-width:640px){header{padding-top:8px!important}.nav-shell{min-height:56px;padding:6px 8px 6px 11px!important}.brand-lockup{gap:7px}.brand-lockup>i{display:none}.nav-actions{gap:5px}.nav-download{min-width:0!important;padding:0 10px!important;font-size:11px}.menu-button{width:44px;height:44px}.brand-boot-section{padding:12px 12px 48px}.brand-boot-stage{min-height:70vh;min-height:70svh;max-height:80svh}.download-hero{min-height:650px;padding:145px 16px 75px}.download-hero h1{font-size:48px}.download-lead{font-size:14px}.release-card{padding:24px 18px}.release-card-head{align-items:flex-start;flex-direction:column}.release-card dl{grid-template-columns:1fr 1fr}.checksum{grid-template-columns:1fr}.checksum code{white-space:normal;overflow-wrap:anywhere}.download-grid,.install-section,.preview-section{grid-template-columns:1fr}.download-grid article,.install-section>div{padding:27px 22px}.preview-section{gap:24px}.download-content,.download-grid,.install-section,.preview-section,.faq-section,.final-download{padding-top:38px;padding-bottom:38px}}
 @media(max-width:350px){.brand-lockup .forge-mark{width:22px}.brand-lockup>span{font-size:13px}.nav-download svg{display:none}.nav-download{padding:0 9px!important}}
 
+/* Production polish: verified download trust and single-source step numbering. */
+.download-trust{display:flex;flex-wrap:wrap;justify-content:center;gap:8px 18px;max-width:780px;margin:22px auto 0;color:#ffffff8c;font-size:10px}
+.download-trust li{display:inline-flex;align-items:center;gap:6px}
+.download-trust li span{color:var(--lime);font-weight:700}
+.install-section ol{list-style:decimal;padding-left:20px}
+.install-section ol li{display:list-item;padding-left:5px;color:#ffffff8c;font-size:13px;line-height:1.6}
+.install-section ol li::marker{color:var(--lime);font-family:var(--font-mono);font-size:10px}
+@media(max-width:640px){.download-trust{display:grid;grid-template-columns:1fr 1fr;max-width:360px;text-align:left}.download-hero h1{text-wrap:balance}.download-primary{max-width:100%;white-space:normal;text-align:center}.final-download>div{padding:54px 20px}.faq-section summary{font-size:13px}}
+@media(max-width:360px){.download-trust{grid-template-columns:1fr}.download-hero h1{font-size:42px}.download-chips{gap:6px}.hero-proof strong{font-size:15px}.hero-proof span{font-size:6px}}
+

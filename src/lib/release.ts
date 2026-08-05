@@ -27,7 +27,17 @@ const validDate = (value: unknown) => { const candidate = text(value); return ca
 const validUrl = (value: unknown, host: string) => { try { const url = new URL(String(value)); return url.protocol === "https:" && (url.hostname === host || url.hostname.endsWith(`.${host}`)) ? url.href : null; } catch { return null; } };
 const validVersion = (value: unknown) => { const candidate = text(value)?.replace(/^v/i, ""); return candidate && /^\d+\.\d+\.\d+(?:[-+][\w.-]+)?$/.test(candidate) ? candidate : null; };
 const digest = (value: unknown) => { const candidate = text(value)?.replace(/^sha256:/i, "").toLowerCase(); return candidate && /^[a-f0-9]{64}$/.test(candidate) ? candidate : null; };
-const releaseNotes = (value: unknown) => text(value)?.split(/\r?\n/).map((line) => line.replace(/^\s*(?:#{1,6}|[-*+]\s*)/, "").trim()).filter((line) => line && !/^(?:fut forge \d|improvements?|more exciting updates)/i.test(line)).slice(0, 8) ?? [];
+const genericReleaseNote = /^(?:(?:general )?(?:bug fixes?|fixes?|stability improvements?|improvements?|optimizations?|performance improvements?)|improved (?:application stability|updater reliability)|general optimizations? and bug fixes?|more exciting updates.*)[.!]?$/i;
+const releaseNotes = (value: unknown) => text(value)?.split(/\r?\n/)
+  .map((line) => line
+    .replace(/^\s*(?:#{1,6}\s*|[-*+]\s+|\d+[.)]\s+)/, "")
+    .replace(/^\s*\[[ xX]\]\s*/, "")
+    .replace(/\[([^\]]+)]\([^)]+\)/g, "$1")
+    .replace(/[*_`~]/g, "")
+    .replace(/<[^>]+>/g, "")
+    .trim())
+  .filter((line) => line && line.length <= 180 && !/^fut forge v?\d/i.test(line) && !genericReleaseNote.test(line))
+  .slice(0, 8) ?? [];
 
 async function fetchJson(url: string): Promise<unknown> {
   const response = await fetch(url, { headers: { Accept: "application/vnd.github+json", "User-Agent": "FUT-Forge-Website" }, next: { revalidate: RELEASE_REVALIDATE_SECONDS } });
