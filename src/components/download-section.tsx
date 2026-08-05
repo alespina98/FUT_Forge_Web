@@ -20,7 +20,7 @@ export function DownloadSection({ release }: { release: ReleaseInfo }) {
           <p className="font-mono text-xs uppercase tracking-[.22em] text-black/50">{t.download.label}</p>
           <h2 className="mx-auto mt-5 max-w-3xl text-balance text-4xl font-semibold leading-none tracking-[-.055em] text-black sm:text-6xl">{t.download.title}</h2>
           <p className="mx-auto mt-5 max-w-xl text-sm leading-6 text-black/60 sm:text-base">{t.download.body}</p>
-          <a href={release.downloadUrl ?? "#top"} className="download-cta mt-8 inline-flex min-h-13 items-center justify-center gap-2 rounded-full bg-black px-6 font-semibold text-white transition hover:-translate-y-1 hover:bg-black/85" aria-label={available ? t.download.button : t.download.unavailable}>
+          <a href="/download" className="download-cta mt-8 inline-flex min-h-13 items-center justify-center gap-2 rounded-full bg-black px-6 font-semibold text-white transition hover:-translate-y-1 hover:bg-black/85" aria-label={available ? t.download.button : t.download.unavailable}>
             <DownloadIcon className="size-5" />{available ? t.download.button : t.download.unavailable}
           </a>
           <dl className="release-meta">

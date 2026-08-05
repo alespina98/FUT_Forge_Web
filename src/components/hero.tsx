@@ -16,7 +16,7 @@ export function Hero() {
         </h1>
         <div className="hero-message reveal delay-2"><p>{t.hero.lead}</p><p>{t.hero.body}</p></div>
         <div className="hero-actions reveal delay-3">
-          <a href="#download" className="button-primary hero-primary magnetic"><DownloadIcon className="size-5" /><span><b>{t.hero.primary}</b><small>{t.hero.primaryMeta}</small></span><span className="button-chip">{t.hero.free}</span></a>
+          <a href="/download" className="button-primary hero-primary magnetic"><DownloadIcon className="size-5" /><span><b>{t.hero.primary}</b><small>{t.hero.primaryMeta}</small></span><span className="button-chip">{t.hero.free}</span></a>
           <a href="#features" className="button-secondary hero-secondary magnetic"><span><b>{t.hero.secondary}</b><small>{t.hero.secondaryMeta}</small></span><Arrow className="size-5" /></a>
         </div>
         <div className="hero-trust reveal delay-4">{t.hero.trust.map((item, index) => <span key={item}><i className={index === 0 ? "active" : ""} />{item}</span>)}</div>
