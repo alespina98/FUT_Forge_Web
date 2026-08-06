@@ -67,3 +67,75 @@
 @media(max-width:640px){.download-trust{display:grid;grid-template-columns:1fr 1fr;max-width:360px;text-align:left}.download-hero h1{text-wrap:balance}.download-primary{max-width:100%;white-space:normal;text-align:center}.final-download>div{padding:54px 20px}.faq-section summary{font-size:13px}}
 @media(max-width:360px){.download-trust{grid-template-columns:1fr}.download-hero h1{font-size:42px}.download-chips{gap:6px}.hero-proof strong{font-size:15px}.hero-proof span{font-size:6px}}
 
+/* Premium visual refinement: tighter rhythm, quieter continuity, richer feedback. */
+:root{--ease-premium:cubic-bezier(.22,1,.36,1)}
+main{background-image:radial-gradient(ellipse 72% 18% at 50% 31%,rgba(200,255,61,.024),transparent 72%),radial-gradient(ellipse 68% 17% at 50% 72%,rgba(70,170,92,.018),transparent 74%)}
+.section-shell{padding-top:92px;padding-bottom:92px}
+.hero-v2{padding-bottom:78px}
+.hero-orb-primary{background:radial-gradient(ellipse,rgba(171,255,61,.15),rgba(103,255,77,.032) 42%,rgba(40,120,62,.012) 58%,transparent 72%)}
+.hero-message{margin-top:38px}
+.hero-actions{margin-top:32px}
+.hero-proof{margin-top:38px}
+.brand-boot-section{padding:30px 24px 104px}
+.story-intro{gap:54px;margin-bottom:90px}
+.story-list{gap:122px}
+.product-story{gap:64px}
+.story-journey:before{background:linear-gradient(transparent,rgba(200,255,61,.11) 9%,rgba(255,255,255,.055) 49%,rgba(200,255,61,.1) 91%,transparent)}
+
+.button-primary,.button-secondary,.download-cta{transition:transform .45s var(--ease-premium),box-shadow .45s var(--ease-premium),background-color .35s ease,border-color .35s ease}
+.button-primary:hover,.button-secondary:hover{transform:translateY(-2px) scale(1.008)}
+.button-primary:active,.button-secondary:active,.download-cta:active{transform:translateY(0) scale(.992)}
+.button-primary:hover{box-shadow:0 0 0 1px rgba(200,255,61,.48),0 18px 42px rgba(200,255,61,.19),0 4px 12px rgba(0,0,0,.18)}
+.button-secondary:hover{border-color:rgba(255,255,255,.18);box-shadow:0 14px 34px rgba(0,0,0,.24),inset 0 1px rgba(255,255,255,.055)}
+.download-cta:hover{transform:translateY(-2px) scale(1.008);box-shadow:0 17px 38px rgba(0,0,0,.24)}
+.nav-center a,.language-switcher button,.mobile-menu a{transition:color .35s ease,background-color .35s ease,transform .4s var(--ease-premium)}
+.nav-center a:hover{transform:translateY(-1px)}
+
+.desktop-frame-shell{box-shadow:0 48px 104px rgba(0,0,0,.56),0 14px 34px rgba(0,0,0,.32),inset 0 1px rgba(255,255,255,.075);transition:transform .8s var(--ease-premium),border-color .5s ease,box-shadow .8s var(--ease-premium)}
+.desktop-frame:hover .desktop-frame-shell{border-color:rgba(255,255,255,.18);box-shadow:0 56px 116px rgba(0,0,0,.6),0 18px 40px rgba(0,0,0,.34),0 0 0 1px rgba(200,255,61,.025) inset}
+.desktop-frame-screen img{transition:transform 1.2s var(--ease-premium)}
+
+.download-panel{box-shadow:0 34px 96px rgba(200,255,61,.135),0 10px 32px rgba(0,0,0,.2);transition:transform .7s var(--ease-premium),box-shadow .7s var(--ease-premium)}
+.download-panel:hover{transform:translateY(-3px);box-shadow:0 40px 112px rgba(200,255,61,.16),0 14px 38px rgba(0,0,0,.22)}
+.roadmap-item{transition:transform .45s var(--ease-premium),background-color .35s ease,border-color .35s ease}
+.roadmap-item:hover{padding-left:0;transform:translateX(4px);border-color:rgba(200,255,61,.12);background:linear-gradient(90deg,rgba(200,255,61,.022),transparent)}
+
+.download-content,.download-grid,.install-section,.preview-section,.faq-section,.final-download{padding-top:50px;padding-bottom:50px}
+.release-card,.download-grid article,.install-section>div{transition:transform .55s var(--ease-premium),border-color .4s ease,box-shadow .55s var(--ease-premium),background-color .4s ease}
+.release-card:hover,.download-grid article:hover,.install-section>div:hover{transform:translateY(-3px);border-color:rgba(255,255,255,.13);box-shadow:0 24px 58px rgba(0,0,0,.24);background:rgba(255,255,255,.024)}
+.release-card{position:relative;overflow:hidden;box-shadow:0 26px 64px rgba(0,0,0,.22),inset 0 1px rgba(255,255,255,.035)}
+.release-card:before{content:"";position:absolute;left:7%;right:7%;top:0;height:1px;background:linear-gradient(90deg,transparent,rgba(200,255,61,.42),transparent)}
+.release-source{padding:7px 10px;border:1px solid rgba(200,255,61,.13);border-radius:999px;background:rgba(200,255,61,.045);color:rgba(200,255,61,.72);letter-spacing:.11em;text-transform:uppercase}
+.release-card dl{border-radius:14px;overflow:hidden}
+.release-card dl div{transition:background-color .35s ease}
+.release-card dl div:hover{background:#0c0f0d}
+.release-card dl div:nth-child(1) dd,.release-card dl div:nth-child(3) dd{font-size:14px;font-weight:620;color:rgba(255,255,255,.92)}
+.checksum{border-color:rgba(200,255,61,.12);background:rgba(200,255,61,.018);box-shadow:inset 0 1px rgba(255,255,255,.025)}
+.checksum code{color:rgba(255,255,255,.66);letter-spacing:.025em}
+.checksum button,.github-release-link{transition:color .3s ease,transform .4s var(--ease-premium)}
+.checksum button:hover,.github-release-link:hover{color:#dcff82;transform:translateY(-1px)}
+.preview-section img{box-shadow:0 42px 92px rgba(0,0,0,.46),0 12px 30px rgba(0,0,0,.26);transition:transform .8s var(--ease-premium),border-color .4s ease,box-shadow .8s var(--ease-premium)}
+.preview-section img:hover{transform:translateY(-3px);border-color:rgba(255,255,255,.2);box-shadow:0 48px 104px rgba(0,0,0,.5),0 15px 34px rgba(0,0,0,.28)}
+
+.faq-section{interpolate-size:allow-keywords}
+.faq-section details{transition:border-color .35s ease}
+.faq-section details:hover,.faq-section details[open]{border-color:rgba(255,255,255,.11)}
+.faq-section summary{min-height:68px;padding:2px 0;font-weight:520;transition:color .35s ease,padding .45s var(--ease-premium)}
+.faq-section summary:hover,.faq-section details[open] summary{color:rgba(255,255,255,.94)}
+.faq-section summary span{transition:transform .45s var(--ease-premium),color .35s ease}
+.faq-section details[open] summary span{transform:rotate(45deg);color:#dcff82}
+.faq-section details::details-content{block-size:0;overflow:hidden;opacity:0;transition:block-size .5s var(--ease-premium),opacity .35s ease,content-visibility .5s allow-discrete}
+.faq-section details[open]::details-content{block-size:auto;opacity:1}
+.faq-section details p{padding-bottom:28px}
+
+.final-download>div{position:relative;isolation:isolate;overflow:hidden;box-shadow:0 34px 94px rgba(200,255,61,.13),0 12px 34px rgba(0,0,0,.2)}
+.final-download>div:before{content:"";position:absolute;z-index:-1;inset:-55% -20%;background:radial-gradient(circle at 35% 50%,rgba(255,255,255,.24),transparent 28%),radial-gradient(circle at 70% 48%,rgba(255,255,255,.13),transparent 30%);opacity:.55;animation:final-cta-glow 10s ease-in-out infinite alternate;pointer-events:none}
+.final-download>div:after{content:"";position:absolute;z-index:-1;inset:0;border-radius:inherit;box-shadow:inset 0 1px rgba(255,255,255,.34),inset 0 -1px rgba(0,0,0,.08);pointer-events:none}
+.final-download .download-primary{box-shadow:0 14px 34px rgba(0,0,0,.22)}
+.final-download .download-primary:hover{box-shadow:0 20px 42px rgba(0,0,0,.3)}
+@keyframes final-cta-glow{from{transform:translate3d(-2%,0,0) scale(.98)}to{transform:translate3d(2%,0,0) scale(1.02)}}
+
+@media(min-width:1024px){.hero-v2{padding-bottom:115px}}
+@media(max-width:900px){.story-intro{margin-bottom:66px}.story-list{gap:86px}.product-story,.product-story.reverse{gap:34px}}
+@media(max-width:640px){.section-shell{padding-top:68px;padding-bottom:68px}.hero-v2{padding-bottom:76px}.hero-message{margin-top:34px}.hero-actions{margin-top:26px}.brand-boot-section{padding:18px 12px 72px}.story-intro{margin-bottom:62px}.story-list{gap:70px}.download-content,.download-grid,.install-section,.preview-section,.faq-section,.final-download{padding-top:32px;padding-bottom:32px}.release-card,.download-grid article,.install-section>div{transform:none!important}.faq-section summary{min-height:66px}.faq-section details p{padding-bottom:25px}.download-panel:hover,.preview-section img:hover{transform:none}.final-download>div{box-shadow:0 24px 64px rgba(200,255,61,.1),0 10px 26px rgba(0,0,0,.18)}}
+
