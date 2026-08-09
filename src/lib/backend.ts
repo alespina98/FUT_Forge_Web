@@ -1,4 +1,5 @@
 const REQUEST_TIMEOUT_MS = 15_000;
+const BACKEND_SECRET_HEADER = "X-FutForge-Backend-Secret";
 
 export type BackendSuccess = { ok: true; status: number; body: unknown };
 export type BackendFailure = { ok: false; status: number; error: { code: string; message: string } };
@@ -21,9 +22,22 @@ function getBackendBaseUrl(): string | null {
 }
 
 /**
+ * Every caller gets the shared secret attached automatically - no route
+ * handler needs to know it exists. Matches the backend's own opt-in design:
+ * if FUTFORGE_BACKEND_SECRET isn't set here (e.g. local dev), the header is
+ * simply omitted, exactly like today's unauthenticated local workflow.
+ */
+function buildHeaders(init?: RequestInit): Headers {
+  const headers = new Headers(init?.headers);
+  const secret = process.env.FUTFORGE_BACKEND_SECRET;
+  if (secret) headers.set(BACKEND_SECRET_HEADER, secret);
+  return headers;
+}
+
+/**
  * Server-only transport to the FUT Forge Python backend. Deliberately
  * contains no FUT Forge pricing/EVO/grade logic — it only moves bytes and
- * never returns the configured base URL to a caller.
+ * never returns the configured base URL (or secret) to a caller.
  */
 export async function fetchFromBackend(path: string, init?: RequestInit): Promise<BackendResult> {
   const base = getBackendBaseUrl();
@@ -35,7 +49,7 @@ export async function fetchFromBackend(path: string, init?: RequestInit): Promis
   const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   let response: Response;
   try {
-    response = await fetch(`${base}${path}`, { ...init, signal: controller.signal, cache: "no-store" });
+    response = await fetch(`${base}${path}`, { ...init, headers: buildHeaders(init), signal: controller.signal, cache: "no-store" });
   } catch (error) {
     const timedOut = error instanceof Error && error.name === "AbortError";
     return {
