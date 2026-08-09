@@ -13,6 +13,7 @@ export function Navbar() {
     [t.nav.features, "/#features"],
     [t.nav.roadmap, "/#roadmap"],
     [t.nav.download, "/download"],
+    [t.nav.app, "/app"],
   ] as const;
 
   return (
