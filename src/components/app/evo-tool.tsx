@@ -3,6 +3,7 @@
 import { useMemo, useState, type FormEvent } from "react";
 import { useI18n } from "../i18n-provider";
 import { CardArt } from "./card-art";
+import { GeneratedEvoCard } from "./generated-evo-card";
 
 type PlayerResult = {
   resource_id: number;
@@ -16,6 +17,7 @@ type SearchSuccessEnvelope = { ok: true; data: { query: string; results: PlayerR
 
 type EvoStep = { index?: number; name?: string; rarity_name?: string; item_ea_id?: number | null; image_url?: string | null };
 type EvoStats = Record<string, number | null>;
+type RarityVisual = { image_url: string; text_color: string | null; line_color: string | null };
 type RankedChain = {
   rank: number;
   length: number;
@@ -25,9 +27,13 @@ type RankedChain = {
   fut_rating: number | null;
   meta_rating: number | null;
   final_image_url?: string | null;
+  final_cutout_url?: string | null;
+  final_item_ea_id?: number | null;
+  final_position?: string | null;
+  final_rarity_visual?: RarityVisual | null;
 };
-type SortMode = "best" | "meta" | "fut" | "ovr" | "fewest";
-type AnalysisSuccessEnvelope = { ok: true; data: { ranked_chains: RankedChain[]; chains_found: number } };
+type SortMode = "best" | "fut" | "ovr" | "fewest";
+type AnalysisSuccessEnvelope = { ok: true; data: { player: { image_url: string | null }; ranked_chains: RankedChain[]; chains_found: number } };
 
 type BackendErrorEnvelope = { ok: false; error: { code: string; message: string } };
 type ApiError = { code: string; message: string };
@@ -80,6 +86,7 @@ export function EvoTool() {
   const [selectedRank, setSelectedRank] = useState<number | null>(null);
   const [sortMode, setSortMode] = useState<SortMode>("best");
   const [analysisError, setAnalysisError] = useState<ApiError | null>(null);
+  const [startingCardUrl, setStartingCardUrl] = useState<string | null>(null);
 
   async function runSearch(event: FormEvent) {
     event.preventDefault();
@@ -91,6 +98,7 @@ export function EvoTool() {
     setAnalysisStatus("idle");
     setChains([]);
     setSelectedRank(null);
+    setStartingCardUrl(null);
     try {
       const response = await fetch(`/api/players/search?q=${encodeURIComponent(q)}`, { cache: "no-store" });
       const body: unknown = await response.json().catch(() => null);
@@ -114,6 +122,7 @@ export function EvoTool() {
     setSelectedRank(null);
     setSortMode("best");
     setAnalysisError(null);
+    setStartingCardUrl(null);
   }
 
   function backToResults() {
@@ -123,6 +132,7 @@ export function EvoTool() {
     setSelectedRank(null);
     setSortMode("best");
     setAnalysisError(null);
+    setStartingCardUrl(null);
   }
 
   async function runAnalysis() {
@@ -132,6 +142,7 @@ export function EvoTool() {
     setChains([]);
     setSelectedRank(null);
     setSortMode("best");
+    setStartingCardUrl(null);
     try {
       const response = await fetch("/api/evo/analysis", {
         method: "POST",
@@ -152,6 +163,7 @@ export function EvoTool() {
         }
         setChains(ranked);
         setSelectedRank(ranked[0].rank);
+        setStartingCardUrl(body.data.player?.image_url ?? null);
         setAnalysisStatus("success");
         return;
       }
@@ -165,14 +177,26 @@ export function EvoTool() {
 
   const sortedChains = useMemo(() => {
     const rows = [...chains];
-    if (sortMode === "meta") rows.sort((a, b) => (b.meta_rating ?? -1) - (a.meta_rating ?? -1));
-    else if (sortMode === "fut") rows.sort((a, b) => (b.fut_rating ?? -1) - (a.fut_rating ?? -1));
+    // "fut" sorts by fut_rating - the same value now shown to the user as
+    // "META Rating" everywhere in this tool. The old meta_rating metric is
+    // never surfaced, so it has no corresponding sort option.
+    if (sortMode === "fut") rows.sort((a, b) => (b.fut_rating ?? -1) - (a.fut_rating ?? -1));
     else if (sortMode === "ovr") rows.sort((a, b) => (b.final_stats?.OVR ?? 0) - (a.final_stats?.OVR ?? 0));
     else if (sortMode === "fewest") rows.sort((a, b) => (a.length ?? 99) - (b.length ?? 99));
     return rows;
   }, [chains, sortMode]);
 
   const chain = chains.find((c) => c.rank === selectedRank) ?? null;
+
+  // FUT.GG only has a real, distinct card render for an evolution's end
+  // state when that state coincides with an actual catalog item
+  // (final_item_ea_id non-null). Otherwise - the common case - there is no
+  // genuine full-card render to resolve, so the final card is composed
+  // locally from verified public data (GeneratedEvoCard), same principle
+  // FUT Forge Desktop uses for this exact case. "none" only when even that
+  // data (final_rarity_visual) is unavailable.
+  const finalCardMode: "real" | "generated" | "none" =
+    chain && chain.final_item_ea_id != null ? "real" : chain?.final_rarity_visual ? "generated" : "none";
 
   const boostChips = chain
     ? STAT_ORDER.filter((k) => {
@@ -306,8 +330,7 @@ export function EvoTool() {
                       className="select-dark min-h-10 rounded-xl border border-white/10 bg-white/[.03] px-3 text-sm text-white focus:border-lime/40 focus:outline-none"
                     >
                       <option value="best">{p.sortBest}</option>
-                      <option value="meta">{p.sortMeta}</option>
-                      <option value="fut">{p.sortFut}</option>
+                      <option value="fut">{p.sortMetaRating}</option>
                       <option value="ovr">{p.sortOvr}</option>
                       <option value="fewest">{p.sortFewest}</option>
                     </select>
@@ -342,13 +365,11 @@ export function EvoTool() {
                               {rc.length} {p.evoCountLabel} · OVR {rc.final_stats?.OVR ?? "—"}
                             </span>
                           </span>
-                          <span className="shrink-0 text-right">
-                            <span className="block font-mono text-[10px] uppercase tracking-[.1em] text-white/35">{p.futRatingLabel}</span>
-                            <span className="block text-sm font-semibold text-lime">{rc.fut_rating ?? "—"}</span>
-                          </span>
+                          {/* Displays fut_rating under the "META Rating" label - see the
+                              product decision noted by the detail panel below. */}
                           <span className="shrink-0 text-right">
                             <span className="block font-mono text-[10px] uppercase tracking-[.1em] text-white/35">{p.metaRatingLabel}</span>
-                            <span className="block text-sm font-semibold text-lime">{rc.meta_rating ?? "—"}</span>
+                            <span className="block text-sm font-semibold text-lime">{rc.fut_rating ?? "—"}</span>
                           </span>
                         </button>
                       </li>
@@ -366,7 +387,7 @@ export function EvoTool() {
 
                 <div className="mt-4 flex flex-col items-stretch gap-4 sm:flex-row sm:items-center">
                   <div className="flex flex-col items-center gap-2 sm:shrink-0">
-                    <CardArt src={selected.image_url} alt={selected.name} size="lg" />
+                    <CardArt src={startingCardUrl} alt={selected.name} size="lg" />
                     <span className="max-w-[9rem] truncate text-center text-[11px] font-semibold text-white">{p.startingCardLabel}</span>
                   </div>
 
@@ -402,7 +423,27 @@ export function EvoTool() {
                   <span className="hidden text-white/20 sm:block" aria-hidden>→</span>
 
                   <div className="flex flex-col items-center gap-2 sm:shrink-0">
-                    <CardArt src={chain.final_image_url} alt={selected.name} size="lg" />
+                    {finalCardMode === "real" && <CardArt src={chain.final_image_url ?? null} alt={selected.name} size="lg" />}
+                    {finalCardMode === "generated" && chain.final_rarity_visual && (
+                      <GeneratedEvoCard
+                        rarityImageUrl={chain.final_rarity_visual.image_url}
+                        textColor={chain.final_rarity_visual.text_color}
+                        cutoutUrl={chain.final_cutout_url ?? null}
+                        ovr={chain.final_stats?.OVR ?? null}
+                        position={chain.final_position ?? null}
+                        name={selected.name}
+                        stats={{
+                          PAC: chain.final_stats?.PAC ?? null,
+                          SHO: chain.final_stats?.SHO ?? null,
+                          PAS: chain.final_stats?.PAS ?? null,
+                          DRI: chain.final_stats?.DRI ?? null,
+                          DEF: chain.final_stats?.DEF ?? null,
+                          PHY: chain.final_stats?.PHY ?? null,
+                        }}
+                        size="lg"
+                      />
+                    )}
+                    {finalCardMode === "none" && <CardArt src={null} alt={selected.name} size="lg" />}
                     <span className="max-w-[9rem] truncate text-center text-[11px] font-semibold text-lime">{p.finalResultLabel}</span>
                   </div>
                 </div>

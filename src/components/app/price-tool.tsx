@@ -4,9 +4,10 @@ import { useState, type FormEvent } from "react";
 import { useI18n } from "../i18n-provider";
 import { CardArt } from "./card-art";
 
-type PlayerResult = { resource_id: number; name: string; rating: number | null; position: string | null; image_url: string | null };
+type PlayerResult = { resource_id: number; asset_id: number; name: string; rating: number | null; position: string | null; image_url: string | null };
 type SearchSuccessEnvelope = { ok: true; data: { query: string; results: PlayerResult[] } };
 type PriceSuccessEnvelope = { ok: true; data: { resource_id: number; price: number; manifestVersion: number; cached: boolean } };
+type CardArtSuccessEnvelope = { ok: true; data: { resource_id: number; image_url: string | null } };
 type BackendErrorEnvelope = { ok: false; error: { code: string; message: string } };
 type ApiError = { code: string; message: string };
 
@@ -23,6 +24,12 @@ function isPriceSuccess(value: unknown): value is PriceSuccessEnvelope {
   if (typeof value !== "object" || value === null) return false;
   const v = value as { ok?: unknown; data?: unknown };
   return v.ok === true && typeof v.data === "object" && v.data !== null && typeof (v.data as { price?: unknown }).price === "number";
+}
+
+function isCardArtSuccess(value: unknown): value is CardArtSuccessEnvelope {
+  if (typeof value !== "object" || value === null) return false;
+  const v = value as { ok?: unknown; data?: unknown };
+  return v.ok === true && typeof v.data === "object" && v.data !== null && "image_url" in (v.data as object);
 }
 
 function isBackendError(value: unknown): value is BackendErrorEnvelope {
@@ -52,6 +59,7 @@ export function PriceTool() {
   const [priceStatus, setPriceStatus] = useState<PriceStatus>("idle");
   const [price, setPrice] = useState<PriceSuccessEnvelope["data"] | null>(null);
   const [priceError, setPriceError] = useState<ApiError | null>(null);
+  const [cardArtUrl, setCardArtUrl] = useState<string | null>(null);
 
   async function runSearch(event: FormEvent) {
     event.preventDefault();
@@ -84,6 +92,8 @@ export function PriceTool() {
     setPriceStatus("loading");
     setPriceError(null);
     setPrice(null);
+    setCardArtUrl(null);
+    void loadCardArt(card);
     try {
       const response = await fetch(`/api/price/${card.resource_id}`, { cache: "no-store" });
       const body: unknown = await response.json().catch(() => null);
@@ -104,11 +114,29 @@ export function PriceTool() {
     }
   }
 
+  // Separate from the price fetch: artwork is not required for the price
+  // result to be useful, so a failed/unavailable lookup here never blocks
+  // or errors the price panel - CardArt's own honest fallback (no image)
+  // covers it. Never falls back to the plain search-result cutout, which
+  // would silently show something other than this exact card's full design.
+  async function loadCardArt(card: PlayerResult) {
+    try {
+      const response = await fetch(`/api/card-art/${card.resource_id}?asset_id=${card.asset_id}`, { cache: "no-store" });
+      const body: unknown = await response.json().catch(() => null);
+      if (isCardArtSuccess(body)) {
+        setCardArtUrl(body.data.image_url);
+      }
+    } catch {
+      // Leave cardArtUrl null - CardArt renders its fallback mark.
+    }
+  }
+
   function backToResults() {
     setSelected(null);
     setPriceStatus("idle");
     setPrice(null);
     setPriceError(null);
+    setCardArtUrl(null);
   }
 
   const numberFormat = new Intl.NumberFormat(locale === "it" ? "it-IT" : "en-US");
@@ -185,7 +213,7 @@ export function PriceTool() {
             </div>
 
             <div className="mt-5 flex justify-center">
-              <CardArt src={selected.image_url} alt={selected.name} size="lg" />
+              <CardArt src={cardArtUrl} alt={selected.name} size="lg" />
             </div>
 
             <div className="mt-5">
@@ -204,9 +232,6 @@ export function PriceTool() {
                   <p className="font-mono text-[10px] uppercase tracking-[.12em] text-white/35">{p.priceValueLabel}</p>
                   <p className="mt-1 text-3xl font-semibold text-lime">
                     {numberFormat.format(price.price)} <span className="text-sm font-normal text-white/40">{p.coinsSuffix}</span>
-                  </p>
-                  <p className="mt-3 font-mono text-[10px] uppercase tracking-[.1em] text-white/30">
-                    {p.cachedLabel}: {price.cached ? p.yes : p.no}
                   </p>
                 </div>
               )}
