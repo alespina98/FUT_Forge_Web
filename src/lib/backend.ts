@@ -1,4 +1,7 @@
-const REQUEST_TIMEOUT_MS = 15_000;
+// Render's free-tier backend spins down after 15 minutes idle and takes
+// "about one minute" to spin back up (per Render's own docs) - this must
+// stay comfortably above that, not just above typical warm response times.
+const REQUEST_TIMEOUT_MS = 75_000;
 const BACKEND_SECRET_HEADER = "X-FutForge-Backend-Secret";
 
 export type BackendSuccess = { ok: true; status: number; body: unknown };
