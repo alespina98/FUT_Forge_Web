@@ -2,8 +2,9 @@
 
 import { useState, type FormEvent } from "react";
 import { useI18n } from "../i18n-provider";
+import { CardArt } from "./card-art";
 
-type PlayerResult = { resource_id: number; name: string; rating: number | null; position: string | null };
+type PlayerResult = { resource_id: number; name: string; rating: number | null; position: string | null; image_url: string | null };
 type SearchSuccessEnvelope = { ok: true; data: { query: string; results: PlayerResult[] } };
 type PriceSuccessEnvelope = { ok: true; data: { resource_id: number; price: number; manifestVersion: number; cached: boolean } };
 type BackendErrorEnvelope = { ok: false; error: { code: string; message: string } };
@@ -183,19 +184,23 @@ export function PriceTool() {
               </button>
             </div>
 
+            <div className="mt-5 flex justify-center">
+              <CardArt src={selected.image_url} alt={selected.name} size="lg" />
+            </div>
+
             <div className="mt-5">
               {priceStatus === "loading" && (
-                <p className="text-sm text-white/50" role="status">{p.priceLoading}</p>
+                <p className="text-center text-sm text-white/50" role="status">{p.priceLoading}</p>
               )}
 
-              {priceStatus === "not_found" && <p className="text-sm text-white/40">{p.priceNotFound}</p>}
+              {priceStatus === "not_found" && <p className="text-center text-sm text-white/40">{p.priceNotFound}</p>}
 
               {priceStatus === "error" && priceError && (
                 <ErrorPanel title={p.priceErrorTitle} message={priceError.message} code={priceError.code} />
               )}
 
               {priceStatus === "success" && price && (
-                <div>
+                <div className="text-center">
                   <p className="font-mono text-[10px] uppercase tracking-[.12em] text-white/35">{p.priceValueLabel}</p>
                   <p className="mt-1 text-3xl font-semibold text-lime">
                     {numberFormat.format(price.price)} <span className="text-sm font-normal text-white/40">{p.coinsSuffix}</span>

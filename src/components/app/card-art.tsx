@@ -6,12 +6,13 @@ import { ForgeMark } from "../icons";
 type CardArtProps = {
   src: string | null | undefined;
   alt: string;
-  size?: "sm" | "md";
+  size?: "sm" | "md" | "lg";
 };
 
 const SIZE_CLASSES: Record<NonNullable<CardArtProps["size"]>, string> = {
   sm: "w-16",
   md: "w-24",
+  lg: "w-28 sm:w-36",
 };
 
 // FUT.GG player-item card renders are consistently ~300x416 (verified live).

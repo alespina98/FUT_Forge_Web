@@ -364,71 +364,70 @@ export function EvoTool() {
                   {chain.rank === 1 ? p.bestPathHeading : `${p.pathHeadingPrefix} #${chain.rank}`}
                 </p>
 
-                <div className="mt-4 flex flex-wrap items-center gap-3">
-                  <div className="flex flex-col items-center gap-2">
-                    <CardArt src={selected.image_url} alt={selected.name} />
-                    <span className="max-w-[7rem] truncate text-center text-[11px] font-semibold text-white">{p.startingCardLabel}</span>
+                <div className="mt-4 flex flex-col items-stretch gap-4 sm:flex-row sm:items-center">
+                  <div className="flex flex-col items-center gap-2 sm:shrink-0">
+                    <CardArt src={selected.image_url} alt={selected.name} size="lg" />
+                    <span className="max-w-[9rem] truncate text-center text-[11px] font-semibold text-white">{p.startingCardLabel}</span>
                   </div>
 
-                  {chain.steps.map((step, index) => {
-                    const hasDistinctArt = Boolean(
-                      step.image_url && step.item_ea_id != null && step.item_ea_id !== selected.resource_id
-                    );
-                    return (
-                      <div key={index} className="flex items-center gap-3">
-                        <span className="text-white/20" aria-hidden>→</span>
-                        {hasDistinctArt ? (
-                          <div className="flex flex-col items-center gap-2">
-                            <CardArt src={step.image_url} alt={step.name || p.stepFallbackName} size="sm" />
-                            <span className="max-w-[6rem] truncate text-center text-[10px] font-semibold text-white/70">{step.name}</span>
+                  <span className="text-white/20 sm:hidden" aria-hidden>↓</span>
+                  <span className="hidden text-white/20 sm:block" aria-hidden>→</span>
+
+                  <div className="glass min-w-0 flex-1 rounded-xl p-4">
+                    <div className="flex flex-wrap items-center justify-center gap-3">
+                      {chain.steps.map((step, index) => {
+                        const hasDistinctArt = Boolean(
+                          step.image_url && step.item_ea_id != null && step.item_ea_id !== selected.resource_id
+                        );
+                        return (
+                          <div key={index} className="flex items-center gap-3">
+                            {index > 0 && <span className="text-white/20" aria-hidden>→</span>}
+                            {hasDistinctArt ? (
+                              <div className="flex flex-col items-center gap-2">
+                                <CardArt src={step.image_url} alt={step.name || p.stepFallbackName} size="sm" />
+                                <span className="max-w-[6rem] truncate text-center text-[10px] font-semibold text-white/70">{step.name}</span>
+                              </div>
+                            ) : (
+                              <span className="rounded-full border border-lime/20 bg-lime/[.06] px-3 py-1.5 text-xs font-semibold text-lime">
+                                {step.name || p.stepFallbackName}
+                              </span>
+                            )}
                           </div>
-                        ) : (
-                          <span className="rounded-full border border-lime/20 bg-lime/[.06] px-3 py-1.5 text-xs font-semibold text-lime">
-                            {step.name || p.stepFallbackName}
-                          </span>
-                        )}
-                      </div>
-                    );
-                  })}
-
-                  <span className="text-white/20" aria-hidden>→</span>
-
-                  <div className="flex flex-col items-center gap-2">
-                    <CardArt src={chain.final_image_url} alt={selected.name} />
-                    <span className="max-w-[7rem] truncate text-center text-[11px] font-semibold text-lime">{p.finalResultLabel}</span>
-                  </div>
-                </div>
-
-                <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
-                  <div>
-                    <p className="font-mono text-[10px] uppercase tracking-[.1em] text-white/35">{p.futRatingLabel}</p>
-                    <p className="mt-1 text-2xl font-semibold text-lime">{chain.fut_rating ?? "—"}</p>
-                  </div>
-                  <div>
-                    <p className="font-mono text-[10px] uppercase tracking-[.1em] text-white/35">{p.metaRatingLabel}</p>
-                    <p className="mt-1 text-2xl font-semibold text-lime">{chain.meta_rating ?? "—"}</p>
-                  </div>
-                </div>
-
-                <p className="mt-6 font-mono text-[10px] uppercase tracking-[.12em] text-white/35">{p.finalStatsLabel}</p>
-                <dl className="mt-2 grid grid-cols-3 gap-3 sm:grid-cols-5">
-                  {STAT_ORDER.map((key) => (
-                    <div key={key}>
-                      <dt className="font-mono text-[10px] uppercase tracking-[.1em] text-white/35">{key}</dt>
-                      <dd className="mt-1 text-sm font-semibold text-white">{chain.final_stats?.[key] ?? "—"}</dd>
+                        );
+                      })}
                     </div>
-                  ))}
-                </dl>
+                  </div>
+
+                  <span className="text-white/20 sm:hidden" aria-hidden>↓</span>
+                  <span className="hidden text-white/20 sm:block" aria-hidden>→</span>
+
+                  <div className="flex flex-col items-center gap-2 sm:shrink-0">
+                    <CardArt src={chain.final_image_url} alt={selected.name} size="lg" />
+                    <span className="max-w-[9rem] truncate text-center text-[11px] font-semibold text-lime">{p.finalResultLabel}</span>
+                  </div>
+                </div>
+
+                {/* Product decision: display the FUT Rating value under a "META Rating" label.
+                    The calculation is untouched - only the label shown to the user changes. */}
+                <div className="mt-5">
+                  <p className="font-mono text-[10px] uppercase tracking-[.1em] text-white/35">{p.metaRatingLabel}</p>
+                  <p className="mt-1 text-2xl font-semibold text-lime">{chain.fut_rating ?? "—"}</p>
+                </div>
 
                 {boostChips.length > 0 && (
                   <>
                     <p className="mt-6 font-mono text-[10px] uppercase tracking-[.12em] text-white/35">{p.boostsLabel}</p>
-                    <p className="mt-2 text-sm font-semibold text-lime">
+                    <div className="mt-2 flex flex-wrap gap-2">
                       {boostChips.map((key) => {
                         const v = chain.total_boosts[key] as number;
-                        return `${key} ${v > 0 ? "+" : ""}${v}`;
-                      }).join("   ")}
-                    </p>
+                        return (
+                          <div key={key} className="flex flex-col items-center gap-1 rounded-lg border border-white/10 bg-white/[.02] px-3 py-2">
+                            <span className="font-mono text-[10px] uppercase tracking-[.1em] text-white/35">{key}</span>
+                            <span className="text-sm font-semibold text-lime">{v > 0 ? "+" : ""}{v}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </>
                 )}
               </div>
