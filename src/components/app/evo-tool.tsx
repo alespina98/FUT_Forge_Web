@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 import { useI18n } from "../i18n-provider";
 import { CardArt } from "./card-art";
 
@@ -18,6 +18,7 @@ type EvoStep = { index?: number; name?: string; rarity_name?: string; item_ea_id
 type EvoStats = Record<string, number | null>;
 type RankedChain = {
   rank: number;
+  length: number;
   steps: EvoStep[];
   final_stats: EvoStats;
   total_boosts: EvoStats;
@@ -25,6 +26,7 @@ type RankedChain = {
   meta_rating: number | null;
   final_image_url?: string | null;
 };
+type SortMode = "best" | "meta" | "fut" | "ovr" | "fewest";
 type AnalysisSuccessEnvelope = { ok: true; data: { ranked_chains: RankedChain[]; chains_found: number } };
 
 type BackendErrorEnvelope = { ok: false; error: { code: string; message: string } };
@@ -74,7 +76,9 @@ export function EvoTool() {
   const [selected, setSelected] = useState<PlayerResult | null>(null);
   const [depth, setDepth] = useState<string>("3");
   const [analysisStatus, setAnalysisStatus] = useState<AnalysisStatus>("idle");
-  const [chain, setChain] = useState<RankedChain | null>(null);
+  const [chains, setChains] = useState<RankedChain[]>([]);
+  const [selectedRank, setSelectedRank] = useState<number | null>(null);
+  const [sortMode, setSortMode] = useState<SortMode>("best");
   const [analysisError, setAnalysisError] = useState<ApiError | null>(null);
 
   async function runSearch(event: FormEvent) {
@@ -85,7 +89,8 @@ export function EvoTool() {
     setSearchError(null);
     setSelected(null);
     setAnalysisStatus("idle");
-    setChain(null);
+    setChains([]);
+    setSelectedRank(null);
     try {
       const response = await fetch(`/api/players/search?q=${encodeURIComponent(q)}`, { cache: "no-store" });
       const body: unknown = await response.json().catch(() => null);
@@ -105,14 +110,18 @@ export function EvoTool() {
   function selectCard(card: PlayerResult) {
     setSelected(card);
     setAnalysisStatus("idle");
-    setChain(null);
+    setChains([]);
+    setSelectedRank(null);
+    setSortMode("best");
     setAnalysisError(null);
   }
 
   function backToResults() {
     setSelected(null);
     setAnalysisStatus("idle");
-    setChain(null);
+    setChains([]);
+    setSelectedRank(null);
+    setSortMode("best");
     setAnalysisError(null);
   }
 
@@ -120,7 +129,9 @@ export function EvoTool() {
     if (!selected) return;
     setAnalysisStatus("loading");
     setAnalysisError(null);
-    setChain(null);
+    setChains([]);
+    setSelectedRank(null);
+    setSortMode("best");
     try {
       const response = await fetch("/api/evo/analysis", {
         method: "POST",
@@ -134,12 +145,13 @@ export function EvoTool() {
       });
       const body: unknown = await response.json().catch(() => null);
       if (isAnalysisSuccess(body)) {
-        const best = body.data.ranked_chains[0];
-        if (!best) {
+        const ranked = body.data.ranked_chains;
+        if (ranked.length === 0) {
           setAnalysisStatus("no_chains");
           return;
         }
-        setChain(best);
+        setChains(ranked);
+        setSelectedRank(ranked[0].rank);
         setAnalysisStatus("success");
         return;
       }
@@ -150,6 +162,17 @@ export function EvoTool() {
       setAnalysisStatus("error");
     }
   }
+
+  const sortedChains = useMemo(() => {
+    const rows = [...chains];
+    if (sortMode === "meta") rows.sort((a, b) => (b.meta_rating ?? -1) - (a.meta_rating ?? -1));
+    else if (sortMode === "fut") rows.sort((a, b) => (b.fut_rating ?? -1) - (a.fut_rating ?? -1));
+    else if (sortMode === "ovr") rows.sort((a, b) => (b.final_stats?.OVR ?? 0) - (a.final_stats?.OVR ?? 0));
+    else if (sortMode === "fewest") rows.sort((a, b) => (a.length ?? 99) - (b.length ?? 99));
+    return rows;
+  }, [chains, sortMode]);
+
+  const chain = chains.find((c) => c.rank === selectedRank) ?? null;
 
   const boostChips = chain
     ? STAT_ORDER.filter((k) => {
@@ -268,9 +291,78 @@ export function EvoTool() {
               <ErrorPanel title={p.analysisErrorTitle} message={analysisError.message} code={analysisError.code} />
             )}
 
+            {analysisStatus === "success" && chains.length > 0 && (
+              <div className="glass mb-6 rounded-2xl p-6 sm:p-8">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <p className="font-mono text-[10px] uppercase tracking-[.12em] text-white/35">{p.pathsHeading}</p>
+                    <p className="mt-1 text-sm text-white/50">{p.pathsSubheading}</p>
+                  </div>
+                  <label className="flex flex-col gap-1.5">
+                    <span className="font-mono text-[10px] uppercase tracking-[.1em] text-white/40">{p.sortLabel}</span>
+                    <select
+                      value={sortMode}
+                      onChange={(event) => setSortMode(event.target.value as SortMode)}
+                      className="select-dark min-h-10 rounded-xl border border-white/10 bg-white/[.03] px-3 text-sm text-white focus:border-lime/40 focus:outline-none"
+                    >
+                      <option value="best">{p.sortBest}</option>
+                      <option value="meta">{p.sortMeta}</option>
+                      <option value="fut">{p.sortFut}</option>
+                      <option value="ovr">{p.sortOvr}</option>
+                      <option value="fewest">{p.sortFewest}</option>
+                    </select>
+                  </label>
+                </div>
+
+                <ul className="mt-4 flex flex-col gap-2">
+                  {sortedChains.map((rc) => {
+                    const isSelected = rc.rank === selectedRank;
+                    return (
+                      <li key={rc.rank}>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedRank(rc.rank)}
+                          aria-pressed={isSelected}
+                          className={`flex w-full items-center gap-3 rounded-xl border px-4 py-3 text-left transition ${
+                            isSelected ? "border-lime/40 bg-lime/[.06]" : "border-white/10 bg-white/[.02] hover:bg-white/[.04]"
+                          }`}
+                        >
+                          <span
+                            className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg font-mono text-xs font-bold ${
+                              isSelected ? "bg-lime text-black" : "bg-white/10 text-white/70"
+                            }`}
+                          >
+                            {rc.rank}
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate text-sm font-semibold text-white">
+                              {rc.steps.map((s) => s.name || p.stepFallbackName).join(" → ")}
+                            </span>
+                            <span className="mt-0.5 block font-mono text-[10px] uppercase tracking-[.1em] text-white/35">
+                              {rc.length} {p.evoCountLabel} · OVR {rc.final_stats?.OVR ?? "—"}
+                            </span>
+                          </span>
+                          <span className="shrink-0 text-right">
+                            <span className="block font-mono text-[10px] uppercase tracking-[.1em] text-white/35">{p.futRatingLabel}</span>
+                            <span className="block text-sm font-semibold text-lime">{rc.fut_rating ?? "—"}</span>
+                          </span>
+                          <span className="shrink-0 text-right">
+                            <span className="block font-mono text-[10px] uppercase tracking-[.1em] text-white/35">{p.metaRatingLabel}</span>
+                            <span className="block text-sm font-semibold text-lime">{rc.meta_rating ?? "—"}</span>
+                          </span>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
+
             {analysisStatus === "success" && chain && (
               <div className="glass rounded-2xl p-6 sm:p-8">
-                <p className="font-mono text-[10px] uppercase tracking-[.12em] text-white/35">{p.bestPathHeading}</p>
+                <p className="font-mono text-[10px] uppercase tracking-[.12em] text-white/35">
+                  {chain.rank === 1 ? p.bestPathHeading : `${p.pathHeadingPrefix} #${chain.rank}`}
+                </p>
 
                 <div className="mt-4 flex flex-wrap items-center gap-3">
                   <div className="flex flex-col items-center gap-2">
