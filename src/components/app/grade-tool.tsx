@@ -37,6 +37,9 @@ function ErrorPanel({ title, message, code }: { title: string; message: string; 
 
 const fieldClass =
   "min-h-12 w-full rounded-xl border border-white/10 bg-white/[.03] px-4 text-sm text-white placeholder:text-white/30 focus:border-lime/40 focus:outline-none";
+// Native <select> popups need explicit dark option colors (see .select-dark
+// in globals.css) or Chrome/Windows renders a low-contrast light dropdown.
+const selectFieldClass = `${fieldClass} select-dark`;
 
 export function GradeTool() {
   const { t } = useI18n();
@@ -137,7 +140,7 @@ export function GradeTool() {
           <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
             <label className="flex flex-col gap-1.5">
               <span className="font-mono text-[10px] uppercase tracking-[.1em] text-white/40">{p.positionLabel}</span>
-              <select value={position} onChange={(event) => setPosition(event.target.value)} className={fieldClass}>
+              <select value={position} onChange={(event) => setPosition(event.target.value)} className={selectFieldClass}>
                 <option value="">{p.positionPlaceholder}</option>
                 {POSITIONS.map((pos) => (
                   <option key={pos} value={pos}>{pos}</option>
@@ -146,7 +149,7 @@ export function GradeTool() {
             </label>
             <label className="flex flex-col gap-1.5">
               <span className="font-mono text-[10px] uppercase tracking-[.1em] text-white/40">{p.skillMovesLabel}</span>
-              <select value={skillMoves} onChange={(event) => setSkillMoves(event.target.value)} className={fieldClass}>
+              <select value={skillMoves} onChange={(event) => setSkillMoves(event.target.value)} className={selectFieldClass}>
                 <option value="">—</option>
                 {STAR_OPTIONS.map((n) => (
                   <option key={n} value={n}>{n}★</option>
@@ -155,7 +158,7 @@ export function GradeTool() {
             </label>
             <label className="flex flex-col gap-1.5">
               <span className="font-mono text-[10px] uppercase tracking-[.1em] text-white/40">{p.weakFootLabel}</span>
-              <select value={weakFoot} onChange={(event) => setWeakFoot(event.target.value)} className={fieldClass}>
+              <select value={weakFoot} onChange={(event) => setWeakFoot(event.target.value)} className={selectFieldClass}>
                 <option value="">—</option>
                 {STAR_OPTIONS.map((n) => (
                   <option key={n} value={n}>{n}★</option>
@@ -164,7 +167,7 @@ export function GradeTool() {
             </label>
             <label className="flex flex-col gap-1.5">
               <span className="font-mono text-[10px] uppercase tracking-[.1em] text-white/40">{p.accelerateLabel}</span>
-              <select value={accelerate} onChange={(event) => setAccelerate(event.target.value as AccelerateOption)} className={fieldClass}>
+              <select value={accelerate} onChange={(event) => setAccelerate(event.target.value as AccelerateOption)} className={selectFieldClass}>
                 <option value="">{p.accelerateNone}</option>
                 <option value="EXPLOSIVE">{p.accelerateExplosive}</option>
                 <option value="LENGTHY">{p.accelerateLengthy}</option>
