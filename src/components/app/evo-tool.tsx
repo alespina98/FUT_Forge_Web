@@ -2,11 +2,19 @@
 
 import { useState, type FormEvent } from "react";
 import { useI18n } from "../i18n-provider";
+import { CardArt } from "./card-art";
 
-type PlayerResult = { resource_id: number; asset_id: number; name: string; rating: number | null; position: string | null };
+type PlayerResult = {
+  resource_id: number;
+  asset_id: number;
+  name: string;
+  rating: number | null;
+  position: string | null;
+  image_url: string | null;
+};
 type SearchSuccessEnvelope = { ok: true; data: { query: string; results: PlayerResult[] } };
 
-type EvoStep = { index?: number; name?: string; rarity_name?: string };
+type EvoStep = { index?: number; name?: string; rarity_name?: string; item_ea_id?: number | null; image_url?: string | null };
 type EvoStats = Record<string, number | null>;
 type RankedChain = {
   rank: number;
@@ -15,6 +23,7 @@ type RankedChain = {
   total_boosts: EvoStats;
   fut_rating: number | null;
   meta_rating: number | null;
+  final_image_url?: string | null;
 };
 type AnalysisSuccessEnvelope = { ok: true; data: { ranked_chains: RankedChain[]; chains_found: number } };
 
@@ -215,11 +224,14 @@ export function EvoTool() {
         <div className="mt-8">
           <div className="glass rounded-2xl p-6 sm:p-8">
             <div className="flex items-start justify-between gap-4">
-              <div className="min-w-0">
-                <p className="truncate text-lg font-semibold text-white">{selected.name}</p>
-                <p className="mt-1 font-mono text-[10px] uppercase tracking-[.1em] text-white/35">
-                  {selected.position ?? "—"} · {p.ratingLabel} {selected.rating ?? "—"}
-                </p>
+              <div className="flex min-w-0 items-center gap-4">
+                <CardArt src={selected.image_url} alt={selected.name} size="sm" />
+                <div className="min-w-0">
+                  <p className="truncate text-lg font-semibold text-white">{selected.name}</p>
+                  <p className="mt-1 font-mono text-[10px] uppercase tracking-[.1em] text-white/35">
+                    {selected.position ?? "—"} · {p.ratingLabel} {selected.rating ?? "—"}
+                  </p>
+                </div>
               </div>
               <button type="button" onClick={backToResults} className="shrink-0 text-xs font-semibold text-white/50 hover:text-white">
                 ← {p.backToResults}
@@ -259,9 +271,41 @@ export function EvoTool() {
             {analysisStatus === "success" && chain && (
               <div className="glass rounded-2xl p-6 sm:p-8">
                 <p className="font-mono text-[10px] uppercase tracking-[.12em] text-white/35">{p.bestPathHeading}</p>
-                <p className="mt-2 text-sm font-semibold leading-6 text-white">
-                  {chain.steps.map((step) => step.name || "EVO").join(" → ")}
-                </p>
+
+                <div className="mt-4 flex flex-wrap items-center gap-3">
+                  <div className="flex flex-col items-center gap-2">
+                    <CardArt src={selected.image_url} alt={selected.name} />
+                    <span className="max-w-[7rem] truncate text-center text-[11px] font-semibold text-white">{p.startingCardLabel}</span>
+                  </div>
+
+                  {chain.steps.map((step, index) => {
+                    const hasDistinctArt = Boolean(
+                      step.image_url && step.item_ea_id != null && step.item_ea_id !== selected.resource_id
+                    );
+                    return (
+                      <div key={index} className="flex items-center gap-3">
+                        <span className="text-white/20" aria-hidden>→</span>
+                        {hasDistinctArt ? (
+                          <div className="flex flex-col items-center gap-2">
+                            <CardArt src={step.image_url} alt={step.name || p.stepFallbackName} size="sm" />
+                            <span className="max-w-[6rem] truncate text-center text-[10px] font-semibold text-white/70">{step.name}</span>
+                          </div>
+                        ) : (
+                          <span className="rounded-full border border-lime/20 bg-lime/[.06] px-3 py-1.5 text-xs font-semibold text-lime">
+                            {step.name || p.stepFallbackName}
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
+
+                  <span className="text-white/20" aria-hidden>→</span>
+
+                  <div className="flex flex-col items-center gap-2">
+                    <CardArt src={chain.final_image_url} alt={selected.name} />
+                    <span className="max-w-[7rem] truncate text-center text-[11px] font-semibold text-lime">{p.finalResultLabel}</span>
+                  </div>
+                </div>
 
                 <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
                   <div>
