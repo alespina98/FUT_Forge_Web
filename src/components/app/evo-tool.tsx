@@ -34,7 +34,32 @@ type RankedChain = {
   final_rarity_visual?: RarityVisual | null;
 };
 type SortMode = "best" | "fut" | "ovr" | "fewest";
-type AnalysisSuccessEnvelope = { ok: true; data: { player: { image_url: string | null }; ranked_chains: RankedChain[]; chains_found: number } };
+type EvoRequirementText = { label: string; value: string; maxValue?: string | null };
+type EvoMeta = {
+  id?: number | null;
+  name?: string | null;
+  coinsCost?: number | null;
+  pointsCost?: number | null;
+  tokenCost?: number | null;
+  endTime?: string | null;
+  isExpired?: boolean | null;
+  repeatabilityCount?: number | null;
+  requirementsText?: EvoRequirementText[] | null;
+  url?: string | null;
+};
+type ApplicableEvolution = {
+  name: string;
+  evolution_id: number | string | null;
+  evolution: EvoMeta | null;
+  rarity_name: string | null;
+  boosts: EvoStats;
+  final_stats?: EvoStats;
+  image_url?: string | null;
+};
+type AnalysisSuccessEnvelope = {
+  ok: true;
+  data: { player: { image_url: string | null }; ranked_chains: RankedChain[]; chains_found: number; applicable?: ApplicableEvolution[] };
+};
 
 type BackendErrorEnvelope = { ok: false; error: { code: string; message: string } };
 type ApiError = { code: string; message: string };
@@ -67,6 +92,20 @@ function isBackendError(value: unknown): value is BackendErrorEnvelope {
   return typeof value === "object" && value !== null && (value as { ok?: unknown }).ok === false;
 }
 
+// coinsCost/pointsCost/tokenCost are genuine, distinct FUT.GG cost fields
+// (verified live against the evolutions-paths API) - only pointsCost is real
+// money (FC Points), so that's the sole signal used for the free/paid badge.
+// This just formats whichever of the three are actually non-zero; it never
+// fabricates a cost when the API reports none.
+function formatEligibleCost(meta: EvoMeta | null | undefined, unitPoints: string, unitCoins: string, unitTokens: string): string | null {
+  if (!meta) return null;
+  const parts: string[] = [];
+  if (typeof meta.pointsCost === "number" && meta.pointsCost > 0) parts.push(`${meta.pointsCost.toLocaleString()} ${unitPoints}`);
+  if (typeof meta.coinsCost === "number" && meta.coinsCost > 0) parts.push(`${meta.coinsCost.toLocaleString()} ${unitCoins}`);
+  if (typeof meta.tokenCost === "number" && meta.tokenCost > 0) parts.push(`${meta.tokenCost.toLocaleString()} ${unitTokens}`);
+  return parts.length > 0 ? parts.join(" + ") : null;
+}
+
 function ErrorPanel({ title, message, code }: { title: string; message: string; code?: string }) {
   return (
     <div className="rounded-xl border border-red-500/25 bg-red-500/[.06] p-4" role="alert">
@@ -78,7 +117,7 @@ function ErrorPanel({ title, message, code }: { title: string; message: string; 
 }
 
 export function EvoTool() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const p = t.app.evo;
 
   const [query, setQuery] = useState("");
@@ -90,6 +129,7 @@ export function EvoTool() {
   const [depth, setDepth] = useState<string>("3");
   const [analysisStatus, setAnalysisStatus] = useState<AnalysisStatus>("idle");
   const [chains, setChains] = useState<RankedChain[]>([]);
+  const [applicable, setApplicable] = useState<ApplicableEvolution[]>([]);
   const [selectedRank, setSelectedRank] = useState<number | null>(null);
   const [sortMode, setSortMode] = useState<SortMode>("best");
   const [analysisError, setAnalysisError] = useState<ApiError | null>(null);
@@ -105,6 +145,7 @@ export function EvoTool() {
     setSelected(null);
     setAnalysisStatus("idle");
     setChains([]);
+    setApplicable([]);
     setSelectedRank(null);
     setStartingCardUrl(null);
     setSelectedCardArtUrl(null);
@@ -128,6 +169,7 @@ export function EvoTool() {
     setSelected(card);
     setAnalysisStatus("idle");
     setChains([]);
+    setApplicable([]);
     setSelectedRank(null);
     setSortMode("best");
     setAnalysisError(null);
@@ -155,6 +197,7 @@ export function EvoTool() {
     setSelected(null);
     setAnalysisStatus("idle");
     setChains([]);
+    setApplicable([]);
     setSelectedRank(null);
     setSortMode("best");
     setAnalysisError(null);
@@ -167,6 +210,7 @@ export function EvoTool() {
     setAnalysisStatus("loading");
     setAnalysisError(null);
     setChains([]);
+    setApplicable([]);
     setSelectedRank(null);
     setSortMode("best");
     setStartingCardUrl(null);
@@ -184,14 +228,11 @@ export function EvoTool() {
       const body: unknown = await response.json().catch(() => null);
       if (isAnalysisSuccess(body)) {
         const ranked = body.data.ranked_chains;
-        if (ranked.length === 0) {
-          setAnalysisStatus("no_chains");
-          return;
-        }
         setChains(ranked);
-        setSelectedRank(ranked[0].rank);
+        setApplicable(body.data.applicable ?? []);
+        setSelectedRank(ranked[0]?.rank ?? null);
         setStartingCardUrl(body.data.player?.image_url ?? null);
-        setAnalysisStatus("success");
+        setAnalysisStatus(ranked.length === 0 ? "no_chains" : "success");
         return;
       }
       setAnalysisError({ code: isBackendError(body) ? body.error.code : "unexpected_response", message: p.genericError });
@@ -340,6 +381,110 @@ export function EvoTool() {
 
             {analysisStatus === "error" && analysisError && (
               <ErrorPanel title={p.analysisErrorTitle} message={analysisError.message} code={analysisError.code} />
+            )}
+
+            {(analysisStatus === "success" || analysisStatus === "no_chains") && (
+              <div className="glass mb-6 rounded-2xl p-6 sm:p-8">
+                <p className="font-mono text-[10px] uppercase tracking-[.12em] text-white/35">{p.eligibleHeading}</p>
+                <p className="mt-1 text-sm text-white/50">{p.eligibleSubheading}</p>
+
+                {applicable.length === 0 ? (
+                  <p className="mt-4 text-sm text-white/40">{p.eligibleEmptyState}</p>
+                ) : (
+                  <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    {applicable.map((evo, index) => {
+                      const meta = evo.evolution;
+                      const isPaid = typeof meta?.pointsCost === "number" && meta.pointsCost > 0;
+                      const cost = formatEligibleCost(meta, p.eligiblePaidBadge, p.eligibleCoinsUnit, p.eligibleTokensUnit);
+                      const ends = meta?.endTime ? new Date(meta.endTime) : null;
+                      const hasValidEndDate = ends !== null && !Number.isNaN(ends.getTime());
+                      const requirements = (meta?.requirementsText ?? []).filter((r) => r.value);
+                      const evoBoostChips = STAT_ORDER.filter((k) => {
+                        const v = evo.boosts?.[k];
+                        return typeof v === "number" && v !== 0;
+                      });
+                      return (
+                        <div
+                          key={`${evo.evolution_id ?? evo.name}-${index}`}
+                          className="flex gap-3 rounded-xl border border-white/10 bg-white/[.02] p-4"
+                        >
+                          <CardArt src={evo.image_url} alt={evo.name} size="sm" />
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="truncate text-sm font-semibold text-white">{evo.name}</span>
+                              <span
+                                className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[.08em] ${
+                                  isPaid ? "border-white/15 bg-white/[.04] text-white/70" : "border-lime/30 bg-lime/[.06] text-lime"
+                                }`}
+                              >
+                                {isPaid ? p.eligiblePaidBadge : p.eligibleFreeBadge}
+                              </span>
+                              {typeof meta?.repeatabilityCount === "number" && meta.repeatabilityCount > 1 && (
+                                <span className="shrink-0 rounded-full border border-white/15 bg-white/[.04] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[.08em] text-white/60">
+                                  {p.eligibleRepeatableBadge}
+                                </span>
+                              )}
+                            </div>
+
+                            {cost && <p className="mt-1 text-xs text-white/50">{cost}</p>}
+                            {hasValidEndDate && (
+                              <p className="mt-1 font-mono text-[10px] uppercase tracking-[.08em] text-white/35">
+                                {p.eligibleEndsLabel}{" "}
+                                {ends!.toLocaleDateString(locale === "it" ? "it-IT" : "en-US", { year: "numeric", month: "short", day: "numeric" })}
+                              </p>
+                            )}
+
+                            {evo.rarity_name && (
+                              <p className="mt-2 text-xs font-semibold text-lime">
+                                {p.eligibleResultLabel}: {evo.rarity_name}
+                                {evo.final_stats?.OVR != null ? ` · ${evo.final_stats.OVR} OVR` : ""}
+                              </p>
+                            )}
+
+                            {evoBoostChips.length > 0 && (
+                              <div className="mt-2 flex flex-wrap gap-1.5">
+                                {evoBoostChips.map((k) => {
+                                  const v = evo.boosts[k] as number;
+                                  return (
+                                    <span key={k} className="rounded-md border border-white/10 bg-white/[.02] px-1.5 py-0.5 font-mono text-[10px] text-white/60">
+                                      {k} {v > 0 ? "+" : ""}
+                                      {v}
+                                    </span>
+                                  );
+                                })}
+                              </div>
+                            )}
+
+                            {requirements.length > 0 && (
+                              <div className="mt-3">
+                                <p className="font-mono text-[10px] uppercase tracking-[.08em] text-white/35">{p.eligibleRequirementsLabel}</p>
+                                <ul className="mt-1 flex flex-col gap-0.5">
+                                  {requirements.map((r, i) => (
+                                    <li key={i} className="text-xs text-white/50">
+                                      {r.label}: {r.value}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+
+                            {meta?.url && (
+                              <a
+                                href={`https://www.fut.gg${meta.url}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="mt-3 inline-block text-xs font-semibold text-lime hover:underline"
+                              >
+                                {p.eligibleViewLink} ↗
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             )}
 
             {analysisStatus === "success" && chains.length > 0 && (
