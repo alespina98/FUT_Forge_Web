@@ -14,6 +14,7 @@ type PlayerResult = {
   image_url: string | null;
 };
 type SearchSuccessEnvelope = { ok: true; data: { query: string; results: PlayerResult[] } };
+type CardArtSuccessEnvelope = { ok: true; data: { resource_id: number; image_url: string | null } };
 
 type EvoStep = { index?: number; name?: string; rarity_name?: string; item_ea_id?: number | null; image_url?: string | null };
 type EvoStats = Record<string, number | null>;
@@ -56,6 +57,12 @@ function isAnalysisSuccess(value: unknown): value is AnalysisSuccessEnvelope {
   return v.ok === true && typeof v.data === "object" && v.data !== null && Array.isArray((v.data as { ranked_chains?: unknown }).ranked_chains);
 }
 
+function isCardArtSuccess(value: unknown): value is CardArtSuccessEnvelope {
+  if (typeof value !== "object" || value === null) return false;
+  const v = value as { ok?: unknown; data?: unknown };
+  return v.ok === true && typeof v.data === "object" && v.data !== null && "image_url" in (v.data as object);
+}
+
 function isBackendError(value: unknown): value is BackendErrorEnvelope {
   return typeof value === "object" && value !== null && (value as { ok?: unknown }).ok === false;
 }
@@ -87,6 +94,7 @@ export function EvoTool() {
   const [sortMode, setSortMode] = useState<SortMode>("best");
   const [analysisError, setAnalysisError] = useState<ApiError | null>(null);
   const [startingCardUrl, setStartingCardUrl] = useState<string | null>(null);
+  const [selectedCardArtUrl, setSelectedCardArtUrl] = useState<string | null>(null);
 
   async function runSearch(event: FormEvent) {
     event.preventDefault();
@@ -99,6 +107,7 @@ export function EvoTool() {
     setChains([]);
     setSelectedRank(null);
     setStartingCardUrl(null);
+    setSelectedCardArtUrl(null);
     try {
       const response = await fetch(`/api/players/search?q=${encodeURIComponent(q)}`, { cache: "no-store" });
       const body: unknown = await response.json().catch(() => null);
@@ -123,6 +132,23 @@ export function EvoTool() {
     setSortMode("best");
     setAnalysisError(null);
     setStartingCardUrl(null);
+    setSelectedCardArtUrl(null);
+    void loadSelectedCardArt(card);
+  }
+
+  // Same endpoint/pattern as Price's loadCardArt() - reused deliberately,
+  // not a second lookup mechanism. Failure here never blocks selection;
+  // CardArt's own honest fallback covers a null url.
+  async function loadSelectedCardArt(card: PlayerResult) {
+    try {
+      const response = await fetch(`/api/card-art/${card.resource_id}?asset_id=${card.asset_id}`, { cache: "no-store" });
+      const body: unknown = await response.json().catch(() => null);
+      if (isCardArtSuccess(body)) {
+        setSelectedCardArtUrl(body.data.image_url);
+      }
+    } catch {
+      // Leave selectedCardArtUrl null - CardArt renders its fallback mark.
+    }
   }
 
   function backToResults() {
@@ -133,6 +159,7 @@ export function EvoTool() {
     setSortMode("best");
     setAnalysisError(null);
     setStartingCardUrl(null);
+    setSelectedCardArtUrl(null);
   }
 
   async function runAnalysis() {
@@ -272,7 +299,7 @@ export function EvoTool() {
           <div className="glass rounded-2xl p-6 sm:p-8">
             <div className="flex items-start justify-between gap-4">
               <div className="flex min-w-0 items-center gap-4">
-                <CardArt src={selected.image_url} alt={selected.name} size="sm" />
+                <CardArt src={selectedCardArtUrl} alt={selected.name} size="lg" />
                 <div className="min-w-0">
                   <p className="truncate text-lg font-semibold text-white">{selected.name}</p>
                   <p className="mt-1 font-mono text-[10px] uppercase tracking-[.1em] text-white/35">

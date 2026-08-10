@@ -33,10 +33,15 @@ const STAT_KEYS = ["PAC", "SHO", "PAS", "DRI", "DEF", "PHY"] as const;
  */
 export function GeneratedEvoCard({ rarityImageUrl, textColor, cutoutUrl, ovr, position, name, stats, size = "md" }: GeneratedEvoCardProps) {
   const color = textColor || "#ffffff";
+  // FUT.GG applies Referer-based hotlink protection to this specific asset
+  // family (verified live: works server-side, 403/503s as a direct browser
+  // <img src>) - relayed through our own server, which never sends a
+  // cross-origin Referer, rather than a fragile direct CDN link.
+  const proxiedRarityUrl = `/api/rarity-image?url=${encodeURIComponent(rarityImageUrl)}`;
   return (
     <div className={`glass relative aspect-[300/416] shrink-0 overflow-hidden rounded-xl ${SIZE_CLASSES[size]}`}>
       {/* eslint-disable-next-line @next/next/no-img-element -- external, non-local artwork; same rationale as CardArt */}
-      <img src={rarityImageUrl} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-contain" loading="lazy" />
+      <img src={proxiedRarityUrl} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-contain" loading="lazy" />
       {cutoutUrl && (
         // eslint-disable-next-line @next/next/no-img-element -- external, non-local artwork
         <img
