@@ -21,6 +21,23 @@ const SIZE_CLASSES: Record<NonNullable<GeneratedEvoCardProps["size"]>, string> =
 
 const STAT_KEYS = ["PAC", "SHO", "PAS", "DRI", "DEF", "PHY"] as const;
 
+// Real FUT cards use FUT.GG's condensed "Cruyff Condensed" typeface - not
+// available as a system/web-safe font here. FUT Forge Desktop's own
+// card_renderer.py already documents its fallback for this exact gap
+// ("Arial Narrow is a closer Windows fallback for FUT.GG's Cruyff
+// Condensed"); this stack extends that same choice to non-Windows systems
+// rather than introducing a new font dependency. Without it, this card
+// silently inherited the site's global Geist UI font, which is wide and
+// normal-weight - the opposite of the dense, heavy, condensed look every
+// genuine FUT card has.
+const CONDENSED_FONT = '"Arial Narrow", "Liberation Sans Narrow", "Roboto Condensed", Arial, sans-serif';
+const condensedTextStyle: React.CSSProperties = {
+  fontFamily: CONDENSED_FONT,
+  fontStretch: "condensed",
+  fontWeight: 800,
+  letterSpacing: "-0.02em",
+};
+
 /**
  * Locally composes a card when FUT.GG has no genuine full-card render for a
  * hypothetical EVO result (no cardImagePath - only real catalog items get
@@ -52,21 +69,21 @@ export function GeneratedEvoCard({ rarityImageUrl, textColor, cutoutUrl, ovr, po
           style={{ width: "64.3%", left: "56%", top: "17.4%", transform: "translateX(-50%)" }}
         />
       )}
-      <div className="absolute text-center font-bold leading-tight" style={{ left: "21.8%", top: "20.5%", transform: "translateX(-50%)", color }}>
-        <div className="text-[13px] sm:text-[17px]">{ovr ?? "—"}</div>
-        <div className="text-[7px] sm:text-[9px]">{position ?? ""}</div>
+      <div className="absolute text-center leading-none" style={{ left: "21.8%", top: "20.5%", transform: "translateX(-50%)", color, ...condensedTextStyle }}>
+        <div className="text-[15px] sm:text-[19px]">{ovr ?? "—"}</div>
+        <div className="mt-0.5 text-[8px] sm:text-[10px]">{position ?? ""}</div>
       </div>
       <div
-        className="absolute max-w-[76%] truncate text-center font-bold"
-        style={{ top: "62%", left: "50%", transform: "translateX(-50%)", color, fontSize: "8px" }}
+        className="absolute max-w-[78%] truncate text-center"
+        style={{ top: "62%", left: "50%", transform: "translateX(-50%)", color, fontSize: "9px", ...condensedTextStyle }}
       >
         {name}
       </div>
       <div className="absolute flex w-full justify-between px-[9%]" style={{ top: "73.5%" }}>
         {STAT_KEYS.map((key) => (
-          <div key={key} className="flex flex-col items-center leading-tight" style={{ color }}>
-            <span className="text-[5px] font-bold sm:text-[6px]">{key}</span>
-            <span className="text-[7px] font-bold sm:text-[8px]">{stats[key] ?? "—"}</span>
+          <div key={key} className="flex flex-col items-center leading-none" style={{ color, ...condensedTextStyle }}>
+            <span className="text-[6px] sm:text-[7px]">{key}</span>
+            <span className="mt-0.5 text-[8px] sm:text-[9.5px]">{stats[key] ?? "—"}</span>
           </div>
         ))}
       </div>
