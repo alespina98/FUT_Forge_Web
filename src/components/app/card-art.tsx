@@ -6,10 +6,11 @@ import { ForgeMark } from "../icons";
 type CardArtProps = {
   src: string | null | undefined;
   alt: string;
-  size?: "sm" | "md" | "lg";
+  size?: "xs" | "sm" | "md" | "lg";
 };
 
 const SIZE_CLASSES: Record<NonNullable<CardArtProps["size"]>, string> = {
+  xs: "w-10",
   sm: "w-16",
   md: "w-24",
   lg: "w-28 sm:w-36",
