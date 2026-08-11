@@ -5,6 +5,7 @@ import Link from "next/link";
 import { PRODUCT } from "@/lib/copy";
 import { useI18n } from "./i18n-provider";
 import { DownloadIcon, ForgeMark } from "./icons";
+import { leaksCopy } from "@/lib/leaks/copy";
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
@@ -14,6 +15,7 @@ export function Navbar() {
     [t.nav.roadmap, "/#roadmap"],
     [t.nav.download, "/download"],
     [t.nav.app, "/app"],
+    [leaksCopy[locale].nav, "/app/leaks"],
   ] as const;
 
   return (
@@ -39,5 +41,4 @@ export function Navbar() {
     </header>
   );
 }
-
 

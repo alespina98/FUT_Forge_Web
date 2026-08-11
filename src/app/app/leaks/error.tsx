@@ -1,0 +1,3 @@
+"use client";
+import { useI18n } from "@/components/i18n-provider"; import { leaksCopy } from "@/lib/leaks/copy";
+export default function ErrorState({ reset }: { error: Error; reset: () => void }) { const { locale } = useI18n(); const t = leaksCopy[locale]; return <div className="mx-auto max-w-xl rounded-[28px] border border-white/10 bg-white/[.025] px-7 py-20 text-center"><h1 className="text-2xl font-semibold">{t.errorTitle}</h1><p className="mt-3 text-sm text-white/45">{t.errorBody}</p><button onClick={reset} className="mt-6 rounded-xl bg-lime px-5 py-3 text-xs font-bold text-black">{t.retry}</button></div>; }
