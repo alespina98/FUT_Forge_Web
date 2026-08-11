@@ -1,8 +1,8 @@
 import "server-only";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { Leak, LeakListQuery, LeakReport, LeakSource, LeakTranslation, LeakTranslations, PlayerMetadata } from "./types";
 import { safeHttpUrl } from "./core";
 import { buildLeakPrefixQuery } from "./search";
+import { readPublishedLeaks } from "./supabase-read";
 
 type DbRow = Record<string, unknown>;
 const sourceSelect = "id,name,source_type,handle,platform,url,reliability";
@@ -28,20 +28,27 @@ function mapLeak(row: DbRow): Leak { return { id: String(row.id), slug: String(r
 export async function listPublishedLeaks(filters: LeakListQuery = {}): Promise<Leak[]> {
   const prefixQuery = filters.search ? buildLeakPrefixQuery(filters.search) : null;
   if (filters.search && !prefixQuery) return [];
-  const supabase = await createSupabaseServerClient();
-  let query = supabase.from("leaks").select(leakSelect).eq("is_published", true).lte("published_at", new Date().toISOString());
-  if (filters.category) query = query.eq("category", filters.category);
-  if (filters.confidence) query = query.eq("confidence", filters.confidence);
-  if (prefixQuery) query = query.textSearch("search_document", prefixQuery, { config: "simple" });
-  query = query.order("published_at", { ascending: filters.order === "oldest" });
-  const { data, error } = await query;
-  if (error) throw new Error(`Unable to load leaks: ${error.message}`);
-  return ((data || []) as unknown as DbRow[]).map(mapLeak);
+  const params = new URLSearchParams({
+    select: leakSelect,
+    is_published: "eq.true",
+    published_at: `lte.${new Date().toISOString()}`,
+    order: `published_at.${filters.order === "oldest" ? "asc" : "desc"}`,
+  });
+  if (filters.category) params.set("category", `eq.${filters.category}`);
+  if (filters.confidence) params.set("confidence", `eq.${filters.confidence}`);
+  if (prefixQuery) params.set("search_document", `fts(simple).${prefixQuery}`);
+  const data = await readPublishedLeaks(params);
+  return (data as DbRow[]).map(mapLeak);
 }
 
 export async function getPublishedLeak(slug: string): Promise<Leak | null> {
-  const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase.from("leaks").select(leakSelect).eq("slug", slug).eq("is_published", true).lte("published_at", new Date().toISOString()).maybeSingle();
-  if (error) throw new Error(`Unable to load leak: ${error.message}`);
-  return data ? mapLeak(data as unknown as DbRow) : null;
+  const params = new URLSearchParams({
+    select: leakSelect,
+    slug: `eq.${slug}`,
+    is_published: "eq.true",
+    published_at: `lte.${new Date().toISOString()}`,
+    limit: "1",
+  });
+  const data = await readPublishedLeaks(params);
+  return data[0] ? mapLeak(data[0] as DbRow) : null;
 }
