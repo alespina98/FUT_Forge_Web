@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import type { ReleaseInfo } from "@/lib/release";
+import type { ReleaseCatalog, ReleaseInfo } from "@/lib/release";
 import { useI18n } from "./i18n-provider";
 import { DownloadIcon } from "./icons";
 
@@ -14,7 +14,8 @@ function DownloadButton({ release, label }: { release: ReleaseInfo; label: strin
   return release.downloadUrl ? <a className="button-primary download-primary" href={release.downloadUrl} aria-label={`${label} — ${release.filename}`}><DownloadIcon className="size-5" />{label}</a> : <span className="button-primary download-primary is-disabled" aria-disabled="true"><DownloadIcon className="size-5" />{label}</span>;
 }
 
-export function DownloadPageContent({ release }: { release: ReleaseInfo }) {
+export function DownloadPageContent({ releases }: { releases: ReleaseCatalog }) {
+  const release = releases.windows;
   const { locale, t } = useI18n();
   const d = t.downloadPage;
   const [copied, setCopied] = useState(false);
@@ -45,6 +46,15 @@ export function DownloadPageContent({ release }: { release: ReleaseInfo }) {
       </div>
     </section>
 
+    <section className="download-content section-shell" aria-labelledby="platform-heading"><div className="release-card">
+      <div className="release-card-head"><div><p className="section-label">macOS</p><h2 id="platform-heading">{locale === "it" ? "Download per Mac" : "Downloads for Mac"}</h2></div><span className="release-source">macOS 15+</span></div>
+      <p className="download-lead">{locale === "it" ? "Scegli la build nativa per il tuo Mac. Queste build non sono Universal2 e gli aggiornamenti sono manuali." : "Choose the native build for your Mac. These are not Universal2 builds and updates are manual."}</p>
+      <div className="mt-6 flex flex-wrap gap-3">
+        <DownloadButton release={releases.macos.arm64} label={releases.macos.arm64.downloadUrl ? "Apple Silicon · arm64" : (locale === "it" ? "Apple Silicon · presto disponibile" : "Apple Silicon · coming soon")} />
+        <DownloadButton release={releases.macos.x86_64} label={releases.macos.x86_64.downloadUrl ? "Intel · x86_64" : (locale === "it" ? "Intel · presto disponibile" : "Intel · coming soon")} />
+      </div>
+      <p className="availability-note">{locale === "it" ? "Build attualmente non firmate né notarizzate da Apple: macOS potrebbe richiedere Control-click → Apri o Privacy e Sicurezza → Apri comunque." : "Currently not Apple Developer ID signed or notarized: macOS may require Control-click → Open or Privacy & Security → Open Anyway."}</p>
+    </div></section>
     <section className="download-content section-shell" aria-labelledby="release-heading"><div className="release-card">
       <div className="release-card-head"><div><p className="section-label">{d.eyebrow}</p><h2 id="release-heading">{d.releaseTitle}</h2></div><span className="release-source">{release.source === "github" ? d.stable : d.unavailable}</span></div>
       <dl>{facts.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>

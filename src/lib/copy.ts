@@ -133,8 +133,8 @@ export const copy = {
       disclaimer: "Not affiliated with EA Sports or Electronic Arts.",
     },
     downloadPage: {
-      metaTitle: "Download FUT Forge Desktop", metaDescription: "Download the official FUT Forge installer for Windows 10 and 11.",
-      eyebrow: "FUT Forge Desktop", heroTitle: "Your Ultimate Team workspace. On Windows.", heroBody: "Plan SBCs and Evolutions in one focused desktop application.",
+      metaTitle: "Download FUT Forge Desktop", metaDescription: "Download FUT Forge Desktop for Windows, Apple Silicon Mac, or Intel Mac.",
+      eyebrow: "FUT Forge Desktop", heroTitle: "Your Ultimate Team workspace. On Windows and macOS.", heroBody: "Plan SBCs and Evolutions in one focused desktop application.",
       stable: "Stable", beta: "Beta", version: "Version", released: "Released", windows: "Windows 10/11", architecture: "64-bit", architectureLabel: "Architecture", free: "Free", updates: "Automatic updates",
       download: "Download FUT Forge", unavailable: "Installer temporarily unavailable", unavailableHelp: "The official installer could not be verified. Please try again shortly.",
       releaseTitle: "Current release", filename: "Installer", size: "Size", checksum: "SHA-256", copyChecksum: "Copy SHA-256 checksum", copied: "Copied", officialRelease: "View official GitHub Release",
@@ -148,8 +148,8 @@ export const copy = {
       faq: "Frequently asked questions", faqs: [
         ["Is FUT Forge free?", "Yes. FUT Forge Desktop is free."], ["Does it support Windows 11?", "Yes. It supports 64-bit Windows 10 and 11."],
         ["How do updates work?", "The app checks for official FUT Forge releases automatically."], ["Where is the installer hosted?", "In the official FUT Forge Releases repository on GitHub."],
-        ["Is a Mac version available?", "No. The official repository currently provides a Windows installer only."],
-      ], finalTitle: "Ready to get started?", finalBody: "Download the latest official Windows release.",
+        ["Is a Mac version available?", "Yes. Separate native downloads are available for Apple Silicon and Intel Macs."],
+      ], finalTitle: "Ready to get started?", finalBody: "Choose the latest official Windows or macOS release.",
     },
     app: {
       landing: {
@@ -414,8 +414,8 @@ export const copy = {
       disclaimer: "FUT Forge non è affiliato a EA Sports o Electronic Arts.",
     },
     downloadPage: {
-      metaTitle: "Scarica FUT Forge Desktop", metaDescription: "Scarica l’installer ufficiale di FUT Forge per Windows 10 e 11.",
-      eyebrow: "FUT Forge Desktop", heroTitle: "Il tuo workspace per Ultimate Team. Su Windows.", heroBody: "Pianifica SBC ed Evoluzioni in un’unica applicazione desktop.",
+      metaTitle: "Scarica FUT Forge Desktop", metaDescription: "Scarica FUT Forge Desktop per Windows, Mac Apple Silicon o Mac Intel.",
+      eyebrow: "FUT Forge Desktop", heroTitle: "Il tuo workspace per Ultimate Team. Su Windows e macOS.", heroBody: "Pianifica SBC ed Evoluzioni in un’unica applicazione desktop.",
       stable: "Versione stabile", beta: "Beta", version: "Versione", released: "Pubblicata il", windows: "Windows 10/11", architecture: "64 bit", architectureLabel: "Architettura", free: "Gratis", updates: "Aggiornamenti automatici",
       download: "Scarica FUT Forge", unavailable: "Installer temporaneamente non disponibile", unavailableHelp: "Non è stato possibile verificare l’installer ufficiale. Riprova tra poco.",
       releaseTitle: "Release attuale", filename: "Installer", size: "Dimensione", checksum: "SHA-256", copyChecksum: "Copia il checksum SHA-256", copied: "Copiato", officialRelease: "Apri la release ufficiale su GitHub",
@@ -429,8 +429,8 @@ export const copy = {
       faq: "Domande frequenti", faqs: [
         ["FUT Forge è gratuito?", "Sì. FUT Forge Desktop è gratuito."], ["È compatibile con Windows 11?", "Sì. Supporta Windows 10 e 11 a 64 bit."],
         ["Come funzionano gli aggiornamenti?", "L’app controlla automaticamente le release ufficiali di FUT Forge."], ["Dove è ospitato l’installer?", "Nel repository ufficiale FUT Forge Releases su GitHub."],
-        ["Esiste una versione per Mac?", "No. Il repository ufficiale offre al momento solo l’installer Windows."],
-      ], finalTitle: "Pronto per iniziare?", finalBody: "Scarica l’ultima release ufficiale per Windows.",
+        ["Esiste una versione per Mac?", "Sì. Sono disponibili download nativi separati per Mac Apple Silicon e Intel."],
+      ], finalTitle: "Pronto per iniziare?", finalBody: "Scegli l’ultima release ufficiale per Windows o macOS.",
     },
     app: {
       landing: {
