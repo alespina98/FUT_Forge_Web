@@ -1,5 +1,6 @@
 ﻿import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import { I18nProvider } from "@/components/i18n-provider";
 import { PRODUCT, siteCopy } from "@/lib/copy";
 import "./globals.css";
@@ -71,6 +72,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
         />
         <I18nProvider>{children}</I18nProvider>
+        <Analytics />
       </body>
     </html>
   );

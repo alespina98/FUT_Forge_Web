@@ -6,7 +6,7 @@ import { ForgeMark } from "../icons";
 type CardArtProps = {
   src: string | null | undefined;
   alt: string;
-  size?: "xs" | "sm" | "md" | "lg";
+  size?: "xs" | "sm" | "md" | "lg" | "xl";
 };
 
 const SIZE_CLASSES: Record<NonNullable<CardArtProps["size"]>, string> = {
@@ -14,6 +14,8 @@ const SIZE_CLASSES: Record<NonNullable<CardArtProps["size"]>, string> = {
   sm: "w-16",
   md: "w-24",
   lg: "w-28 sm:w-36",
+  // Tuned so aspect-[300/416] renders ~155-180px tall on desktop (My Club grid).
+  xl: "w-28 lg:w-32",
 };
 
 // FUT.GG player-item card renders are consistently ~300x416 (verified live).
