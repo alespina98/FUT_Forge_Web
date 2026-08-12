@@ -1,0 +1,3 @@
+import assert from "node:assert/strict"; import test from "node:test"; import { createFingerprint } from "./deduplication.ts";
+test("fingerprints equivalent token order", () => { const base = { category: "PLAYER", game: "FC26", publishedAt: "2026-08-12T10:00:00Z" }; assert.equal(createFingerprint({ ...base, text: "Messi 99 card" }), createFingerprint({ ...base, text: "card Messi 99" })); });
+test("keeps categories separate", () => { const base = { text: "Messi 99", game: "FC26", publishedAt: "2026-08-12T10:00:00Z" }; assert.notEqual(createFingerprint({ ...base, category: "PLAYER" }), createFingerprint({ ...base, category: "SBC" })); });

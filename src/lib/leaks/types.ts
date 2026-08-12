@@ -1,8 +1,12 @@
 export const LEAK_CATEGORIES = ["PLAYER", "SBC", "EVOLUTION", "PROMO", "OBJECTIVE", "PACK", "OTHER"] as const;
 export const LEAK_CONFIDENCES = ["RUMOR", "LIKELY", "CONFIRMED"] as const;
+export const LEAK_GAMES = ["FC26", "FC27"] as const;
+export const LEAK_STATUSES = ["LEAKED", "CONFIRMED", "OFFICIAL"] as const;
 
 export type LeakCategory = (typeof LEAK_CATEGORIES)[number];
 export type LeakConfidence = (typeof LEAK_CONFIDENCES)[number];
+export type LeakGame = (typeof LEAK_GAMES)[number];
+export type LeakStatus = (typeof LEAK_STATUSES)[number];
 
 export type PlayerMetadata = {
   playerId?: string;
@@ -53,6 +57,8 @@ export type Leak = {
   translations: LeakTranslations;
   category: LeakCategory;
   confidence: LeakConfidence;
+  game: LeakGame;
+  status: LeakStatus;
   imageUrl: string | null;
   normalizedSubject: string;
   eventKey: string | null;

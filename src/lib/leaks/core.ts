@@ -10,6 +10,11 @@ export function safeHttpUrl(value: unknown): string | null {
   try { const url = new URL(value); return url.protocol === "http:" || url.protocol === "https:" ? url.href : null; }
   catch { return null; }
 }
+export function safeLeakImageUrl(value: unknown): string | null {
+  const remote = safeHttpUrl(value); if (remote) return remote;
+  if (typeof value !== "string" || value.includes("..") || value.includes("\\") || value.includes("?") || value.includes("#")) return null;
+  return /^\/leaks\/[a-z0-9][a-z0-9/_-]*\.(?:png|jpe?g|webp)$/i.test(value) ? value : null;
+}
 export function isLeakCategory(value: string | null | undefined): value is LeakCategory { return !!value && LEAK_CATEGORIES.includes(value as LeakCategory); }
 export function isLeakConfidence(value: string | null | undefined): value is LeakConfidence { return !!value && LEAK_CONFIDENCES.includes(value as LeakConfidence); }
 

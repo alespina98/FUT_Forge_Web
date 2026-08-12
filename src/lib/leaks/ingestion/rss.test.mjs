@@ -1,0 +1,3 @@
+import assert from "node:assert/strict"; import test from "node:test"; import { parsePublicFeed } from "./rss.ts";
+test("normalizes RSS", () => { const items = parsePublicFeed(`<rss><item><guid>42</guid><link>https://example.com/post</link><title>New SBC</title><description>Player SBC soon</description><pubDate>Wed, 12 Aug 2026 10:00:00 GMT</pubDate><media:content url="https://example.com/card.jpg" /></item></rss>`); assert.equal(items.length, 1); assert.equal(items[0].sourcePostId, "42"); });
+test("rejects incomplete entries", () => assert.deepEqual(parsePublicFeed(`<rss><item><title>No URL</title></item></rss>`), []));
