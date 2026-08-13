@@ -1,8 +1,8 @@
 ;(()=>{
   "use strict";
-  const EA=/^https:\/\/www\.ea\.com\/ea-sports-fc\/ultimate-team\/web-app\//;
+  const isEAWebApp=()=>{try{const u=new URL(location.href);return u.protocol==="https:"&&u.hostname==="www.ea.com"&&/^\/(?:[a-z]{2}-[a-z]{2}\/)?(?:games\/)?ea-sports-fc\/ultimate-team\/web-app\/?$/i.test(u.pathname);}catch(_){return false;}};
   const fail=(message,error)=>{globalThis.__FUTFORGE_BOOKMARKLET_LOADING__=false;console.error("[FUT Forge Bookmarklet]",message,error||"");alert("FUT Forge: "+message);};
-  if(!EA.test(location.href))return fail("Open the EA FC Ultimate Team Web App before using this bookmark.");
+  if(!isEAWebApp())return fail("Open the EA FC Ultimate Team Web App before using this bookmark.");
   if(globalThis.__FUTFORGE_BOOKMARKLET_LOADED__||globalThis.FutGenieDispatcher)return alert("FUT Forge is already running on this page.");
   if(globalThis.__FUTFORGE_LOADER_ACTIVE__)return alert("FUT Forge is already loading. Please wait a moment.");
   globalThis.__FUTFORGE_LOADER_ACTIVE__=true;globalThis.__FUTFORGE_BOOKMARKLET_LOADING__=true;

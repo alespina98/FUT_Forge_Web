@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { makeBookmarklet, setBookmarkletDragData } from "./bookmarklet.ts";
+import { isEAWebAppUrl, makeBookmarklet, setBookmarkletDragData } from "./bookmarklet.ts";
 const origin = "https://candidate.example.vercel.app";
 test("the exact draggable href is one-line ASCII and directly parseable", () => {
   const href = makeBookmarklet(origin);
@@ -21,4 +21,13 @@ test("drag and manual installation receive the exact same href", () => {
   const href = setBookmarkletDragData(origin, transfer);
   assert.equal(values.get("text/uri-list"), href);
   assert.equal(values.get("text/plain"), href);
+});
+test("EA Web App URL variants are accepted without widening to other EA pages", () => {
+  for (const url of ["https://www.ea.com/ea-sports-fc/ultimate-team/web-app/", "https://www.ea.com/games/ea-sports-fc/ultimate-team/web-app/", "https://www.ea.com/it-it/games/ea-sports-fc/ultimate-team/web-app/?foo=1#home"]) assert.equal(isEAWebAppUrl(url), true, url);
+  for (const url of ["http://www.ea.com/games/ea-sports-fc/ultimate-team/web-app/", "https://ea.com/games/ea-sports-fc/ultimate-team/web-app/", "https://www.ea.com/games/ea-sports-fc/", "https://www.ea.com.evil.example/games/ea-sports-fc/ultimate-team/web-app/"]) assert.equal(isEAWebAppUrl(url), false, url);
+});
+test("DEV preview bookmarklet selects only the DEV channel", () => {
+  const href = makeBookmarklet(origin, "dev");
+  assert.match(href, /channel=dev&t=/);
+  assert.doesNotMatch(href, /channel=stable/);
 });

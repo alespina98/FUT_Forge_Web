@@ -6,6 +6,7 @@ import "./browser-bookmarklet.css";
 
 export function BrowserBookmarkletSection() {
   const { locale } = useI18n();
+  const channel = process.env.NEXT_PUBLIC_FUTFORGE_BROWSER_CHANNEL === "dev" ? "dev" : "stable";
   const [href, setHref] = useState("");
   const [copied, setCopied] = useState(false);
   const mockLink = useRef<HTMLAnchorElement>(null);
@@ -13,14 +14,14 @@ export function BrowserBookmarkletSection() {
   const it = locale === "it";
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
-      const value = makeBookmarklet(window.location.origin);
+      const value = makeBookmarklet(window.location.origin, channel);
       setHref(value);
       if (mockLink.current) mockLink.current.href = value;
       if (installLink.current) installLink.current.href = value;
     });
     return () => window.cancelAnimationFrame(frame);
-  }, []);
-  const drag = (event: DragEvent<HTMLAnchorElement>) => setBookmarkletDragData(window.location.origin, event.dataTransfer);
+  }, [channel]);
+  const drag = (event: DragEvent<HTMLAnchorElement>) => setBookmarkletDragData(window.location.origin, event.dataTransfer, channel);
   const copy = async () => { await navigator.clipboard.writeText(href); setCopied(true); window.setTimeout(() => setCopied(false), 1800); };
   const steps = it
     ? ["Mostra la barra dei preferiti", "Trascina FUT Forge nella barra", "Apri e accedi alla EA FC Web App", "Clicca FUT Forge"]
