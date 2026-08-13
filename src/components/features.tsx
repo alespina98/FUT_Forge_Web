@@ -5,7 +5,7 @@ import { SparkIcon } from "./icons";
 import { useI18n } from "./i18n-provider";
 
 const captures = [
-  { src: "/screenshots/sbc-solver.png", width: 1290, height: 756 },
+  { src: "/screenshots/sbc-solver.png", width: 1571, height: 782 },
   { src: "/screenshots/evolutions.png", width: 1456, height: 792 },
 ] as const;
 
