@@ -1,10 +1,10 @@
 ﻿"use client";
 
-import { Arrow, DownloadIcon, SparkIcon } from "./icons";
+import { DownloadIcon, SparkIcon } from "./icons";
 import { useI18n } from "./i18n-provider";
 
 export function Hero() {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
 
   return (
     <section id="top" className="hero-grid hero-v2 relative px-4 pb-24 pt-36 sm:px-6 sm:pt-44 lg:pb-36">
@@ -16,8 +16,9 @@ export function Hero() {
         </h1>
         <div className="hero-message reveal delay-2"><p>{t.hero.lead}</p><p>{t.hero.body}</p></div>
         <div className="hero-actions reveal delay-3">
-          <a href="/download" className="button-primary hero-primary magnetic"><DownloadIcon className="size-5" /><span><b>{t.hero.primary}</b><small>{t.hero.primaryMeta}</small></span><span className="button-chip">{t.hero.free}</span></a>
-          <a href="#features" className="button-secondary hero-secondary magnetic"><span><b>{t.hero.secondary}</b><small>{t.hero.secondaryMeta}</small></span><Arrow className="size-5" /></a>
+          <a href="/download#windows" className="button-primary magnetic min-w-[210px] text-left"><DownloadIcon className="size-5" /><span><b>Windows</b><small>Windows 10 &amp; 11</small></span></a>
+          <a href="/download#macos" className="button-secondary magnetic min-w-[210px] text-left"><DownloadIcon className="size-5" /><span><b>macOS</b><small>Apple Silicon &amp; Intel</small></span></a>
+          <a href="#browser" className="button-secondary magnetic min-w-[210px] text-left"><span><b>{locale === "it" ? "Usa nel browser" : "Use in Browser"}</b><small>{locale === "it" ? "Nessuna installazione" : "No installation"}</small></span></a>
         </div>
         <div className="hero-trust reveal delay-4">{t.hero.trust.map((item, index) => <span key={item}><i className={index === 0 ? "active" : ""} />{item}</span>)}</div>
         <div className="hero-proof reveal">{t.hero.proof.map(([value, label], index) => <div className="hero-proof-item" key={label}><div><strong>{value}</strong><span>{label}</span></div>{index < t.hero.proof.length - 1 && <i />}</div>)}</div>

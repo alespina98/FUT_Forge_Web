@@ -1,4 +1,5 @@
 ﻿import { AmbientEffects } from "@/components/ambient-effects";
+import { BrowserBookmarkletSection } from "@/components/browser-bookmarklet-section";
 import { DownloadSection } from "@/components/download-section";
 import { Features } from "@/components/features";
 import { Footer } from "@/components/footer";
@@ -19,6 +20,7 @@ export default async function Home() {
       <BootSequenceSection />
       <Features />
       <DownloadSection release={release} />
+      <BrowserBookmarkletSection />
       <Roadmap />
       <Footer />
     </main>

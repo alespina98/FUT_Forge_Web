@@ -34,7 +34,7 @@ export function DownloadPageContent({ releases }: { releases: ReleaseCatalog }) 
   }
 
   return <>
-    <section className="download-hero hero-grid">
+    <section id="windows" className="download-hero hero-grid">
       <div className="hero-noise" /><div className="hero-orb hero-orb-primary" />
       <div className="download-hero-inner">
         <p className="section-label">{d.eyebrow}</p><span className="release-badge"><i />{release.channel === "beta" ? d.beta : d.stable}</span>
@@ -46,7 +46,7 @@ export function DownloadPageContent({ releases }: { releases: ReleaseCatalog }) 
       </div>
     </section>
 
-    <section className="download-content section-shell" aria-labelledby="platform-heading"><div className="release-card">
+    <section id="macos" className="download-content section-shell" aria-labelledby="platform-heading"><div className="release-card">
       <div className="release-card-head"><div><p className="section-label">macOS</p><h2 id="platform-heading">{locale === "it" ? "Download per Mac" : "Downloads for Mac"}</h2></div><span className="release-source">macOS 15+</span></div>
       <p className="download-lead">{locale === "it" ? "Scegli la build nativa per il tuo Mac. Queste build non sono Universal2 e gli aggiornamenti sono manuali." : "Choose the native build for your Mac. These are not Universal2 builds and updates are manual."}</p>
       <div className="mt-6 flex flex-wrap gap-3">
@@ -54,6 +54,11 @@ export function DownloadPageContent({ releases }: { releases: ReleaseCatalog }) 
         <DownloadButton release={releases.macos.x86_64} label={releases.macos.x86_64.downloadUrl ? "Intel · x86_64" : (locale === "it" ? "Intel · presto disponibile" : "Intel · coming soon")} />
       </div>
       <p className="availability-note">{locale === "it" ? "Build attualmente non firmate né notarizzate da Apple: macOS potrebbe richiedere Control-click → Apri o Privacy e Sicurezza → Apri comunque." : "Currently not Apple Developer ID signed or notarized: macOS may require Control-click → Open or Privacy & Security → Open Anyway."}</p>
+    </div></section>
+    <section id="browser-download" className="download-content section-shell" aria-labelledby="browser-heading"><div className="release-card">
+      <div className="release-card-head"><div><p className="section-label">Browser</p><h2 id="browser-heading">FUT Forge Browser</h2></div><span className="release-source">Chrome · Edge</span></div>
+      <p className="download-lead">{locale === "it" ? "Usa FUT Forge direttamente nella EA FC Web App. Nessuna applicazione da installare." : "Use FUT Forge directly in the EA FC Web App. No app installation required."}</p>
+      <a className="button-primary download-primary" href="/#browser">{locale === "it" ? "Usa nel browser" : "Use in Browser"}</a>
     </div></section>
     <section className="download-content section-shell" aria-labelledby="release-heading"><div className="release-card">
       <div className="release-card-head"><div><p className="section-label">{d.eyebrow}</p><h2 id="release-heading">{d.releaseTitle}</h2></div><span className="release-source">{release.source === "github" ? d.stable : d.unavailable}</span></div>
