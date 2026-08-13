@@ -16,6 +16,7 @@ export function RegisterForm() {
   const searchParams = useSearchParams();
   const next = searchParams.get("next") || "/app/club";
 
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -27,6 +28,11 @@ export function RegisterForm() {
     event.preventDefault();
     setError(null);
 
+    if (username.trim().length < 3) {
+      setStatus("error");
+      setError(r.usernameTooShort);
+      return;
+    }
     if (password.length < 6) {
       setStatus("error");
       setError(r.passwordTooShort);
@@ -42,8 +48,17 @@ export function RegisterForm() {
     const supabase = createSupabaseBrowserClient();
     // Same FUT Forge account system Desktop/Browser Mode already use - this
     // creates a real account in the one shared Supabase project, not a
-    // second signup system.
-    const { data, error: signUpError } = await supabase.auth.signUp({ email: email.trim(), password });
+    // second signup system. Email stays the Supabase Auth identity/login
+    // credential; username is stored as Supabase's own user_metadata (no
+    // new table/RLS) - futforge_auth.js's publicUser() already falls back
+    // to user_metadata.username when the (separate, Desktop-only) profiles
+    // row has none, so Desktop/Browser Mode pick this up with zero core
+    // changes.
+    const { data, error: signUpError } = await supabase.auth.signUp({
+      email: email.trim(),
+      password,
+      options: { data: { username: username.trim() } },
+    });
 
     if (signUpError) {
       setStatus("error");
@@ -83,6 +98,22 @@ export function RegisterForm() {
       <p className="mt-4 text-sm leading-6 text-white/50">{r.lead}</p>
 
       <form onSubmit={handleSubmit} className="glass mt-8 flex flex-col gap-4 rounded-2xl p-6 sm:p-8">
+        <div>
+          <label className="mb-2 block text-xs font-semibold uppercase tracking-[.1em] text-white/50" htmlFor="register-username">
+            {r.usernameLabel}
+          </label>
+          <input
+            id="register-username"
+            type="text"
+            autoComplete="username"
+            required
+            minLength={3}
+            maxLength={32}
+            value={username}
+            onChange={(event) => setUsername(event.target.value)}
+            className="min-h-12 w-full rounded-xl border border-white/10 bg-white/[.03] px-4 text-sm text-white placeholder:text-white/30 focus:border-lime/40 focus:outline-none"
+          />
+        </div>
         <div>
           <label className="mb-2 block text-xs font-semibold uppercase tracking-[.1em] text-white/50" htmlFor="register-email">
             {r.emailLabel}
@@ -144,7 +175,7 @@ export function RegisterForm() {
           </div>
         )}
 
-        <button type="submit" className="button-primary" disabled={status === "submitting" || !email.trim() || !password || !confirmPassword}>
+        <button type="submit" className="button-primary" disabled={status === "submitting" || !username.trim() || !email.trim() || !password || !confirmPassword}>
           {status === "submitting" ? r.submittingButton : r.submitButton}
         </button>
       </form>

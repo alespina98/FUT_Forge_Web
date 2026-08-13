@@ -36,3 +36,15 @@ export function useAuthUser(): AuthUserState {
 
   return state;
 }
+
+// Same fallback chain as futforge_auth.js's publicUser() (name = profiles
+// row's username || user_metadata.username || user_metadata.name || email
+// local-part) minus the profiles-row lookup, which is Desktop-only - the
+// site only ever has user_metadata to go on, which is exactly the field
+// registration now writes to. Kept as one shared helper so the navbar chip
+// and the account panel can never disagree on what "no username yet" means.
+export function getDisplayName(user: User | null | undefined): string {
+  if (!user) return "";
+  const meta = (user.user_metadata || {}) as { username?: string; name?: string };
+  return meta.username || meta.name || (user.email ? user.email.split("@")[0] : "");
+}

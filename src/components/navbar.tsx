@@ -5,10 +5,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PRODUCT } from "@/lib/copy";
 import { useI18n } from "./i18n-provider";
-import { DownloadIcon, ForgeMark, UserIcon } from "./icons";
+import { DownloadIcon, ExitIcon, ForgeMark, UserIcon } from "./icons";
 import { leaksCopy } from "@/lib/leaks/copy";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
-import { useAuthUser } from "@/lib/use-auth-user";
+import { useAuthUser, getDisplayName } from "@/lib/use-auth-user";
 
 function NavAccount({ onNavigate }: { onNavigate?: () => void }) {
   const { t } = useI18n();
@@ -19,11 +19,11 @@ function NavAccount({ onNavigate }: { onNavigate?: () => void }) {
 
   if (status === "signedOut") {
     return (
-      <div className="flex items-center gap-3 text-sm">
-        <Link href="/app/login" onClick={onNavigate} className="font-semibold text-white/70 hover:text-white">
+      <div className="flex min-w-0 shrink-0 items-center gap-2 text-sm">
+        <Link href="/app/login" onClick={onNavigate} className="whitespace-nowrap font-semibold text-white/70 hover:text-white">
           {t.nav.login}
         </Link>
-        <Link href="/app/register" onClick={onNavigate} className="rounded-full bg-lime px-4 py-2 text-xs font-bold uppercase tracking-[.04em] text-ink hover:bg-lime/85">
+        <Link href="/app/register" onClick={onNavigate} className="whitespace-nowrap rounded-full bg-lime px-4 py-2 text-xs font-bold uppercase tracking-[.04em] text-ink hover:bg-lime/85">
           {t.nav.register}
         </Link>
       </div>
@@ -39,18 +39,18 @@ function NavAccount({ onNavigate }: { onNavigate?: () => void }) {
   }
 
   return (
-    <div className="flex items-center gap-3 text-sm">
+    <div className="flex min-w-0 shrink-0 items-center gap-1.5 text-sm">
       <Link
         href="/app/account"
         onClick={onNavigate}
-        className="flex max-w-[160px] items-center gap-1.5 rounded-full border border-white/10 bg-white/[.03] px-3 py-1.5 text-xs font-semibold text-white/80 hover:border-lime/30 hover:text-white"
+        className="flex min-w-0 max-w-[128px] items-center gap-1.5 rounded-full border border-white/10 bg-white/[.03] px-3 py-1.5 text-xs font-semibold text-white/80 hover:border-lime/30 hover:text-white"
         aria-label={t.nav.account}
       >
         <UserIcon className="size-3.5 shrink-0 text-lime" />
-        <span className="truncate">{user?.email}</span>
+        <span className="truncate">{getDisplayName(user)}</span>
       </Link>
-      <button type="button" onClick={handleLogout} className="text-xs font-semibold text-white/50 hover:text-white">
-        {t.auth.logoutButton}
+      <button type="button" onClick={handleLogout} className="shrink-0 rounded-full p-2 text-white/50 hover:text-white" aria-label={t.auth.logoutButton} title={t.auth.logoutButton}>
+        <ExitIcon className="size-4" />
       </button>
     </div>
   );
@@ -82,7 +82,11 @@ export function Navbar() {
               </button>
             ))}
           </div>
-          <div className="hidden md:block"><NavAccount /></div>
+          {/* Same visibility rule as .desktop-language (only past the 1024px
+              breakpoint where .nav-center's links also reappear, see
+              globals.css) - showing this earlier is what left it fighting
+              nav-center + nav-download for space in the 768-1023px band. */}
+          <div className="desktop-account"><NavAccount /></div>
           <a href="/download" className="button-primary nav-download !min-h-11 !px-3 text-sm"><DownloadIcon className="size-4" /><span className="nav-cta-full">{t.nav.cta}</span><span className="nav-cta-short">{t.nav.download}</span></a>
           <button className={`menu-button ${open ? "open" : ""}`} onClick={() => setOpen(!open)} aria-expanded={open} aria-controls="mobile-navigation" aria-label={open ? t.nav.close : t.nav.open}><span /><span /></button>
         </div>
