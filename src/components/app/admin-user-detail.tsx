@@ -6,6 +6,7 @@ import { useI18n } from "../i18n-provider";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useAuthUser } from "@/lib/use-auth-user";
 import { FEATURE_IDS, FEATURE_LABELS, type FeatureId, type OverrideState } from "@/lib/entitlements";
+import { AdminSelect } from "./admin-select";
 
 type UserDetail = {
   id: string;
@@ -129,11 +130,10 @@ export function AdminUserDetail({ userId }: { userId: string }) {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <Link href="/app/admin" className="text-xs font-semibold text-white/40 hover:text-lime">
+      <Link href="/app/admin" className="block text-xs font-semibold text-white/40 hover:text-lime">
         ← {a.backToUsers}
       </Link>
-      <p className="section-label mt-4">{a.detailTitle}</p>
-      <h1 className="mt-2 text-3xl font-semibold tracking-[-.04em]">{detail.username || detail.email}</h1>
+      <h1 className="mt-4 text-3xl font-semibold tracking-[-.04em]">{detail.username || detail.email}</h1>
 
       <div className="glass mt-6 grid grid-cols-1 gap-5 rounded-2xl p-6 sm:grid-cols-2 sm:p-8">
         <Field label={a.fieldUsername} value={detail.username || "—"} />
@@ -144,29 +144,31 @@ export function AdminUserDetail({ userId }: { userId: string }) {
 
         <div>
           <p className="text-xs font-semibold uppercase tracking-[.1em] text-white/40">{a.fieldRole}</p>
-          <select
+          <AdminSelect
             value={detail.role}
-            onChange={(event) => handleRoleSelect(event.target.value as "USER" | "ADMIN")}
+            onChange={(value) => handleRoleSelect(value as "USER" | "ADMIN")}
             disabled={roleSave === "saving"}
-            className="mt-1.5 min-h-10 rounded-lg border border-white/10 bg-white/[.03] px-3 text-sm text-white focus:border-lime/40 focus:outline-none"
-          >
-            <option value="USER">USER</option>
-            <option value="ADMIN">ADMIN</option>
-          </select>
+            options={[
+              { value: "USER", label: "USER" },
+              { value: "ADMIN", label: "ADMIN" },
+            ]}
+            className="mt-1.5"
+          />
           {roleSave === "error" && roleError && <p className="mt-1 text-xs text-red-300">{roleError}</p>}
         </div>
 
         <div>
           <p className="text-xs font-semibold uppercase tracking-[.1em] text-white/40">{a.fieldTier}</p>
-          <select
+          <AdminSelect
             value={detail.tier}
-            onChange={(event) => handleTierSelect(event.target.value as "FREE" | "PREMIUM")}
+            onChange={(value) => handleTierSelect(value as "FREE" | "PREMIUM")}
             disabled={tierSave === "saving"}
-            className="mt-1.5 min-h-10 rounded-lg border border-white/10 bg-white/[.03] px-3 text-sm text-white focus:border-lime/40 focus:outline-none"
-          >
-            <option value="FREE">FREE</option>
-            <option value="PREMIUM">PREMIUM</option>
-          </select>
+            options={[
+              { value: "FREE", label: "FREE" },
+              { value: "PREMIUM", label: "PREMIUM" },
+            ]}
+            className="mt-1.5"
+          />
         </div>
       </div>
 
@@ -201,16 +203,18 @@ export function AdminUserDetail({ userId }: { userId: string }) {
             return (
               <div key={feature} className="flex items-center justify-between gap-4 py-3">
                 <span className="text-sm text-white/80">{FEATURE_LABELS[feature]}</span>
-                <select
+                <AdminSelect
                   value={current}
-                  onChange={(event) => handleFeatureState(feature, event.target.value as OverrideState)}
+                  onChange={(value) => handleFeatureState(feature, value as OverrideState)}
                   disabled={featureSave[feature] === "saving"}
-                  className="min-h-9 rounded-lg border border-white/10 bg-white/[.03] px-3 text-xs text-white focus:border-lime/40 focus:outline-none"
-                >
-                  <option value="DEFAULT">{a.entitlementDefault}</option>
-                  <option value="ENABLED">{a.entitlementEnabled}</option>
-                  <option value="DISABLED">{a.entitlementDisabled}</option>
-                </select>
+                  size="sm"
+                  className="w-36"
+                  options={[
+                    { value: "DEFAULT", label: a.entitlementDefault },
+                    { value: "ENABLED", label: a.entitlementEnabled },
+                    { value: "DISABLED", label: a.entitlementDisabled },
+                  ]}
+                />
               </div>
             );
           })}

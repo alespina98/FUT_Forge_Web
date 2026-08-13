@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useI18n } from "../i18n-provider";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useAuthUser } from "@/lib/use-auth-user";
+import { AdminSelect } from "./admin-select";
 
 type AdminUserRow = {
   id: string;
@@ -92,24 +93,26 @@ export function AdminUsersList() {
           onChange={(event) => setSearch(event.target.value)}
           className="min-h-11 min-w-0 flex-1 rounded-xl border border-white/10 bg-white/[.03] px-4 text-sm text-white placeholder:text-white/30 focus:border-lime/40 focus:outline-none"
         />
-        <select
+        <AdminSelect
           value={roleFilter}
-          onChange={(event) => setRoleFilter(event.target.value as typeof roleFilter)}
-          className="min-h-11 rounded-xl border border-white/10 bg-white/[.03] px-3 text-sm text-white focus:border-lime/40 focus:outline-none"
-        >
-          <option value="">{a.roleFilterAll}</option>
-          <option value="USER">USER</option>
-          <option value="ADMIN">ADMIN</option>
-        </select>
-        <select
+          onChange={(value) => setRoleFilter(value as typeof roleFilter)}
+          options={[
+            { value: "", label: a.roleFilterAll },
+            { value: "USER", label: "USER" },
+            { value: "ADMIN", label: "ADMIN" },
+          ]}
+          className="min-w-[150px]"
+        />
+        <AdminSelect
           value={tierFilter}
-          onChange={(event) => setTierFilter(event.target.value as typeof tierFilter)}
-          className="min-h-11 rounded-xl border border-white/10 bg-white/[.03] px-3 text-sm text-white focus:border-lime/40 focus:outline-none"
-        >
-          <option value="">{a.tierFilterAll}</option>
-          <option value="FREE">FREE</option>
-          <option value="PREMIUM">PREMIUM</option>
-        </select>
+          onChange={(value) => setTierFilter(value as typeof tierFilter)}
+          options={[
+            { value: "", label: a.tierFilterAll },
+            { value: "FREE", label: "FREE" },
+            { value: "PREMIUM", label: "PREMIUM" },
+          ]}
+          className="min-w-[150px]"
+        />
       </div>
 
       <div className="glass mt-6 overflow-x-auto rounded-2xl border border-white/10">
