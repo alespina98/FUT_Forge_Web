@@ -37,6 +37,42 @@ export function useAuthUser(): AuthUserState {
   return state;
 }
 
+export type OwnProfile = { role: "USER" | "ADMIN"; tier: "FREE" | "PREMIUM" } | null;
+
+// The signed-in user's own role/tier, straight from `profiles` (RLS: a user
+// may always read their own row). Used for account-panel display and to
+// decide whether to *show* the discreet "Admin" link - a UI convenience,
+// never the security boundary: every admin_* RPC re-checks is_admin()
+// against the caller's real session before doing anything, so a forged/
+// stale client value here can't grant access - worst case a non-admin
+// briefly sees a link that then fails via the RPC.
+export function useOwnProfile(userId: string | null | undefined): OwnProfile {
+  const [profile, setProfile] = useState<OwnProfile>(null);
+
+  useEffect(() => {
+    if (!userId) {
+      setProfile(null);
+      return;
+    }
+    let cancelled = false;
+    const supabase = createSupabaseBrowserClient();
+    supabase
+      .from("profiles")
+      .select("role, tier")
+      .eq("id", userId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (cancelled) return;
+        setProfile({ role: data?.role === "ADMIN" ? "ADMIN" : "USER", tier: data?.tier === "PREMIUM" ? "PREMIUM" : "FREE" });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
+
+  return profile;
+}
+
 // Same fallback chain as futforge_auth.js's publicUser() (name = profiles
 // row's username || user_metadata.username || user_metadata.name || email
 // local-part) minus the profiles-row lookup, which is Desktop-only - the

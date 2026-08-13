@@ -5,8 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useI18n } from "../i18n-provider";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
-import { getUserTier } from "@/lib/entitlements";
-import { useAuthUser, getDisplayName } from "@/lib/use-auth-user";
+import { useAuthUser, useOwnProfile, getDisplayName } from "@/lib/use-auth-user";
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
 
@@ -57,6 +56,7 @@ export function AccountPanel() {
   const { t } = useI18n();
   const router = useRouter();
   const { status, user } = useAuthUser();
+  const profile = useOwnProfile(status === "signedIn" ? user?.id : null);
 
   async function handleLogout() {
     const supabase = createSupabaseBrowserClient();
@@ -82,7 +82,6 @@ export function AccountPanel() {
     );
   }
 
-  const tier = getUserTier(user);
   const hasUsername = !!(user?.user_metadata as { username?: string } | undefined)?.username;
 
   return (
@@ -108,7 +107,7 @@ export function AccountPanel() {
         </div>
         <div>
           <p className="text-xs font-semibold uppercase tracking-[.1em] text-white/40">{t.account.tierLabel}</p>
-          <p className="mt-1 text-sm text-white">{tier === "premium" ? "Premium" : t.account.tierFree}</p>
+          <p className="mt-1 text-sm text-white">{profile?.tier === "PREMIUM" ? "Premium" : t.account.tierFree}</p>
         </div>
         <div>
           <p className="text-xs font-semibold uppercase tracking-[.1em] text-white/40">{t.account.browserModeLabel}</p>
@@ -116,9 +115,16 @@ export function AccountPanel() {
         </div>
         <p className="text-xs leading-5 text-white/30">{t.account.tierNote}</p>
 
-        <button type="button" onClick={handleLogout} className="button-secondary mt-2 self-start">
-          {t.auth.logoutButton}
-        </button>
+        <div className="mt-2 flex flex-wrap items-center gap-4">
+          <button type="button" onClick={handleLogout} className="button-secondary self-start">
+            {t.auth.logoutButton}
+          </button>
+          {profile?.role === "ADMIN" && (
+            <Link href="/app/admin" className="text-xs font-semibold text-white/40 hover:text-lime">
+              {t.account.adminLink}
+            </Link>
+          )}
+        </div>
       </div>
     </div>
   );

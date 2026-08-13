@@ -69,12 +69,12 @@ export function Navbar() {
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-6 sm:pt-4">
-      <nav className="glass nav-shell mx-auto flex max-w-7xl items-center justify-between rounded-2xl px-4 py-3 sm:px-5" aria-label={t.nav.aria}>
-        <Link href="/" className="brand-lockup" aria-label={t.nav.home}><ForgeMark /><span>{PRODUCT.wordmark[0]}<span>{PRODUCT.wordmark[1]}</span></span><i>{t.nav.desktop}</i></Link>
-        <div className="nav-center hidden items-center gap-1 text-sm text-white/60 md:flex">
+      <nav className="glass nav-shell mx-auto grid max-w-7xl grid-cols-[auto_minmax(0,1fr)_auto] items-center rounded-2xl px-4 py-3 sm:px-5" aria-label={t.nav.aria}>
+        <Link href="/" className="brand-lockup min-w-0 shrink-0" aria-label={t.nav.home}><ForgeMark /><span>{PRODUCT.wordmark[0]}<span>{PRODUCT.wordmark[1]}</span></span><i>{t.nav.desktop}</i></Link>
+        <div className="nav-center hidden min-w-0 items-center justify-center gap-1 text-sm text-white/60 md:flex">
           {links.map(([label, href]) => <a key={href} href={href}>{label}</a>)}
         </div>
-        <div className="nav-actions">
+        <div className="nav-actions min-w-0 justify-self-end">
           <div className="language-switcher desktop-language" role="group" aria-label={t.nav.language}>
             {(["en", "it"] as const).map((item) => (
               <button key={item} type="button" className={locale === item ? "active" : ""} onClick={() => setLocale(item)} aria-pressed={locale === item}>

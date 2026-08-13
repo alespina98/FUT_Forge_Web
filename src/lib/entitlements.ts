@@ -1,17 +1,26 @@
-// Unified FUT Forge tier/entitlements resolver.
+// Unified FUT Forge role/tier/entitlements resolver.
 //
-// USER -> TIER -> ENTITLEMENTS -> FEATURE ACCESS
+// USER-facing account:  ROLE (USER | ADMIN)  -> administrative privilege only.
+//                        TIER (FREE | PREMIUM) -> product plan.
+//                        These are deliberately independent. An ADMIN is not a tier - an admin
+//                        account still has its own FREE/PREMIUM tier value, and gets full access
+//                        to features through that tier (both currently unlock everything) plus
+//                        separate admin-only capabilities (the /app/admin panel and its RPCs),
+//                        never through a fabricated "admin tier".
 //
-// This is intentionally the ONLY place that decides what a tier can access.
-// Nothing else in the app should hardcode "if (tier === 'premium')" - call
-// canUseFeature()/getEntitlements() instead, so a future real Premium tier
-// only needs to change the FEATURE_TIERS table below, not call sites.
+// FEATURE ACCESS resolution order (see resolveFeatureAccess): individual override (if any) wins,
+// otherwise the tier default, otherwise deny.
 //
-// Today: FUT Forge is entirely free. FREE and PREMIUM both resolve to every
-// feature - there is no paywall, no Stripe, no pricing. This module only
-// exists so the *shape* of tiered access already exists before Premium is
-// real, instead of retrofitting it later across dozens of call sites.
-export type Tier = "free" | "premium";
+// This is intentionally the ONLY place that encodes what a tier can access. Nothing else in the
+// app should hardcode "if (tier === 'PREMIUM')" - call canUseFeature()/getEntitlements() instead,
+// so a future real Premium tier only needs to change FEATURE_TIERS below, not call sites.
+//
+// Today: FUT Forge is entirely free. FREE and PREMIUM both resolve to every feature - there is no
+// paywall, no Stripe, no pricing. This module (plus the admin panel it backs) only exists so the
+// *shape* of tiered, per-feature access already exists before Premium is real, instead of
+// retrofitting it later across dozens of call sites.
+export type Role = "USER" | "ADMIN";
+export type Tier = "FREE" | "PREMIUM";
 
 export type FeatureId =
   | "sbc.quick_complete"
@@ -32,46 +41,71 @@ export const FEATURE_IDS: readonly FeatureId[] = [
   "browser.mode",
 ];
 
-// Every feature is available on every tier today. When a real Premium tier
-// ships, individual entries move from "both" to "premium" here - no other
-// file needs to change.
-const FEATURE_TIERS: Record<FeatureId, readonly Tier[]> = {
-  "sbc.quick_complete": ["free", "premium"],
-  "sbc.auto_complete": ["free", "premium"],
-  "sbc.multi_completion": ["free", "premium"],
-  "sbc.pricing": ["free", "premium"],
-  "evo.builder": ["free", "premium"],
-  "club.sync": ["free", "premium"],
-  "browser.mode": ["free", "premium"],
+export const FEATURE_LABELS: Record<FeatureId, string> = {
+  "sbc.quick_complete": "Quick Complete",
+  "sbc.auto_complete": "Auto Complete",
+  "sbc.multi_completion": "Multi Completion",
+  "sbc.pricing": "SBC Pricing",
+  "evo.builder": "EVO Builder",
+  "club.sync": "Club Sync",
+  "browser.mode": "Browser Mode",
 };
 
-// Minimal shape this module needs from a user - both the Supabase
-// `@supabase/ssr` User (site) and the plain hydrated-profile object already
-// produced by futforge_auth.js's hydratedUser() satisfy this without
-// adaptation.
-export type EntitlementUser = { id?: string | null; plan?: string | null; subscriptionTier?: string | null } | null | undefined;
+// Every feature is available on every tier today. When a real Premium tier
+// ships, individual entries move from "both" to "PREMIUM" here - no other
+// file needs to change.
+const FEATURE_TIERS: Record<FeatureId, readonly Tier[]> = {
+  "sbc.quick_complete": ["FREE", "PREMIUM"],
+  "sbc.auto_complete": ["FREE", "PREMIUM"],
+  "sbc.multi_completion": ["FREE", "PREMIUM"],
+  "sbc.pricing": ["FREE", "PREMIUM"],
+  "evo.builder": ["FREE", "PREMIUM"],
+  "club.sync": ["FREE", "PREMIUM"],
+  "browser.mode": ["FREE", "PREMIUM"],
+};
 
-export function getUserTier(user: EntitlementUser): Tier {
-  if (!user || !user.id) return "free";
-  const raw = String(user.subscriptionTier || user.plan || "FREE").toUpperCase();
-  return raw === "PREMIUM" || raw === "ADMIN" ? "premium" : "free";
+export type EntitlementAccount = { id?: string | null; role?: string | null; tier?: string | null } | null | undefined;
+
+export function getUserTier(account: EntitlementAccount): Tier {
+  if (!account || !account.id) return "FREE";
+  return String(account.tier || "FREE").toUpperCase() === "PREMIUM" ? "PREMIUM" : "FREE";
 }
 
-export function canUseFeature(user: EntitlementUser, feature: FeatureId): boolean {
-  return FEATURE_TIERS[feature].includes(getUserTier(user));
+export function getUserRole(account: EntitlementAccount): Role {
+  if (!account || !account.id) return "USER";
+  return String(account.role || "USER").toUpperCase() === "ADMIN" ? "ADMIN" : "USER";
 }
 
-export function getEntitlements(user: EntitlementUser): Record<FeatureId, boolean> {
-  const tier = getUserTier(user);
-  return Object.fromEntries(FEATURE_IDS.map((feature) => [feature, FEATURE_TIERS[feature].includes(tier)])) as Record<FeatureId, boolean>;
+export function isAdmin(account: EntitlementAccount): boolean {
+  return getUserRole(account) === "ADMIN";
 }
 
-// Whether the user can use the product at all right now - the actual
+export type OverrideState = "ENABLED" | "DISABLED" | "DEFAULT";
+
+// Resolution order: individual override wins, then the tier default, then deny for an unknown
+// feature id. Used both by the (currently unused, since nothing is gated yet) canUseFeature() and
+// directly by the admin user-detail panel to display DEFAULT/ENABLED/DISABLED per feature.
+export function resolveFeatureAccess(tier: Tier, overrides: Partial<Record<FeatureId, boolean>>, feature: FeatureId): boolean {
+  const override = overrides[feature];
+  if (override !== undefined) return override;
+  return FEATURE_TIERS[feature]?.includes(tier) ?? false;
+}
+
+export function canUseFeature(account: EntitlementAccount, feature: FeatureId, overrides: Partial<Record<FeatureId, boolean>> = {}): boolean {
+  return resolveFeatureAccess(getUserTier(account), overrides, feature);
+}
+
+export function getEntitlements(account: EntitlementAccount, overrides: Partial<Record<FeatureId, boolean>> = {}): Record<FeatureId, boolean> {
+  const tier = getUserTier(account);
+  return Object.fromEntries(FEATURE_IDS.map((feature) => [feature, resolveFeatureAccess(tier, overrides, feature)])) as Record<FeatureId, boolean>;
+}
+
+// Whether the account can use the product at all right now - the actual
 // product gate for this milestone (Browser Mode + the site's Browser
 // section). Distinct from per-feature entitlements: today it's just
 // "is there a real session", but keeping it as its own function means the
 // call sites (auth gate, locked-state UI) don't need to change when a real
 // paywall is introduced later.
-export function hasProductAccess(user: EntitlementUser): boolean {
-  return !!(user && user.id);
+export function hasProductAccess(account: EntitlementAccount): boolean {
+  return !!(account && account.id);
 }
