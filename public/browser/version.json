@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
   "channels": {
-    "stable": "2.10.3-browser.2"
+    "stable": "2.10.3-browser.3"
   },
   "releases": {
-    "2.10.3-browser.2": {
-      "js": "releases/2.10.3-browser.2/futforge.js",
-      "css": "releases/2.10.3-browser.2/futforge.css",
-      "jsIntegrity": "sha384-D/Tp9Ryssa63IXlZCpq3P3OCxAkB6aHpkPx40TVda9HCliAcx3UmQneYEhVf90lo",
+    "2.10.3-browser.3": {
+      "js": "releases/2.10.3-browser.3/futforge.js",
+      "css": "releases/2.10.3-browser.3/futforge.css",
+      "jsIntegrity": "sha384-zUlTsSrNVVkqKPIxhNVopTfhrOeZP1QkT4RoqpVI9b+AhpOy6UqOQAN4xjU/bCH/",
       "cssIntegrity": "sha384-5vwXedOB71hSloWbq1+/UD+0eVeQx+SZF3v4dpBZhFTKcpYfD6T8VJx+4K8CuKjY"
     }
   }
