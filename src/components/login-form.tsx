@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useI18n } from "./i18n-provider";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
@@ -16,6 +17,7 @@ export function LoginForm() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string | null>(null);
 
@@ -63,15 +65,25 @@ export function LoginForm() {
           <label className="mb-2 block text-xs font-semibold uppercase tracking-[.1em] text-white/50" htmlFor="login-password">
             {a.passwordLabel}
           </label>
-          <input
-            id="login-password"
-            type="password"
-            autoComplete="current-password"
-            required
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            className="min-h-12 w-full rounded-xl border border-white/10 bg-white/[.03] px-4 text-sm text-white placeholder:text-white/30 focus:border-lime/40 focus:outline-none"
-          />
+          <div className="relative">
+            <input
+              id="login-password"
+              type={showPassword ? "text" : "password"}
+              autoComplete="current-password"
+              required
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              className="min-h-12 w-full rounded-xl border border-white/10 bg-white/[.03] px-4 pr-16 text-sm text-white placeholder:text-white/30 focus:border-lime/40 focus:outline-none"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((value) => !value)}
+              className="absolute inset-y-0 right-0 px-4 text-xs font-semibold text-white/40 hover:text-white/70"
+              aria-label={showPassword ? a.hidePassword : a.showPassword}
+            >
+              {showPassword ? a.hidePassword : a.showPassword}
+            </button>
+          </div>
         </div>
 
         {status === "error" && error && (
@@ -86,7 +98,12 @@ export function LoginForm() {
         </button>
       </form>
 
-      <p className="mt-6 text-xs leading-5 text-white/30">{a.noAccount}</p>
+      <p className="mt-6 text-xs leading-5 text-white/30">
+        {a.noAccount}{" "}
+        <Link href={`/app/register${next !== "/app/club" ? `?next=${encodeURIComponent(next)}` : ""}`} className="font-semibold text-lime hover:text-lime/80">
+          {a.noAccountLinkLabel}
+        </Link>
+      </p>
     </div>
   );
 }

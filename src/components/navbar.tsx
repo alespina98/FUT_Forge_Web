@@ -2,10 +2,59 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { PRODUCT } from "@/lib/copy";
 import { useI18n } from "./i18n-provider";
-import { DownloadIcon, ForgeMark } from "./icons";
+import { DownloadIcon, ForgeMark, UserIcon } from "./icons";
 import { leaksCopy } from "@/lib/leaks/copy";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { useAuthUser } from "@/lib/use-auth-user";
+
+function NavAccount({ onNavigate }: { onNavigate?: () => void }) {
+  const { t } = useI18n();
+  const router = useRouter();
+  const { status, user } = useAuthUser();
+
+  if (status === "loading") return null;
+
+  if (status === "signedOut") {
+    return (
+      <div className="flex items-center gap-3 text-sm">
+        <Link href="/app/login" onClick={onNavigate} className="font-semibold text-white/70 hover:text-white">
+          {t.nav.login}
+        </Link>
+        <Link href="/app/register" onClick={onNavigate} className="rounded-full bg-lime px-4 py-2 text-xs font-bold uppercase tracking-[.04em] text-ink hover:bg-lime/85">
+          {t.nav.register}
+        </Link>
+      </div>
+    );
+  }
+
+  async function handleLogout() {
+    const supabase = createSupabaseBrowserClient();
+    await supabase.auth.signOut();
+    onNavigate?.();
+    router.refresh();
+    router.push("/");
+  }
+
+  return (
+    <div className="flex items-center gap-3 text-sm">
+      <Link
+        href="/app/account"
+        onClick={onNavigate}
+        className="flex max-w-[160px] items-center gap-1.5 rounded-full border border-white/10 bg-white/[.03] px-3 py-1.5 text-xs font-semibold text-white/80 hover:border-lime/30 hover:text-white"
+        aria-label={t.nav.account}
+      >
+        <UserIcon className="size-3.5 shrink-0 text-lime" />
+        <span className="truncate">{user?.email}</span>
+      </Link>
+      <button type="button" onClick={handleLogout} className="text-xs font-semibold text-white/50 hover:text-white">
+        {t.auth.logoutButton}
+      </button>
+    </div>
+  );
+}
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
@@ -33,10 +82,11 @@ export function Navbar() {
               </button>
             ))}
           </div>
+          <div className="hidden md:block"><NavAccount /></div>
           <a href="/download" className="button-primary nav-download !min-h-11 !px-3 text-sm"><DownloadIcon className="size-4" /><span className="nav-cta-full">{t.nav.cta}</span><span className="nav-cta-short">{t.nav.download}</span></a>
           <button className={`menu-button ${open ? "open" : ""}`} onClick={() => setOpen(!open)} aria-expanded={open} aria-controls="mobile-navigation" aria-label={open ? t.nav.close : t.nav.open}><span /><span /></button>
         </div>
-        {open && <div id="mobile-navigation" className="glass mobile-menu absolute left-3 right-3 top-[64px] flex flex-col rounded-2xl p-2 lg:hidden">{links.map(([label, href], index) => <a key={href} href={href} onClick={() => setOpen(false)}>{label}<span>0{index + 1}</span></a>)}<div className="mobile-language" role="group" aria-label={t.nav.language}><span>{t.nav.language}</span>{(["en", "it"] as const).map((item) => <button key={item} type="button" className={locale === item ? "active" : ""} onClick={() => { setLocale(item); setOpen(false); }} aria-pressed={locale === item}>{item.toUpperCase()} · {item === "en" ? "English" : "Italiano"}</button>)}</div></div>}
+        {open && <div id="mobile-navigation" className="glass mobile-menu absolute left-3 right-3 top-[64px] flex flex-col rounded-2xl p-2 lg:hidden">{links.map(([label, href], index) => <a key={href} href={href} onClick={() => setOpen(false)}>{label}<span>0{index + 1}</span></a>)}<div className="mt-1 border-t border-white/10 px-3 py-3"><NavAccount onNavigate={() => setOpen(false)} /></div><div className="mobile-language" role="group" aria-label={t.nav.language}><span>{t.nav.language}</span>{(["en", "it"] as const).map((item) => <button key={item} type="button" className={locale === item ? "active" : ""} onClick={() => { setLocale(item); setOpen(false); }} aria-pressed={locale === item}>{item.toUpperCase()} · {item === "en" ? "English" : "Italiano"}</button>)}</div></div>}
       </nav>
     </header>
   );
