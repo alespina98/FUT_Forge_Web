@@ -6,7 +6,6 @@ export const PRODUCT = {
   desktopName: "FUT Forge Desktop",
   version: "2.10.0",
   displayVersion: "2.10",
-  email: "hello@futforge.app",
   wordmark: ["FUT", "FORGE"],
 } as const;
 

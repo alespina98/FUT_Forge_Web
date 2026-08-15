@@ -8,7 +8,8 @@ const TITLE = "Privacy Policy";
 const DESCRIPTION =
   "How FUT Forge handles data across the website, Desktop app, Browser Extension, and Bookmarklet.";
 const EFFECTIVE_DATE = "August 15, 2026";
-const CONTACT_EMAIL = "hello@futforge.app";
+const INSTAGRAM_HANDLE = "@futforgeofficial";
+const INSTAGRAM_URL = "https://www.instagram.com/futforgeofficial/";
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -228,9 +229,14 @@ export default function PrivacyPolicyPage() {
           <Section id="rights" title="9. Your rights and choices">
             <p>
               You can request access to, correction of, or deletion of your FUT Forge account and any
-              associated data at any time by contacting us at{" "}
-              <a href={`mailto:${CONTACT_EMAIL}`} className="text-lime hover:text-lime/80">
-                {CONTACT_EMAIL}
+              associated data at any time by contacting us through our official Instagram account,{" "}
+              <a
+                href={INSTAGRAM_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-lime hover:text-lime/80"
+              >
+                {INSTAGRAM_HANDLE}
               </a>
               . You can also sign out to clear locally stored session tokens, or use your browser&apos;s
               site-data controls to clear anything else FUT Forge has stored locally.
@@ -275,9 +281,15 @@ export default function PrivacyPolicyPage() {
 
           <Section id="contact" title="13. Contact">
             <p>
-              Questions about this policy or your data can be sent to{" "}
-              <a href={`mailto:${CONTACT_EMAIL}`} className="text-lime hover:text-lime/80">
-                {CONTACT_EMAIL}
+              Questions about this Privacy Policy or your data can be sent to us through our official
+              Instagram account:{" "}
+              <a
+                href={INSTAGRAM_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-lime hover:text-lime/80"
+              >
+                {INSTAGRAM_HANDLE}
               </a>
               .
             </p>
