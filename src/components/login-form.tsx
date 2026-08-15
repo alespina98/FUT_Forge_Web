@@ -62,9 +62,17 @@ export function LoginForm() {
           />
         </div>
         <div>
-          <label className="mb-2 block text-xs font-semibold uppercase tracking-[.1em] text-white/50" htmlFor="login-password">
-            {a.passwordLabel}
-          </label>
+          <div className="mb-2 flex items-center justify-between gap-4">
+            <label className="block text-xs font-semibold uppercase tracking-[.1em] text-white/50" htmlFor="login-password">
+              {a.passwordLabel}
+            </label>
+            <Link
+              href={`/app/forgot-password${next !== "/app/club" ? `?next=${encodeURIComponent(next)}` : ""}`}
+              className="text-xs font-semibold text-white/40 hover:text-lime"
+            >
+              {a.forgotPasswordLink}
+            </Link>
+          </div>
           <div className="relative">
             <input
               id="login-password"
