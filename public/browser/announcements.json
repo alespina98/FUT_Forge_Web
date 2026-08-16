@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "announcements": [
+    {
+      "id": "release-2.10.8",
+      "enabled": true,
+      "type": "update",
+      "priority": 100,
+      "title": {
+        "en": "FUT Forge has been updated 🚀",
+        "it": "FUT Forge è stato aggiornato 🚀"
+      },
+      "message": {
+        "en": "Auto Complete SBC has received an important update.",
+        "it": "Auto Complete SBC ha ricevuto un importante aggiornamento."
+      },
+      "highlights": {
+        "en": [
+          "Smarter SBC filters",
+          "Correct Bronze and Silver requirement support",
+          "Partial completion for SBC Sets",
+          "Correct Repeat Count for SBCs with multiple challenges",
+          "Improved card selection and price handling"
+        ],
+        "it": [
+          "Filtri SBC più intelligenti",
+          "Supporto corretto ai requisiti Bronze e Silver",
+          "Completamento parziale dei Set SBC",
+          "Repeat Count corretto per SBC con più sfide",
+          "Migliore selezione delle carte e gestione dei prezzi"
+        ]
+      },
+      "cta": null,
+      "dismissible": true,
+      "showOnce": true,
+      "platforms": [
+        "bookmarklet",
+        "extension"
+      ],
+      "versions": {
+        "bookmarklet": {
+          "min": "2.10.5-browser.4",
+          "max": "2.10.5-browser.4"
+        },
+        "extension": {
+          "min": "2.10.5.3",
+          "max": "2.10.5.3"
+        }
+      },
+      "metadata": {
+        "en": "Latest FUT Forge update",
+        "it": "Ultimo aggiornamento FUT Forge"
+      },
+      "startsAt": null,
+      "endsAt": null
+    }
+  ]
+}
