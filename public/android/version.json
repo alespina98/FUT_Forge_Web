@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "latestVersion": "1.0.0",
+  "latestVersionCode": 1,
+  "minimumVersionCode": 1,
+  "apkUrl": "https://github.com/alespina98/FUT_Forge_Releases/releases/download/android-v1.0.0/FUT-Forge-Android-1.0.0.apk",
+  "sha256": "0460245bcffcdd9273be687425fb9d5d7380b92b37814bdfd3520cc06be3b57c",
+  "size": 484390,
+  "releaseNotes": {
+    "it": [
+      "Prima release production Android di FUT Forge.",
+      "Updater sicuro integrato con verifica SHA-256."
+    ],
+    "en": [
+      "First FUT Forge Android production release.",
+      "Secure built-in updater with SHA-256 verification."
+    ]
+  },
+  "publishedAt": "2026-08-17T00:00:00Z"
+}
