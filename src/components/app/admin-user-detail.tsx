@@ -30,6 +30,9 @@ export function AdminUserDetail({ userId }: { userId: string }) {
   const [overrides, setOverrides] = useState<Partial<Record<FeatureId, boolean>>>({});
   const [roleSave, setRoleSave] = useState<SaveState>("idle");
   const [tierSave, setTierSave] = useState<SaveState>("idle");
+  const [usernameSave, setUsernameSave] = useState<SaveState>("idle");
+  const [usernameDraft, setUsernameDraft] = useState("");
+  const [usernameError, setUsernameError] = useState<string | null>(null);
   const [roleError, setRoleError] = useState<string | null>(null);
   const [pendingRole, setPendingRole] = useState<"USER" | "ADMIN" | null>(null);
   const [featureSave, setFeatureSave] = useState<Partial<Record<FeatureId, SaveState>>>({});
@@ -41,7 +44,9 @@ export function AdminUserDetail({ userId }: { userId: string }) {
       setStatus("denied");
       return;
     }
-    setDetail(detailRows[0] as UserDetail);
+    const nextDetail = detailRows[0] as UserDetail;
+    setDetail(nextDetail);
+    setUsernameDraft(nextDetail.username || "");
 
     const { data: overrideRows } = await supabase.from("entitlement_overrides").select("feature_id, enabled").eq("user_id", userId);
     const map: Partial<Record<FeatureId, boolean>> = {};
@@ -98,6 +103,28 @@ export function AdminUserDetail({ userId }: { userId: string }) {
     setTierSave("saved");
   }
 
+  async function handleUsernameSave() {
+    if (!detail) return;
+    const username = usernameDraft.trim();
+    setUsernameError(null);
+    if (username.length < 3 || username.length > 32) {
+      setUsernameSave("error");
+      setUsernameError(a.usernameLengthError);
+      return;
+    }
+    setUsernameSave("saving");
+    const supabase = createSupabaseBrowserClient();
+    const { error } = await supabase.rpc("admin_set_user_username", { p_target_id: detail.id, p_new_username: username });
+    if (error) {
+      setUsernameSave("error");
+      setUsernameError(error.code === "23505" ? a.usernameDuplicateError : a.changeError);
+      return;
+    }
+    setDetail({ ...detail, username });
+    setUsernameDraft(username);
+    setUsernameSave("saved");
+  }
+
   async function handleFeatureState(feature: FeatureId, state: OverrideState) {
     if (!detail) return;
     setFeatureSave((prev) => ({ ...prev, [feature]: "saving" }));
@@ -136,7 +163,15 @@ export function AdminUserDetail({ userId }: { userId: string }) {
       <h1 className="mt-4 text-3xl font-semibold tracking-[-.04em]">{detail.username || detail.email}</h1>
 
       <div className="glass mt-6 grid grid-cols-1 gap-5 rounded-2xl p-6 sm:grid-cols-2 sm:p-8">
-        <Field label={a.fieldUsername} value={detail.username || "—"} />
+        <div>
+          <label htmlFor="admin-username" className="text-xs font-semibold uppercase tracking-[.1em] text-white/40">{a.fieldUsername}</label>
+          <div className="mt-1.5 flex gap-2">
+            <input id="admin-username" type="text" minLength={3} maxLength={32} value={usernameDraft} onChange={(event) => { setUsernameDraft(event.target.value); setUsernameSave("idle"); }} placeholder={a.usernameMissingPlaceholder} className="min-h-10 min-w-0 flex-1 rounded-xl border border-white/10 bg-white/[.03] px-3 text-sm text-white focus:border-lime/40 focus:outline-none" />
+            <button type="button" onClick={handleUsernameSave} disabled={usernameSave === "saving" || usernameDraft.trim() === (detail.username || "")} className="button-secondary !min-h-10 !px-4 text-xs">{usernameSave === "saving" ? a.savingChange : a.saveUsername}</button>
+          </div>
+          {usernameSave === "saved" && <p className="mt-1 text-xs text-lime">{a.changeSaved}</p>}
+          {usernameSave === "error" && usernameError && <p className="mt-1 text-xs text-red-300">{usernameError}</p>}
+        </div>
         <Field label={a.fieldEmail} value={detail.email} />
         <Field label={a.fieldUserId} value={detail.id} mono />
         <Field label={a.fieldStatus} value={a.statusActive} dot />
