@@ -1,20 +1,20 @@
 {
   "schema": 1,
-  "latestVersion": "1.0.2",
-  "latestVersionCode": 3,
+  "latestVersion": "1.0.6",
+  "latestVersionCode": 7,
   "minimumVersionCode": 1,
-  "apkUrl": "https://github.com/alespina98/FUT_Forge_Releases/releases/download/android-v1.0.2/FUT-Forge-Android-1.0.2.apk",
-  "sha256": "7d4f33cf310f7f72125194889317c1d8dd50a0862d4783bd7c856410c3a411f0",
-  "size": 2565930,
+  "apkUrl": "https://github.com/alespina98/FUT_Forge_Releases/releases/download/android-v1.0.6/FUT-Forge-Android-1.0.6.apk",
+  "sha256": "2194221f11e3a1b1c09fde9a53c141d8a4b2a1252d67f3d1efedece9b2ecf9fb",
+  "size": 2691034,
   "releaseNotes": {
     "it": [
-      "FUT Forge per Android.",
-      "Updater sicuro integrato con verifica SHA-256."
+      "Corretti layout e scorrimento di Evo Builder su dispositivi mobili.",
+      "Nuova icona ufficiale FUT Forge per Android."
     ],
     "en": [
-      "FUT Forge for Android.",
-      "Secure built-in updater with SHA-256 verification."
+      "Fixed EVO Builder layout and scrolling on mobile devices.",
+      "New official FUT Forge Android launcher icon."
     ]
   },
-  "publishedAt": "2026-08-19T11:30:37Z"
+  "publishedAt": "2026-08-19T13:19:15Z"
 }
