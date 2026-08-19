@@ -1,20 +1,20 @@
 {
   "schema": 1,
-  "latestVersion": "1.0.7",
-  "latestVersionCode": 8,
+  "latestVersion": "1.0.8",
+  "latestVersionCode": 9,
   "minimumVersionCode": 1,
-  "apkUrl": "https://github.com/alespina98/FUT_Forge_Releases/releases/download/android-v1.0.7/FUT-Forge-Android-1.0.7.apk",
-  "sha256": "6fa37136ab455199cc007edfcecdb7db6679e65d046dd6bf223f2211b88fe2d2",
-  "size": 2691058,
+  "apkUrl": "https://github.com/alespina98/FUT_Forge_Releases/releases/download/android-v1.0.8/FUT-Forge-Android-1.0.8.apk",
+  "sha256": "a149ce2d1939c16e14a26d9e9d85ea4b38eb8019bf45b0e9c5d56567fb768a4c",
+  "size": 2692026,
   "releaseNotes": {
     "it": [
-      "Icone dashboard quadrate e card più compatte, in linea con Desktop ed Extension.",
-      "Confermate le correzioni di Evo Builder su mobile introdotte nella 1.0.6."
+      "Corretto e rafforzato il flusso di installazione dell'aggiornamento in-app, che poteva chiudersi senza completare l'installazione.",
+      "Ora un eventuale errore viene sempre mostrato invece di chiudere l'app senza spiegazioni."
     ],
     "en": [
-      "Square dashboard icons and more compact cards, matching Desktop and Extension.",
-      "EVO Builder mobile fixes from 1.0.6 confirmed and preserved."
+      "Fixed and hardened the in-app updater's install flow, which could close without completing installation.",
+      "Any failure now shows a visible error instead of silently closing the app."
     ]
   },
-  "publishedAt": "2026-08-19T18:03:32Z"
+  "publishedAt": "2026-08-19T18:30:13Z"
 }
