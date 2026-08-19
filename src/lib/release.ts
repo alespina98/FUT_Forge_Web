@@ -10,7 +10,7 @@ export type ReleaseInfo = {
   sha256: string | null; architecture: string; platform: string; minimumPlatform: string;
   notes: string[]; releaseUrl: string; source: "github" | "fallback";
 };
-export type ReleaseCatalog = { windows: ReleaseInfo; macos: { arm64: ReleaseInfo; x86_64: ReleaseInfo } };
+export type ReleaseCatalog = { windows: ReleaseInfo; macos: { arm64: ReleaseInfo; x86_64: ReleaseInfo }; android: ReleaseInfo };
 
 const releasePage = `https://github.com/${RELEASE_REPOSITORY}/releases`;
 export const fallbackRelease: ReleaseInfo = {
@@ -25,6 +25,12 @@ const fallbackMac = (architecture: "arm64" | "x86_64"): ReleaseInfo => ({
   sha256: null, architecture, platform: "macOS", minimumPlatform: "macOS 15 or later",
   notes: [], releaseUrl: releasePage, source: "fallback",
 });
+const fallbackAndroid: ReleaseInfo = {
+  version: "1.0.2", channel: "stable", title: "FUT Forge 1.0.2",
+  filename: "FUT-Forge-Android-1.0.2.apk", publishedAt: null, downloadUrl: null, size: null,
+  sha256: null, architecture: "universal", platform: "Android", minimumPlatform: "Android 8.0 (API 26) or later",
+  notes: [], releaseUrl: releasePage, source: "fallback",
+};
 
  type Asset = { name?: unknown; browser_download_url?: unknown; size?: unknown; digest?: unknown };
  type GitHubRelease = { tag_name?: unknown; name?: unknown; body?: unknown; published_at?: unknown; html_url?: unknown; prerelease?: unknown; draft?: unknown; assets?: unknown };
@@ -58,6 +64,15 @@ function macRelease(releases: GitHubRelease[], architecture: "arm64" | "x86_64")
   }
   return fallbackMac(architecture);
 }
-async function loadReleaseCatalog(): Promise<ReleaseCatalog> { try { const releases = publicReleases(await fetchJson(`https://api.github.com/repos/${RELEASE_REPOSITORY}/releases?per_page=20`)); return { windows: await windowsRelease(releases), macos: { arm64: macRelease(releases, "arm64"), x86_64: macRelease(releases, "x86_64") } }; } catch { return { windows: fallbackRelease, macos: { arm64: fallbackMac("arm64"), x86_64: fallbackMac("x86_64") } }; } }
+function androidRelease(releases: GitHubRelease[]): ReleaseInfo {
+  const pattern = /^FUT-Forge-Android-(\d+\.\d+\.\d+)\.apk$/i;
+  for (const release of releases) for (const asset of assetsOf(release)) {
+    const filename = text(asset.name); const match = filename?.match(pattern); if (!filename || !match) continue;
+    const downloadUrl = validUrl(asset.browser_download_url, "github.com"); const releaseUrl = validUrl(release.html_url, "github.com"); if (!downloadUrl || !releaseUrl) continue;
+    return { version: match[1], channel: "stable", title: text(release.name) ?? `FUT Forge ${match[1]}`, filename, publishedAt: validDate(release.published_at), downloadUrl, size: typeof asset.size === "number" ? asset.size : null, sha256: digest(asset.digest), architecture: "universal", platform: "Android", minimumPlatform: "Android 8.0 (API 26) or later", notes: releaseNotes(release.body), releaseUrl, source: "github" };
+  }
+  return fallbackAndroid;
+}
+async function loadReleaseCatalog(): Promise<ReleaseCatalog> { try { const releases = publicReleases(await fetchJson(`https://api.github.com/repos/${RELEASE_REPOSITORY}/releases?per_page=20`)); return { windows: await windowsRelease(releases), macos: { arm64: macRelease(releases, "arm64"), x86_64: macRelease(releases, "x86_64") }, android: androidRelease(releases) }; } catch { return { windows: fallbackRelease, macos: { arm64: fallbackMac("arm64"), x86_64: fallbackMac("x86_64") }, android: fallbackAndroid }; } }
 export const getReleaseCatalog = cache(loadReleaseCatalog);
 export const getLatestRelease = cache(async () => (await loadReleaseCatalog()).windows);

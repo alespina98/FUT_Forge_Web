@@ -55,6 +55,15 @@ export function DownloadPageContent({ releases }: { releases: ReleaseCatalog }) 
       </div>
       <p className="availability-note">{locale === "it" ? "Build attualmente non firmate né notarizzate da Apple: macOS potrebbe richiedere Control-click → Apri o Privacy e Sicurezza → Apri comunque." : "Currently not Apple Developer ID signed or notarized: macOS may require Control-click → Open or Privacy & Security → Open Anyway."}</p>
     </div></section>
+    <section id="android" className="download-content section-shell" aria-labelledby="android-heading"><div className="release-card">
+      <div className="release-card-head"><div><p className="section-label">Android</p><h2 id="android-heading">{locale === "it" ? "Download per Android" : "Download for Android"}</h2></div><span className="release-source">{releases.android.minimumPlatform}</span></div>
+      <p className="download-lead">{locale === "it" ? "L'app Android ufficiale di FUT Forge, distribuita come APK firmato al di fuori del Play Store. Aggiornamenti in-app con verifica SHA-256." : "The official FUT Forge Android app, distributed as a signed APK outside the Play Store. In-app updates with SHA-256 verification."}</p>
+      <div className="mt-6 flex flex-wrap gap-3">
+        <DownloadButton release={releases.android} label={releases.android.downloadUrl ? `APK · v${formatMarketingVersion(releases.android.version)}` : (locale === "it" ? "APK · presto disponibile" : "APK · coming soon")} />
+      </div>
+      {releases.android.downloadUrl && releases.android.size && <p className="availability-note">{formatSize(releases.android.size, locale)}</p>}
+      <p className="availability-note">{locale === "it" ? "Non disponibile su Google Play. Dopo il download, apri il file .apk e consenti l'installazione da questa sorgente quando richiesto da Android." : "Not available on Google Play. After downloading, open the .apk file and allow installation from this source when Android prompts you."}</p>
+    </div></section>
     <section id="browser-download" className="download-content section-shell" aria-labelledby="browser-heading"><div className="release-card">
       <div className="release-card-head"><div><p className="section-label">Browser</p><h2 id="browser-heading">FUT Forge Browser</h2></div><span className="release-source">Chrome · Edge</span></div>
       <p className="download-lead">{locale === "it" ? "Usa FUT Forge direttamente nella EA FC Web App. Nessuna applicazione da installare." : "Use FUT Forge directly in the EA FC Web App. No app installation required."}</p>
