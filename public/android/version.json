@@ -1,20 +1,20 @@
 {
   "schema": 1,
-  "latestVersion": "1.0.6",
-  "latestVersionCode": 7,
+  "latestVersion": "1.0.7",
+  "latestVersionCode": 8,
   "minimumVersionCode": 1,
-  "apkUrl": "https://github.com/alespina98/FUT_Forge_Releases/releases/download/android-v1.0.6/FUT-Forge-Android-1.0.6.apk",
-  "sha256": "2194221f11e3a1b1c09fde9a53c141d8a4b2a1252d67f3d1efedece9b2ecf9fb",
-  "size": 2691034,
+  "apkUrl": "https://github.com/alespina98/FUT_Forge_Releases/releases/download/android-v1.0.7/FUT-Forge-Android-1.0.7.apk",
+  "sha256": "6fa37136ab455199cc007edfcecdb7db6679e65d046dd6bf223f2211b88fe2d2",
+  "size": 2691058,
   "releaseNotes": {
     "it": [
-      "Corretti layout e scorrimento di Evo Builder su dispositivi mobili.",
-      "Nuova icona ufficiale FUT Forge per Android."
+      "Icone dashboard quadrate e card più compatte, in linea con Desktop ed Extension.",
+      "Confermate le correzioni di Evo Builder su mobile introdotte nella 1.0.6."
     ],
     "en": [
-      "Fixed EVO Builder layout and scrolling on mobile devices.",
-      "New official FUT Forge Android launcher icon."
+      "Square dashboard icons and more compact cards, matching Desktop and Extension.",
+      "EVO Builder mobile fixes from 1.0.6 confirmed and preserved."
     ]
   },
-  "publishedAt": "2026-08-19T13:19:15Z"
+  "publishedAt": "2026-08-19T18:03:32Z"
 }
