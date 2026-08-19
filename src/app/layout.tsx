@@ -32,6 +32,9 @@ export const metadata: Metadata = {
   },
   description: siteCopy.description,
   applicationName: siteCopy.applicationName,
+  verification: {
+    google: "ILjaV7aJcpQIylabPOxnlLWyd7HBStO1l32C3KSWLiU",
+  },
   alternates: { canonical: "/" },
   openGraph: {
     type: "website",
@@ -77,3 +80,4 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     </html>
   );
 }
+
