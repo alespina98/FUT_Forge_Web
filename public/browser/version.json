@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
   "channels": {
-    "stable": "2.10.5-browser.7"
+    "stable": "2.10.5-browser.8"
   },
   "releases": {
-    "2.10.5-browser.7": {
-      "js": "releases/2.10.5-browser.7/futforge.js",
-      "css": "releases/2.10.5-browser.7/futforge.css",
-      "jsIntegrity": "sha384-Z+v1u2ZjYVniKS2tRKD3JZ+ZN7dDPNPAIEsYZKHhGGyGYqAD77qg6/0HmaGhn5kR",
-      "cssIntegrity": "sha384-4smSogkIkjXT7uNqYY7yL4DKUJI2wc0Zo4VRGffDpQDYi6TwDROPkigJ7rasEs/E"
+    "2.10.5-browser.8": {
+      "js": "releases/2.10.5-browser.8/futforge.js",
+      "css": "releases/2.10.5-browser.8/futforge.css",
+      "jsIntegrity": "sha384-qiHpQ3gnna3k9Pk6dXBOyLBr46ed8W/K6K6B2pJLIAoinUDfdtiAAKsaP2WUBrum",
+      "cssIntegrity": "sha384-BfrqHEjNoZB93fXv/GwyNq6d6FWE7wJ2sifrQ4RvrlOQocWSG8i+4LFoYpMrdrLK"
     }
   }
 }
