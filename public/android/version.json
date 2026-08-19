@@ -1,18 +1,22 @@
 {
   "schema": 1,
-  "latestVersion": "1.0.11",
-  "latestVersionCode": 12,
+  "latestVersion": "1.0.12",
+  "latestVersionCode": 13,
   "minimumVersionCode": 1,
-  "apkUrl": "https://github.com/alespina98/FUT_Forge_Releases/releases/download/android-v1.0.11/FUT-Forge-Android-1.0.11.apk",
-  "sha256": "2c7d5b0cdd94545808be47f89a65406c91c54e5a25c949d7b7a9558002b34dca",
-  "size": 2696358,
+  "apkUrl": "https://github.com/alespina98/FUT_Forge_Releases/releases/download/android-v1.0.12/FUT-Forge-Android-1.0.12.apk",
+  "sha256": "8d2a55554007015cadb81e53909d5fb624fa86ae4c875de9fcecd01053578543",
+  "size": 2697582,
   "releaseNotes": {
     "it": [
-      "Risolto un problema che poteva riproporre l'installazione dopo un aggiornamento riuscito."
+      "Corretto lo spazio sotto la barra di stato Android su alcuni dispositivi.",
+      "Il tasto/gesto Indietro ora naviga correttamente all'interno di FUT Forge invece di riavviare l'app.",
+      "Risolti i link Registrati e Password dimenticata nella schermata di accesso."
     ],
     "en": [
-      "Fixed an issue that could re-trigger installation after a successful update."
+      "Fixed content drawing under the Android status bar on some devices.",
+      "The Back gesture/button now navigates within FUT Forge instead of restarting the app.",
+      "Fixed the Sign Up and Forgot Password links on the login screen."
     ]
   },
-  "publishedAt": "2026-08-19T22:06:19Z"
+  "publishedAt": "2026-08-19T23:16:19Z"
 }
