@@ -1,18 +1,18 @@
 {
   "schema": 1,
-  "latestVersion": "1.0.9",
-  "latestVersionCode": 10,
+  "latestVersion": "1.0.10",
+  "latestVersionCode": 11,
   "minimumVersionCode": 1,
-  "apkUrl": "https://github.com/alespina98/FUT_Forge_Releases/releases/download/android-v1.0.9/FUT-Forge-Android-1.0.9.apk",
-  "sha256": "26a4bf37d5d6b5195de39c8022f0eb478b705c638c52fd77569643c7bc76e0ed",
-  "size": 2696006,
+  "apkUrl": "https://github.com/alespina98/FUT_Forge_Releases/releases/download/android-v1.0.10/FUT-Forge-Android-1.0.10.apk",
+  "sha256": "97ced7cc79f007d1675a205a82246c82492660a3fe8c14fe05e2d944f683f80d",
+  "size": 2696034,
   "releaseNotes": {
     "it": [
-      "Migliorata la diagnostica e l'affidabilità del sistema di aggiornamento Android."
+      "Migliorata l'affidabilità del sistema di aggiornamento Android."
     ],
     "en": [
-      "Improved Android updater diagnostics and reliability."
+      "Improved Android update reliability."
     ]
   },
-  "publishedAt": "2026-08-19T19:48:51Z"
+  "publishedAt": "2026-08-19T21:31:32Z"
 }
