@@ -1,20 +1,18 @@
 {
   "schema": 1,
-  "latestVersion": "1.0.8",
-  "latestVersionCode": 9,
+  "latestVersion": "1.0.9",
+  "latestVersionCode": 10,
   "minimumVersionCode": 1,
-  "apkUrl": "https://github.com/alespina98/FUT_Forge_Releases/releases/download/android-v1.0.8/FUT-Forge-Android-1.0.8.apk",
-  "sha256": "a149ce2d1939c16e14a26d9e9d85ea4b38eb8019bf45b0e9c5d56567fb768a4c",
-  "size": 2692026,
+  "apkUrl": "https://github.com/alespina98/FUT_Forge_Releases/releases/download/android-v1.0.9/FUT-Forge-Android-1.0.9.apk",
+  "sha256": "26a4bf37d5d6b5195de39c8022f0eb478b705c638c52fd77569643c7bc76e0ed",
+  "size": 2696006,
   "releaseNotes": {
     "it": [
-      "Corretto e rafforzato il flusso di installazione dell'aggiornamento in-app, che poteva chiudersi senza completare l'installazione.",
-      "Ora un eventuale errore viene sempre mostrato invece di chiudere l'app senza spiegazioni."
+      "Migliorata la diagnostica e l'affidabilità del sistema di aggiornamento Android."
     ],
     "en": [
-      "Fixed and hardened the in-app updater's install flow, which could close without completing installation.",
-      "Any failure now shows a visible error instead of silently closing the app."
+      "Improved Android updater diagnostics and reliability."
     ]
   },
-  "publishedAt": "2026-08-19T18:30:13Z"
+  "publishedAt": "2026-08-19T19:48:51Z"
 }

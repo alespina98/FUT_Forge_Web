@@ -26,8 +26,8 @@ const fallbackMac = (architecture: "arm64" | "x86_64"): ReleaseInfo => ({
   notes: [], releaseUrl: releasePage, source: "fallback",
 });
 const fallbackAndroid: ReleaseInfo = {
-  version: "1.0.8", channel: "stable", title: "FUT Forge 1.0.8",
-  filename: "FUT-Forge-Android-1.0.8.apk", publishedAt: null, downloadUrl: null, size: null,
+  version: "1.0.9", channel: "stable", title: "FUT Forge 1.0.9",
+  filename: "FUT-Forge-Android-1.0.9.apk", publishedAt: null, downloadUrl: null, size: null,
   sha256: null, architecture: "universal", platform: "Android", minimumPlatform: "Android 8.0 (API 26) or later",
   notes: [], releaseUrl: releasePage, source: "fallback",
 };
