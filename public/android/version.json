@@ -1,22 +1,18 @@
 {
   "schema": 1,
-  "latestVersion": "1.0.12",
-  "latestVersionCode": 13,
+  "latestVersion": "1.0.13",
+  "latestVersionCode": 14,
   "minimumVersionCode": 1,
-  "apkUrl": "https://github.com/alespina98/FUT_Forge_Releases/releases/download/android-v1.0.12/FUT-Forge-Android-1.0.12.apk",
-  "sha256": "8d2a55554007015cadb81e53909d5fb624fa86ae4c875de9fcecd01053578543",
-  "size": 2697582,
+  "apkUrl": "https://github.com/alespina98/FUT_Forge_Releases/releases/download/android-v1.0.13/FUT-Forge-Android-1.0.13.apk",
+  "sha256": "f961e966268f39c355d305b39bff354410c86544c0bfa40fd3f29fa403e43676",
+  "size": 2697690,
   "releaseNotes": {
     "it": [
-      "Corretto lo spazio sotto la barra di stato Android su alcuni dispositivi.",
-      "Il tasto/gesto Indietro ora naviga correttamente all'interno di FUT Forge invece di riavviare l'app.",
-      "Risolti i link Registrati e Password dimenticata nella schermata di accesso."
+      "Il tasto/gesto Indietro ora naviga davvero all'interno di FUT Forge, schermata per schermata come nell'app EA originale, invece di riavviare l'app - confermato su dispositivo reale."
     ],
     "en": [
-      "Fixed content drawing under the Android status bar on some devices.",
-      "The Back gesture/button now navigates within FUT Forge instead of restarting the app.",
-      "Fixed the Sign Up and Forgot Password links on the login screen."
+      "The Back gesture/button now genuinely navigates within FUT Forge, screen by screen like the original EA app, instead of restarting the app - confirmed on a real device."
     ]
   },
-  "publishedAt": "2026-08-19T23:16:19Z"
+  "publishedAt": "2026-08-20T11:06:07Z"
 }
