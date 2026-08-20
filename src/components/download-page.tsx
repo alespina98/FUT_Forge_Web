@@ -1,17 +1,23 @@
 "use client";
 
-import Image from "next/image";
-import { useState } from "react";
+import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 import type { ReleaseCatalog, ReleaseInfo } from "@/lib/release";
+import { BrowserBookmarkletSection } from "./browser-bookmarklet-section";
 import { useI18n } from "./i18n-provider";
-import { DownloadIcon } from "./icons";
+import { AndroidIcon, AppleIcon, BookmarkIcon, CheckIcon, DownloadIcon, GlobeIcon, RefreshIcon, ShieldIcon, WindowsIcon } from "./icons";
 
 const formatDate = (value: string | null, locale: string) => value ? new Intl.DateTimeFormat(locale, { day: "numeric", month: "long", year: "numeric" }).format(new Date(value)) : "—";
 const formatSize = (value: number | null, locale: string) => value ? new Intl.NumberFormat(locale, { style: "unit", unit: "megabyte", maximumFractionDigits: 1 }).format(value / 1_000_000) : "—";
 const formatMarketingVersion = (version: string) => version.split(".").slice(0, 2).join(".");
+const securityIcons = [ShieldIcon, CheckIcon, RefreshIcon, CheckIcon];
 
 function DownloadButton({ release, label }: { release: ReleaseInfo; label: string }) {
-  return release.downloadUrl ? <a className="button-primary download-primary" href={release.downloadUrl} aria-label={`${label} — ${release.filename}`}><DownloadIcon className="size-5" />{label}</a> : <span className="button-primary download-primary is-disabled" aria-disabled="true"><DownloadIcon className="size-5" />{label}</span>;
+  return release.downloadUrl ? <a className="button-primary download-primary" href={release.downloadUrl} aria-label={`${label} — ${release.filename}`}><DownloadIcon className="size-4.5" />{label}</a> : <span className="button-primary download-primary is-disabled" aria-disabled="true"><DownloadIcon className="size-4.5" />{label}</span>;
+}
+
+function PillAction({ release, label }: { release: ReleaseInfo; label: string }) {
+  return release.downloadUrl ? <a href={release.downloadUrl} aria-label={label}>{label}</a> : <span className="is-disabled" aria-disabled="true">{label}</span>;
 }
 
 export function DownloadPageContent({ releases }: { releases: ReleaseCatalog }) {
@@ -19,8 +25,20 @@ export function DownloadPageContent({ releases }: { releases: ReleaseCatalog }) 
   const { locale, t } = useI18n();
   const d = t.downloadPage;
   const [copied, setCopied] = useState(false);
-  const notes = release.notes.length ? release.notes : [...d.fallbackNotes];
+  const [showBrowser, setShowBrowser] = useState(false);
+  const browserExpandRef = useRef<HTMLDivElement>(null);
   const facts = [[d.version, release.version], [d.released, formatDate(release.publishedAt, locale)], [d.filename, release.filename], [d.size, formatSize(release.size, locale)], [d.architectureLabel, release.architecture === "x86_64" ? d.architecture : release.architecture]];
+
+  // BrowserBookmarkletSection mounts on demand (toggled open), well after
+  // AmbientEffects' page-load IntersectionObserver already scanned the DOM
+  // once for [data-reveal] elements - so its section-reveal opacity never
+  // flips to visible on its own. It was opened by an explicit click, not
+  // scroll, so just show it immediately rather than re-wiring a shared
+  // observer for a one-off case.
+  useEffect(() => {
+    if (!showBrowser) return;
+    browserExpandRef.current?.querySelectorAll("[data-reveal]").forEach((element) => element.classList.add("is-visible"));
+  }, [showBrowser]);
 
   async function copyChecksum() {
     if (!release.sha256) return;
@@ -33,53 +51,94 @@ export function DownloadPageContent({ releases }: { releases: ReleaseCatalog }) 
     }
   }
 
-  return <>
-    <section id="windows" className="download-hero hero-grid">
+  return (
+    <div className="dl-page hero-grid relative">
       <div className="hero-noise" /><div className="hero-orb hero-orb-primary" />
-      <div className="download-hero-inner">
-        <p className="section-label">{d.eyebrow}</p><span className="release-badge"><i />{release.channel === "beta" ? d.beta : d.stable}</span>
-        <h1>{d.heroTitle}</h1><p className="download-lead">{d.heroBody}</p>
-        <DownloadButton release={release} label={release.downloadUrl ? d.download : d.unavailable} />
-        {!release.downloadUrl && <p className="availability-note">{d.unavailableHelp}</p>}
-        {release.downloadUrl && release.sha256 && <ul className="download-trust" aria-label={d.security}>{d.trustItems.map((item) => <li key={item}><span aria-hidden>✓</span>{item}</li>)}</ul>}
-        <div className="download-chips"><span>v{formatMarketingVersion(release.version)}</span><span>{d.windows}</span><span>{d.architecture}</span><span>{d.free}</span><span>{d.updates}</span></div>
-      </div>
-    </section>
 
-    <section id="macos" className="download-content section-shell" aria-labelledby="platform-heading"><div className="release-card">
-      <div className="release-card-head"><div><p className="section-label">macOS</p><h2 id="platform-heading">{locale === "it" ? "Download per Mac" : "Downloads for Mac"}</h2></div><span className="release-source">macOS 15+</span></div>
-      <p className="download-lead">{locale === "it" ? "Scegli la build nativa per il tuo Mac. Queste build non sono Universal2 e gli aggiornamenti sono manuali." : "Choose the native build for your Mac. These are not Universal2 builds and updates are manual."}</p>
-      <div className="mt-6 flex flex-wrap gap-3">
-        <DownloadButton release={releases.macos.arm64} label={releases.macos.arm64.downloadUrl ? "Apple Silicon · arm64" : (locale === "it" ? "Apple Silicon · presto disponibile" : "Apple Silicon · coming soon")} />
-        <DownloadButton release={releases.macos.x86_64} label={releases.macos.x86_64.downloadUrl ? "Intel · x86_64" : (locale === "it" ? "Intel · presto disponibile" : "Intel · coming soon")} />
-      </div>
-      <p className="availability-note">{locale === "it" ? "Build attualmente non firmate né notarizzate da Apple: macOS potrebbe richiedere Control-click → Apri o Privacy e Sicurezza → Apri comunque." : "Currently not Apple Developer ID signed or notarized: macOS may require Control-click → Open or Privacy & Security → Open Anyway."}</p>
-    </div></section>
-    <section id="android" className="download-content section-shell" aria-labelledby="android-heading"><div className="release-card">
-      <div className="release-card-head"><div><p className="section-label">Android</p><h2 id="android-heading">{locale === "it" ? "Download per Android" : "Download for Android"}</h2></div><span className="release-source">{releases.android.minimumPlatform}</span></div>
-      <p className="download-lead">{locale === "it" ? "L'app Android ufficiale di FUT Forge, distribuita come APK firmato al di fuori del Play Store. Aggiornamenti in-app con verifica SHA-256." : "The official FUT Forge Android app, distributed as a signed APK outside the Play Store. In-app updates with SHA-256 verification."}</p>
-      <div className="mt-6 flex flex-wrap gap-3">
-        <DownloadButton release={releases.android} label={releases.android.downloadUrl ? `APK · v${formatMarketingVersion(releases.android.version)}` : (locale === "it" ? "APK · presto disponibile" : "APK · coming soon")} />
-      </div>
-      {releases.android.downloadUrl && releases.android.size && <p className="availability-note">{formatSize(releases.android.size, locale)}</p>}
-      <p className="availability-note">{locale === "it" ? "Non disponibile su Google Play. Dopo il download, apri il file .apk e consenti l'installazione da questa sorgente quando richiesto da Android." : "Not available on Google Play. After downloading, open the .apk file and allow installation from this source when Android prompts you."}</p>
-    </div></section>
-    <section id="browser-download" className="download-content section-shell" aria-labelledby="browser-heading"><div className="release-card">
-      <div className="release-card-head"><div><p className="section-label">Browser</p><h2 id="browser-heading">FUT Forge Browser</h2></div><span className="release-source">Chrome · Edge</span></div>
-      <p className="download-lead">{locale === "it" ? "Usa FUT Forge direttamente nella EA FC Web App. Nessuna applicazione da installare." : "Use FUT Forge directly in the EA FC Web App. No app installation required."}</p>
-      <a className="button-primary download-primary" href="/#browser">{locale === "it" ? "Usa nel browser" : "Use in Browser"}</a>
-    </div></section>
-    <section className="download-content section-shell" aria-labelledby="release-heading"><div className="release-card">
-      <div className="release-card-head"><div><p className="section-label">{d.eyebrow}</p><h2 id="release-heading">{d.releaseTitle}</h2></div><span className="release-source">{release.source === "github" ? d.stable : d.unavailable}</span></div>
-      <dl>{facts.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>
-      {release.sha256 && <div className="checksum"><span>{d.checksum}</span><code>{release.sha256}</code><button type="button" onClick={copyChecksum} aria-label={d.copyChecksum}>{copied ? d.copied : d.copyChecksum}</button><span className="sr-only" role="status" aria-live="polite">{copied ? d.copied : ""}</span></div>}
-      <a className="github-release-link" href={release.releaseUrl} target="_blank" rel="noopener noreferrer" aria-label={d.officialReleaseAria}>{d.officialRelease} <span aria-hidden>↗</span></a>
-    </div></section>
+      <section className="dl-hero">
+        <div className="flex flex-col items-center gap-2.5">
+          <p className="section-label">{d.eyebrow}</p>
+          <span className="dl-badge"><i />{locale === "it" ? "Ultima" : "Latest"} {release.channel === "beta" ? d.beta : d.stable}</span>
+        </div>
+        <h1>{d.compactHeading}</h1>
+        <p>{d.heroBody}</p>
+      </section>
 
-    <section className="download-grid section-shell"><article><p className="section-label">01</p><h2>{d.whatsNew}</h2><ul>{notes.map((note) => <li key={note}>{note}</li>)}</ul></article><article><p className="section-label">02</p><h2>{d.requirements}</h2><ul>{d.requirementItems.map((item) => <li key={item}>{item}</li>)}</ul></article></section>
-    <section className="install-section section-shell"><div><p className="section-label">03</p><h2>{d.installation}</h2><ol>{d.installSteps.map((step) => <li key={step}>{step}</li>)}</ol></div><div><p className="section-label">04</p><h2>{d.security}</h2><ul>{d.securityItems.map((item) => <li key={item}>{item}</li>)}</ul></div></section>
-    <section className="preview-section section-shell"><div><p className="section-label">05 · {d.preview}</p><h2>{d.previewBody}</h2></div><Image src="/screenshots/sbc-solver.png" alt={d.previewAlt} width={1571} height={782} sizes="(max-width: 900px) 92vw, 60vw" loading="lazy" /></section>
-    <section className="faq-section section-shell"><p className="section-label">06</p><h2>{d.faq}</h2><div>{d.faqs.map(([question, answer]) => <details key={question}><summary>{question}<span aria-hidden>+</span></summary><p>{answer}</p></details>)}</div></section>
-    <section className="final-download section-shell"><div><h2>{d.finalTitle}</h2><p>{d.finalBody}</p><DownloadButton release={release} label={release.downloadUrl ? d.download : d.unavailable} /></div></section>
-  </>;
+      <section aria-label={d.platformsLabel}>
+        <div className="dl-cards">
+          <article className="dl-card">
+            <div className="dl-card-icon"><WindowsIcon className="size-6" /></div>
+            <h3>{d.windowsLabel}{release.downloadUrl && <span className="dl-card-version">v{formatMarketingVersion(release.version)}</span>}</h3>
+            <p>{d.windowsBody}</p>
+            <DownloadButton release={releases.windows} label={releases.windows.downloadUrl ? d.windowsCta : d.unavailable} />
+          </article>
+          <article className="dl-card">
+            <div className="dl-card-icon"><AndroidIcon className="size-6" /></div>
+            <h3>{d.androidLabel}{releases.android.downloadUrl && <span className="dl-card-version">v{formatMarketingVersion(releases.android.version)}</span>}</h3>
+            <p>{d.androidBody}</p>
+            <DownloadButton release={releases.android} label={releases.android.downloadUrl ? d.androidCta : d.unavailable} />
+          </article>
+          <article className="dl-card">
+            <div className="dl-card-icon"><GlobeIcon className="size-6" /></div>
+            <h3>{d.webAppLabel}</h3>
+            <p>{d.webAppBody}</p>
+            <Link href="/app" className="button-primary download-primary">{d.webAppCta}</Link>
+          </article>
+        </div>
+        <p className="dl-autoupdate"><strong>{d.autoUpdateTitle}</strong> — {d.autoUpdateBody}</p>
+      </section>
+
+      <section className="dl-also-section" aria-label={d.alsoAvailableLabel}>
+        <p className="dl-also-label">{d.alsoAvailableLabel}</p>
+        <div className="dl-also-row">
+          <div className="dl-pill">
+            <div className="dl-pill-icon"><AppleIcon className="size-4" /></div>
+            <div className="dl-pill-body"><strong>{d.macosPill}</strong><span>{d.macosPillBody}</span></div>
+            <div className="dl-pill-actions">
+              <PillAction release={releases.macos.arm64} label="Apple Silicon" />
+              <PillAction release={releases.macos.x86_64} label="Intel" />
+            </div>
+          </div>
+          <button type="button" className="dl-pill" onClick={() => setShowBrowser((value) => !value)} aria-expanded={showBrowser}>
+            <div className="dl-pill-icon"><BookmarkIcon className="size-4" /></div>
+            <div className="dl-pill-body"><strong>{d.browserPill}</strong><span>{d.browserPillBody}</span></div>
+            <div className="dl-pill-actions"><span>{showBrowser ? d.browserClose : d.browserCta}</span></div>
+          </button>
+        </div>
+        {showBrowser && <div className="dl-browser-expand" ref={browserExpandRef}><BrowserBookmarkletSection /></div>}
+      </section>
+
+      <section className="dl-release-section" aria-labelledby="release-heading">
+        <div className="dl-release-card">
+          <div className="dl-release-head"><h2 id="release-heading">{d.releaseTitle}</h2><span className="release-source">{release.source === "github" ? d.stable : d.unavailable}</span></div>
+          <dl className="dl-release-facts">{facts.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>
+          {release.sha256 && <div className="dl-checksum"><span>{d.checksum}</span><code>{release.sha256}</code><button type="button" onClick={copyChecksum} aria-label={d.copyChecksum}>{copied ? d.copied : d.copyChecksum}</button><span className="sr-only" role="status" aria-live="polite">{copied ? d.copied : ""}</span></div>}
+          <a className="dl-release-link" href={release.releaseUrl} target="_blank" rel="noopener noreferrer" aria-label={d.officialReleaseAria}>{d.officialRelease} <span aria-hidden>↗</span></a>
+        </div>
+      </section>
+
+      <section className="dl-security-section" aria-label={d.security}>
+        <div className="dl-security-grid">
+          {d.securityCompact.map(([title, body], index) => {
+            const Icon = securityIcons[index];
+            return <div className="dl-security-item" key={title}><i><Icon className="size-4" /></i><strong>{title}</strong><p>{body}</p></div>;
+          })}
+        </div>
+      </section>
+
+      <section className="dl-help-section" aria-label={d.helpLabel}>
+        <p className="section-label">{d.helpLabel}</p>
+        <div className="dl-help-list">{d.helpFaqs.map(([question, answer]) => <details key={question}><summary>{question}<span aria-hidden>+</span></summary><p>{answer}</p></details>)}</div>
+        <Link href="/faq" className="dl-help-link">{d.viewAllFaqs} <span aria-hidden>→</span></Link>
+      </section>
+
+      <section className="dl-final">
+        <h2>{d.finalCompactTitle}</h2>
+        <div className="dl-final-actions">
+          <DownloadButton release={release} label={release.downloadUrl ? d.download : d.unavailable} />
+          <Link href="/app" className="button-secondary">{d.webAppCta}</Link>
+        </div>
+      </section>
+    </div>
+  );
 }

@@ -81,7 +81,13 @@ export function RegisterForm() {
 
     if (signUpError) {
       setStatus("error");
-      setError(signUpError.status === 400 && /registered|exists/i.test(signUpError.message) ? r.emailInUse : r.genericError);
+      if (signUpError.status === 429) {
+        setError(r.rateLimited);
+      } else if (signUpError.status === 400 && /registered|exists/i.test(signUpError.message)) {
+        setError(r.emailInUse);
+      } else {
+        setError(r.genericError);
+      }
       return;
     }
 
@@ -98,11 +104,11 @@ export function RegisterForm() {
   if (status === "checkEmail") {
     return (
       <div className="mx-auto max-w-md">
-        <p className="section-label">{t.app.club.eyebrow}</p>
+        <p className="section-label">{t.auth.eyebrow}</p>
         <div className="glass mt-8 rounded-2xl p-6 sm:p-8">
           <h1 className="text-2xl font-semibold tracking-[-.03em]">{r.checkEmailTitle}</h1>
           <p className="mt-4 text-sm leading-6 text-white/60">{r.checkEmailBody.replace("{email}", email.trim())}</p>
-          <Link href="/app/login" className="button-primary mt-6 inline-flex">
+          <Link href="/login" className="button-primary mt-6 inline-flex">
             {r.backToLogin}
           </Link>
         </div>
@@ -112,8 +118,8 @@ export function RegisterForm() {
 
   return (
     <div className="mx-auto max-w-md">
-      <p className="section-label">{t.app.club.eyebrow}</p>
-      <h1 className="mt-5 text-4xl font-semibold tracking-[-.04em]">{r.title}</h1>
+      <p className="section-label">{t.auth.eyebrow}</p>
+      <h1 className="auth-title mt-5 text-4xl font-semibold tracking-[-.04em]">{r.title}</h1>
       <p className="mt-4 text-sm leading-6 text-white/50">{r.lead}</p>
 
       <form onSubmit={handleSubmit} className="glass mt-8 flex flex-col gap-4 rounded-2xl p-6 sm:p-8">
@@ -199,9 +205,17 @@ export function RegisterForm() {
         </button>
       </form>
 
-      <p className="mt-6 text-xs leading-5 text-white/30">
+      <p className="mt-5 text-xs leading-5 text-white/30">
+        {r.terms}{" "}
+        <Link href="/privacy" className="font-semibold text-white/50 hover:text-lime">
+          {r.termsLink}
+        </Link>
+        .
+      </p>
+
+      <p className="mt-3 text-xs leading-5 text-white/30">
         {r.haveAccount}{" "}
-        <Link href={`/app/login${next !== "/app/club" ? `?next=${encodeURIComponent(next)}` : ""}`} className="font-semibold text-lime hover:text-lime/80">
+        <Link href={`/login${next !== "/app/club" ? `?next=${encodeURIComponent(next)}` : ""}`} className="font-semibold text-lime hover:text-lime/80">
           {r.haveAccountLinkLabel}
         </Link>
       </p>

@@ -74,7 +74,7 @@ export function AccountPanel() {
         <h1 className="mt-5 text-3xl font-semibold tracking-[-.04em]">{t.account.title}</h1>
         <div className="glass mt-8 rounded-2xl p-6 sm:p-8">
           <p className="text-sm leading-6 text-white/60">{t.auth.lead}</p>
-          <Link href="/app/login?next=/app/account" className="button-primary mt-6 inline-flex">
+          <Link href="/login?next=/app/account" className="button-primary mt-6 inline-flex">
             {t.nav.login}
           </Link>
         </div>

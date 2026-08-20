@@ -103,7 +103,7 @@ export default function PrivacyPolicyPage() {
             <p>
               Your session tokens are kept in <code className="text-white/70">localStorage</code> under the
               origin of the page you&apos;re using FUT Forge from — <code className="text-white/70">
-                futforge.vercel.app
+                futforgeofficial.com
               </code>{" "}
               when you use the website, or <code className="text-white/70">www.ea.com</code> (the EA Web
               App&apos;s own origin) when you use the Browser Extension, Bookmarklet, or Desktop, since all

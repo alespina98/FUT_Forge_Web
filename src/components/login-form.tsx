@@ -42,8 +42,8 @@ export function LoginForm() {
 
   return (
     <div className="mx-auto max-w-md">
-      <p className="section-label">{t.app.club.eyebrow}</p>
-      <h1 className="mt-5 text-4xl font-semibold tracking-[-.04em]">{a.title}</h1>
+      <p className="section-label">{a.eyebrow}</p>
+      <h1 className="auth-title mt-5 text-4xl font-semibold tracking-[-.04em]">{a.title}</h1>
       <p className="mt-4 text-sm leading-6 text-white/50">{a.lead}</p>
 
       <form onSubmit={handleSubmit} className="glass mt-8 flex flex-col gap-4 rounded-2xl p-6 sm:p-8">
@@ -108,7 +108,7 @@ export function LoginForm() {
 
       <p className="mt-6 text-xs leading-5 text-white/30">
         {a.noAccount}{" "}
-        <Link href={`/app/register${next !== "/app/club" ? `?next=${encodeURIComponent(next)}` : ""}`} className="font-semibold text-lime hover:text-lime/80">
+        <Link href={`/register${next !== "/app/club" ? `?next=${encodeURIComponent(next)}` : ""}`} className="font-semibold text-lime hover:text-lime/80">
           {a.noAccountLinkLabel}
         </Link>
       </p>

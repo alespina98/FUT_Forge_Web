@@ -13,7 +13,7 @@ const jsonLd = {
   "@type": "SoftwareApplication",
   name: PRODUCT.desktopName,
   applicationCategory: "GameApplication",
-  operatingSystem: "Windows 10, Windows 11",
+  operatingSystem: "Windows 10, Windows 11, macOS 15+, Android 8.0+",
   softwareVersion: PRODUCT.version,
   description: siteCopy.description,
   url: siteCopy.url,

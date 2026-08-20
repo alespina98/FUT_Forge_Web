@@ -231,7 +231,7 @@ export function ClubTool() {
       {status === "unauthenticated" && (
         <div className="glass mt-8 rounded-2xl p-6 text-center sm:p-10">
           <p className="text-sm text-white/60">{c.loginPrompt}</p>
-          <Link href="/app/login?next=/app/club" className="button-primary mt-5 inline-block">
+          <Link href="/login?next=/app/club" className="button-primary mt-5 inline-block">
             {c.loginButton}
           </Link>
         </div>

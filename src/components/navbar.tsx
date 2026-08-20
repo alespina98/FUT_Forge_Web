@@ -1,12 +1,11 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PRODUCT } from "@/lib/copy";
 import { useI18n } from "./i18n-provider";
-import { DownloadIcon, ExitIcon, ForgeMark, UserIcon } from "./icons";
-import { leaksCopy } from "@/lib/leaks/copy";
+import { ChevronDownIcon, DownloadIcon, ExitIcon, ForgeMark, UserIcon } from "./icons";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useAuthUser, getDisplayName } from "@/lib/use-auth-user";
 
@@ -20,11 +19,8 @@ function NavAccount({ onNavigate }: { onNavigate?: () => void }) {
   if (status === "signedOut") {
     return (
       <div className="flex min-w-0 shrink-0 items-center gap-2 text-sm">
-        <Link href="/app/login" onClick={onNavigate} className="whitespace-nowrap font-semibold text-white/70 hover:text-white">
+        <Link href="/login" onClick={onNavigate} className="whitespace-nowrap font-semibold text-white/70 hover:text-white">
           {t.nav.login}
-        </Link>
-        <Link href="/app/register" onClick={onNavigate} className="whitespace-nowrap rounded-full bg-lime px-4 py-2 text-xs font-bold uppercase tracking-[.04em] text-ink hover:bg-lime/85">
-          {t.nav.register}
         </Link>
       </div>
     );
@@ -59,12 +55,22 @@ function NavAccount({ onNavigate }: { onNavigate?: () => void }) {
 export function Navbar() {
   const [open, setOpen] = useState(false);
   const { locale, setLocale, t } = useI18n();
-  const links = [
-    [t.nav.features, "/#features"],
-    [t.nav.roadmap, "/#roadmap"],
-    [t.nav.download, "/download"],
-    [t.nav.app, "/app"],
-    [leaksCopy[locale].nav, "/app/leaks"],
+
+  const featuresMenu = [
+    [t.nav.featuresOverview, "/features", t.featuresPage.title],
+    [t.nav.evoLab, "/features/evo-lab", t.evoLabPage.lead],
+    [t.nav.sbc, "/features/sbc", t.sbcPage.lead],
+  ] as const;
+  const flatLinks = [
+    [t.nav.platforms, "/download"],
+    [t.nav.howItWorks, "/how-it-works"],
+    [t.nav.faq, "/faq"],
+  ] as const;
+  const mobileLinks = [
+    [t.nav.featuresOverview, "/features"],
+    [t.nav.evoLab, "/features/evo-lab"],
+    [t.nav.sbc, "/features/sbc"],
+    ...flatLinks,
   ] as const;
 
   return (
@@ -72,7 +78,15 @@ export function Navbar() {
       <nav className="glass nav-shell mx-auto grid max-w-7xl grid-cols-[auto_minmax(0,1fr)_auto] items-center rounded-2xl px-4 py-3 sm:px-5" aria-label={t.nav.aria}>
         <Link href="/" className="brand-lockup min-w-0 shrink-0" aria-label={t.nav.home}><ForgeMark /><span>{PRODUCT.wordmark[0]}<span>{PRODUCT.wordmark[1]}</span></span><i>{t.nav.desktop}</i></Link>
         <div className="nav-center hidden min-w-0 items-center justify-center gap-1 text-sm text-white/60 md:flex">
-          {links.map(([label, href]) => <a key={href} href={href}>{label}</a>)}
+          <div className="nav-dropdown">
+            <button type="button">{t.nav.features}<ChevronDownIcon className="nav-dropdown-chevron size-3.5" /></button>
+            <div className="glass nav-dropdown-menu">
+              {featuresMenu.map(([label, href, description]) => (
+                <Link key={href} href={href}><b>{label}</b><span>{description}</span></Link>
+              ))}
+            </div>
+          </div>
+          {flatLinks.map(([label, href]) => <Link key={href} href={href}>{label}</Link>)}
         </div>
         <div className="nav-actions min-w-0 justify-self-end">
           <div className="language-switcher desktop-language" role="group" aria-label={t.nav.language}>
@@ -90,9 +104,8 @@ export function Navbar() {
           <a href="/download" className="button-primary nav-download !min-h-11 !px-3 text-sm"><DownloadIcon className="size-4" /><span className="nav-cta-full">{t.nav.cta}</span><span className="nav-cta-short">{t.nav.download}</span></a>
           <button className={`menu-button ${open ? "open" : ""}`} onClick={() => setOpen(!open)} aria-expanded={open} aria-controls="mobile-navigation" aria-label={open ? t.nav.close : t.nav.open}><span /><span /></button>
         </div>
-        {open && <div id="mobile-navigation" className="glass mobile-menu absolute left-3 right-3 top-[64px] flex flex-col rounded-2xl p-2 lg:hidden">{links.map(([label, href], index) => <a key={href} href={href} onClick={() => setOpen(false)}>{label}<span>0{index + 1}</span></a>)}<div className="mt-1 border-t border-white/10 px-3 py-3"><NavAccount onNavigate={() => setOpen(false)} /></div><div className="mobile-language" role="group" aria-label={t.nav.language}><span>{t.nav.language}</span>{(["en", "it"] as const).map((item) => <button key={item} type="button" className={locale === item ? "active" : ""} onClick={() => { setLocale(item); setOpen(false); }} aria-pressed={locale === item}>{item.toUpperCase()} · {item === "en" ? "English" : "Italiano"}</button>)}</div></div>}
+        {open && <div id="mobile-navigation" className="glass mobile-menu absolute left-3 right-3 top-[64px] flex flex-col rounded-2xl p-2 lg:hidden">{mobileLinks.map(([label, href], index) => <a key={href} href={href} onClick={() => setOpen(false)}>{label}<span>0{index + 1}</span></a>)}<div className="mt-1 border-t border-white/10 px-3 py-3"><NavAccount onNavigate={() => setOpen(false)} /></div><div className="mobile-language" role="group" aria-label={t.nav.language}><span>{t.nav.language}</span>{(["en", "it"] as const).map((item) => <button key={item} type="button" className={locale === item ? "active" : ""} onClick={() => { setLocale(item); setOpen(false); }} aria-pressed={locale === item}>{item.toUpperCase()} · {item === "en" ? "English" : "Italiano"}</button>)}</div></div>}
       </nav>
     </header>
   );
 }
-

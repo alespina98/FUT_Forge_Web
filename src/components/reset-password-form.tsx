@@ -91,7 +91,7 @@ export function ResetPasswordForm() {
   if (stage === "checking") {
     return (
       <div className="mx-auto max-w-md">
-        <p className="section-label">{t.app.club.eyebrow}</p>
+        <p className="section-label">{t.auth.eyebrow}</p>
         <div className="glass mt-8 rounded-2xl p-6 sm:p-8">
           <p className="text-sm text-white/60">{p.checking}</p>
         </div>
@@ -102,7 +102,7 @@ export function ResetPasswordForm() {
   if (stage === "invalid") {
     return (
       <div className="mx-auto max-w-md">
-        <p className="section-label">{t.app.club.eyebrow}</p>
+        <p className="section-label">{t.auth.eyebrow}</p>
         <div className="glass mt-8 rounded-2xl p-6 sm:p-8">
           <h1 className="text-2xl font-semibold tracking-[-.03em]">{p.invalidLinkTitle}</h1>
           <p className="mt-4 text-sm leading-6 text-white/60">{p.invalidLinkBody}</p>
@@ -117,11 +117,11 @@ export function ResetPasswordForm() {
   if (stage === "success") {
     return (
       <div className="mx-auto max-w-md">
-        <p className="section-label">{t.app.club.eyebrow}</p>
+        <p className="section-label">{t.auth.eyebrow}</p>
         <div className="glass mt-8 rounded-2xl p-6 sm:p-8">
           <h1 className="text-2xl font-semibold tracking-[-.03em]">{p.successTitle}</h1>
           <p className="mt-4 text-sm leading-6 text-white/60">{p.successBody}</p>
-          <Link href="/app/login" className="button-primary mt-6 inline-flex">
+          <Link href="/login" className="button-primary mt-6 inline-flex">
             {p.backToLogin}
           </Link>
         </div>

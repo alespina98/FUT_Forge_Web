@@ -13,7 +13,7 @@ export function ForgotPasswordForm() {
   const f = t.forgotPassword;
   const searchParams = useSearchParams();
   const next = searchParams.get("next") || "/app/club";
-  const loginHref = `/app/login${next !== "/app/club" ? `?next=${encodeURIComponent(next)}` : ""}`;
+  const loginHref = `/login${next !== "/app/club" ? `?next=${encodeURIComponent(next)}` : ""}`;
 
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<Status>("idle");
@@ -43,7 +43,7 @@ export function ForgotPasswordForm() {
   if (status === "sent") {
     return (
       <div className="mx-auto max-w-md">
-        <p className="section-label">{t.app.club.eyebrow}</p>
+        <p className="section-label">{t.auth.eyebrow}</p>
         <div className="glass mt-8 rounded-2xl p-6 sm:p-8">
           <h1 className="text-2xl font-semibold tracking-[-.03em]">{f.title}</h1>
           <p className="mt-4 text-sm leading-6 text-white/60">{f.neutralMessage}</p>

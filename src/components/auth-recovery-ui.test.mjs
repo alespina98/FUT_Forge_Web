@@ -52,7 +52,9 @@ test("the visible outcome of a recovery request never branches on whether the em
 
 test("the forgot-password form links back to login", () => {
   assert.match(forgotPasswordForm, /f\.backToLogin/);
-  assert.match(forgotPasswordForm, /\/app\/login/);
+  // Login lives at the top-level /login route (moved out of /app as part of
+  // the page-based site architecture) - /app/login now just redirects there.
+  assert.match(forgotPasswordForm, /\/login/);
 });
 
 test("the reset-password form recognizes both the recovery success and error callback shapes", () => {
