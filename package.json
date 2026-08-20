@@ -11,6 +11,7 @@
     "test:leaks": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test --experimental-strip-types src/lib/leaks/*.test.mjs src/lib/leaks/ingestion/*.test.mjs",
     "test:auth": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test --experimental-strip-types src/lib/auth-recovery.test.mjs src/components/auth-recovery-ui.test.mjs",
     "test:admin": "node --test src/lib/admin-username.test.mjs",
+    "test:register": "node --test src/lib/register-username.test.mjs",
     "leaks:ingest": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --env-file-if-exists=.env.local --experimental-strip-types scripts/ingest-leak.ts"
   },
   "dependencies": {

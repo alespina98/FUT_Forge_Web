@@ -46,6 +46,25 @@ export function RegisterForm() {
 
     setStatus("submitting");
     const supabase = createSupabaseBrowserClient();
+
+    // Definitive pre-check against the case-insensitive unique index enforced in
+    // 0006_require_username_on_signup.sql. Needed because GoTrue masks the
+    // signup trigger's unique-violation behind a generic 500 "Database error
+    // saving new user" with no code the client can distinguish from any other
+    // DB failure - so this RPC is the only reliable way to tell the user their
+    // username is taken. is_username_available() only ever returns a boolean,
+    // so it doesn't expose profile data. If the check itself fails (network
+    // error), fail open and let signUp proceed - the DB unique index is still
+    // the definitive enforcement against races and bypasses.
+    const { data: usernameAvailable, error: availabilityError } = await supabase.rpc("is_username_available", {
+      p_username: username.trim(),
+    });
+    if (!availabilityError && usernameAvailable === false) {
+      setStatus("error");
+      setError(r.usernameTaken);
+      return;
+    }
+
     // Same FUT Forge account system Desktop/Browser Mode already use - this
     // creates a real account in the one shared Supabase project, not a
     // second signup system. Email stays the Supabase Auth identity/login
