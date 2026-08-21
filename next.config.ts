@@ -18,6 +18,17 @@ const nextConfig: NextConfig = {
     return [
       { source: "/app/login", destination: "/login", permanent: true },
       { source: "/app/register", destination: "/register", permanent: true },
+      // The old Vercel domain and futforgeofficial.com serve the same project,
+      // so this redirect is host-conditional (`has: host`) - it only matches
+      // requests arriving on the retired domain, never futforgeofficial.com
+      // itself, which avoids a redirect loop. Query strings are forwarded
+      // automatically since they aren't part of the source/destination.
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "futforge.vercel.app" }],
+        destination: "https://futforgeofficial.com/:path*",
+        permanent: true,
+      },
     ];
   },
 };
