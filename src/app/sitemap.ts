@@ -10,6 +10,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${siteCopy.url}/features/sbc`, changeFrequency: "monthly", priority: 0.7 },
     { url: `${siteCopy.url}/download`, changeFrequency: "daily", priority: 0.9 },
     { url: `${siteCopy.url}/faq`, changeFrequency: "monthly", priority: 0.6 },
+    { url: `${siteCopy.url}/partners`, changeFrequency: "monthly", priority: 0.5 },
     { url: `${siteCopy.url}/register`, changeFrequency: "monthly", priority: 0.5 },
     { url: `${siteCopy.url}/login`, changeFrequency: "monthly", priority: 0.4 },
     { url: `${siteCopy.url}/privacy`, changeFrequency: "monthly", priority: 0.3 },

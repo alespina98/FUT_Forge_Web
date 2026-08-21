@@ -65,6 +65,7 @@ export function Navbar() {
     [t.nav.platforms, "/download"],
     [t.nav.howItWorks, "/how-it-works"],
     [t.nav.faq, "/faq"],
+    [t.nav.partners, "/partners"],
   ] as const;
   const mobileLinks = [
     [t.nav.featuresOverview, "/features"],
