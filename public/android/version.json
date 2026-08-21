@@ -1,18 +1,18 @@
 {
   "schema": 1,
-  "latestVersion": "1.0.13",
-  "latestVersionCode": 14,
+  "latestVersion": "1.0.14",
+  "latestVersionCode": 15,
   "minimumVersionCode": 1,
-  "apkUrl": "https://github.com/alespina98/FUT_Forge_Releases/releases/download/android-v1.0.13/FUT-Forge-Android-1.0.13.apk",
-  "sha256": "f961e966268f39c355d305b39bff354410c86544c0bfa40fd3f29fa403e43676",
-  "size": 2697690,
+  "apkUrl": "https://github.com/alespina98/FUT_Forge_Releases/releases/download/android-v1.0.14/FUT-Forge-Android-1.0.14.apk",
+  "sha256": "14951b62b3194c5828b9d9a5f90e8edc86e8d1a60e2bc0d5aa1ddd09ef676269",
+  "size": 2697722,
   "releaseNotes": {
     "it": [
-      "Il tasto/gesto Indietro ora naviga davvero all'interno di FUT Forge, schermata per schermata come nell'app EA originale, invece di riavviare l'app - confermato su dispositivo reale."
+      "I link di accesso, registrazione e recupero password ora puntano al dominio ufficiale futforgeofficial.com."
     ],
     "en": [
-      "The Back gesture/button now genuinely navigates within FUT Forge, screen by screen like the original EA app, instead of restarting the app - confirmed on a real device."
+      "Login, registration and forgot-password links now point to the official futforgeofficial.com domain."
     ]
   },
-  "publishedAt": "2026-08-20T11:06:07Z"
+  "publishedAt": "2026-08-21T05:59:03Z"
 }
