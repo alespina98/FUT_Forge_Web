@@ -1,18 +1,18 @@
 {
   "schema": 1,
-  "latestVersion": "1.0.14",
-  "latestVersionCode": 15,
+  "latestVersion": "1.0.15",
+  "latestVersionCode": 16,
   "minimumVersionCode": 1,
-  "apkUrl": "https://github.com/alespina98/FUT_Forge_Releases/releases/download/android-v1.0.14/FUT-Forge-Android-1.0.14.apk",
-  "sha256": "14951b62b3194c5828b9d9a5f90e8edc86e8d1a60e2bc0d5aa1ddd09ef676269",
-  "size": 2697722,
+  "apkUrl": "https://github.com/alespina98/FUT_Forge_Releases/releases/download/android-v1.0.15/FUT-Forge-Android-1.0.15.apk",
+  "sha256": "063c1fb02a3fbc58cf32e7adb48cb3141f5447b9615ea06b4688ac55135240ef",
+  "size": 2697574,
   "releaseNotes": {
     "it": [
-      "I link di accesso, registrazione e recupero password ora puntano al dominio ufficiale futforgeofficial.com."
+      "Rimosse le modalita di animazione pacchetto personalizzate (FUT Forge, Walkout senza esagono dorato): ora viene usata solo l'animazione standard EA."
     ],
     "en": [
-      "Login, registration and forgot-password links now point to the official futforgeofficial.com domain."
+      "Removed the custom pack animation modes (FUT Forge, Walkout no gold hex): only the standard EA animation is used now."
     ]
   },
-  "publishedAt": "2026-08-21T05:59:03Z"
+  "publishedAt": "2026-08-21T09:12:12Z"
 }
