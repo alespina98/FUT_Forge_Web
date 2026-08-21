@@ -1,18 +1,18 @@
 {
   "schema": 1,
-  "latestVersion": "1.0.15",
-  "latestVersionCode": 16,
+  "latestVersion": "1.0.16",
+  "latestVersionCode": 17,
   "minimumVersionCode": 1,
-  "apkUrl": "https://github.com/alespina98/FUT_Forge_Releases/releases/download/android-v1.0.15/FUT-Forge-Android-1.0.15.apk",
-  "sha256": "063c1fb02a3fbc58cf32e7adb48cb3141f5447b9615ea06b4688ac55135240ef",
-  "size": 2697574,
+  "apkUrl": "https://github.com/alespina98/FUT_Forge_Releases/releases/download/android-v1.0.16/FUT-Forge-Android-1.0.16.apk",
+  "sha256": "65e3dd3a5b657e23eb735d04145e945a2cb8969e03b5d02654ff2e565d01d022",
+  "size": 2699554,
   "releaseNotes": {
     "it": [
-      "Rimosse le modalita di animazione pacchetto personalizzate (FUT Forge, Walkout senza esagono dorato): ora viene usata solo l'animazione standard EA."
+      "Corretto il recupero dei prezzi nelle SBC: i prezzi dei giocatori e il costo squadra ora si aggiornano correttamente."
     ],
     "en": [
-      "Removed the custom pack animation modes (FUT Forge, Walkout no gold hex): only the standard EA animation is used now."
+      "Fixed SBC price resolution: player and squad cost estimates now resolve correctly."
     ]
   },
-  "publishedAt": "2026-08-21T09:12:12Z"
+  "publishedAt": "2026-08-21T10:57:27Z"
 }
