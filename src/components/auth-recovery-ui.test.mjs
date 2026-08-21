@@ -20,6 +20,7 @@ const forgotPasswordForm = read("forgot-password-form.tsx");
 const resetPasswordForm = read("reset-password-form.tsx");
 const forgotPasswordPage = readFileSync(componentsDir + "../app/app/forgot-password/page.tsx", "utf8");
 const resetPasswordPage = readFileSync(componentsDir + "../app/app/reset-password/page.tsx", "utf8");
+const authConfirmRoute = readFileSync(componentsDir + "../app/auth/confirm/route.ts", "utf8");
 
 test("the login form has a 'Forgot password?' action wired to /app/forgot-password", () => {
   assert.match(loginForm, /a\.forgotPasswordLink/);
@@ -84,4 +85,34 @@ test("none of the recovery UI files reference a service-role key", () => {
   for (const source of [loginForm, forgotPasswordForm, resetPasswordForm]) {
     assert.doesNotMatch(source, /service_role/i);
   }
+});
+
+// /auth/confirm exists so a password-recovery link works no matter which
+// browser/device opens it: verifyOtp is checked server-side against the
+// token_hash and the resulting session is written to cookies shared by
+// @supabase/ssr, instead of requiring the PKCE code_verifier that only the
+// browser/WebView which called resetPasswordForEmail() ever had.
+test("the auth confirm route verifies a recovery token_hash server-side via the shared SSR client", () => {
+  assert.match(authConfirmRoute, /createSupabaseServerClient/);
+  assert.match(authConfirmRoute, /verifyOtp\(\{\s*token_hash:\s*tokenHash,\s*type:\s*"recovery"\s*\}\)/);
+});
+
+test("the auth confirm route rejects any type other than recovery before calling verifyOtp", () => {
+  assert.match(authConfirmRoute, /type !== "recovery"/);
+});
+
+test("the auth confirm route redirect destination is a hardcoded constant, never attacker-controlled input", () => {
+  // Open-redirect guard: every NextResponse.redirect must target ALLOWED_NEXT,
+  // never a `next`/query value read straight from the request.
+  const redirects = authConfirmRoute.match(/NextResponse\.redirect\([^)]*\)/g) ?? [];
+  assert.ok(redirects.length > 0, "expected at least one redirect");
+  for (const call of redirects) assert.match(call, /ALLOWED_NEXT/, `redirect must use ALLOWED_NEXT: ${call}`);
+});
+
+test("the auth confirm route does not log the token_hash or verifyOtp result", () => {
+  assert.doesNotMatch(authConfirmRoute, /console\.(log|warn|error|debug)\(/);
+});
+
+test("the auth confirm route does not reference a service-role key", () => {
+  assert.doesNotMatch(authConfirmRoute, /service_role/i);
 });
