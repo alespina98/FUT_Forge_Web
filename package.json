@@ -12,7 +12,9 @@
     "test:auth": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test --experimental-strip-types src/lib/auth-recovery.test.mjs src/components/auth-recovery-ui.test.mjs",
     "test:admin": "node --test src/lib/admin-username.test.mjs",
     "test:register": "node --test src/lib/register-username.test.mjs",
-    "leaks:ingest": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --env-file-if-exists=.env.local --experimental-strip-types scripts/ingest-leak.ts"
+    "leaks:ingest": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --env-file-if-exists=.env.local --experimental-strip-types scripts/ingest-leak.ts",
+    "fc27:download": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/fc27/download-ea-ratings.ts",
+    "fc27:sync": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --env-file-if-exists=.env.local --experimental-strip-types scripts/fc27/sync-fc27-players.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.4",
