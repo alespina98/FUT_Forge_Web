@@ -4,7 +4,7 @@ import { siteCopy } from "@/lib/copy";
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: { userAgent: "*", allow: "/" },
-    sitemap: `${siteCopy.url}/sitemap.xml`,
+    sitemap: [`${siteCopy.url}/sitemap.xml`, `${siteCopy.url}/sitemap-index.xml`],
     host: siteCopy.url,
   };
 }
