@@ -144,6 +144,9 @@ export function Fc27PlayerDetailView({ player }: { player: PlayerDetail }) {
               {p.compareAction}
               <Arrow className="size-4" />
             </Link>
+            <Link href={`/fc27/best/${player.position_short_label.toLowerCase()}`} className="fc27-detail-best-position-link">
+              {p.bestPositionAction.replace("{code}", player.position_short_label)}
+            </Link>
 
             {/* skill_moves_raw can exceed 5 (e.g. Mbappe stores 6) while EA's
                 own live ratings page still renders a 5-star max for that

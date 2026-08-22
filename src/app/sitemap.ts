@@ -1,5 +1,6 @@
 ﻿import type { MetadataRoute } from "next";
 import { siteCopy } from "@/lib/copy";
+import { FC27_POSITIONS, positionSlug } from "@/lib/fc27/best-positions";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
@@ -14,6 +15,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${siteCopy.url}/fc27/players`, changeFrequency: "daily", priority: 0.8 },
     { url: `${siteCopy.url}/fc27/compare`, changeFrequency: "weekly", priority: 0.7 },
     { url: `${siteCopy.url}/fc27/rankings`, changeFrequency: "weekly", priority: 0.7 },
+    ...FC27_POSITIONS.map((position) => ({ url: `${siteCopy.url}/fc27/best/${positionSlug(position)}`, changeFrequency: "weekly" as const, priority: 0.7 })),
     { url: `${siteCopy.url}/register`, changeFrequency: "monthly", priority: 0.5 },
     { url: `${siteCopy.url}/login`, changeFrequency: "monthly", priority: 0.4 },
     { url: `${siteCopy.url}/privacy`, changeFrequency: "monthly", priority: 0.3 },
