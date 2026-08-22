@@ -352,3 +352,143 @@ main{background-image:radial-gradient(ellipse 72% 18% at 50% 31%,rgba(200,255,61
 @media(min-width:1025px){.home-hero{padding-top:130px;min-height:600px;display:flex;align-items:center}.home-hero-inner{grid-template-columns:1.05fr .95fr;gap:56px}.home-hero-copy{text-align:left}.home-hero-body{margin-left:0;margin-right:0}.home-hero-actions{justify-content:flex-start}.home-hero-visual{height:420px;max-width:none;margin:0}.home-hero-mark{width:96px;height:96px}.explore-grid{grid-template-columns:repeat(3,1fr)}.home-support-box{flex-direction:row;align-items:center;max-width:none;margin:22px 0 0;padding:12px 14px 12px 12px}.home-support-cta{width:auto}}
 @media(prefers-reduced-motion:reduce){.home-hero-visual-glow,.home-hero-particle{animation:none}}
 
+/* FC27 players database */
+.fc27-count-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;border:1px solid rgba(200,255,61,.18);background:rgba(200,255,61,.05);font-family:var(--font-mono);font-size:10px;letter-spacing:.08em;color:var(--lime)}
+
+.fc27-toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.fc27-search-box{display:flex;flex:1 1 260px;min-width:0;align-items:center;gap:8px;padding:0 14px;min-height:46px;border-radius:14px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03)}
+.fc27-sort-select{min-height:46px;border-radius:14px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);padding:0 12px;font-size:12.5px;color:#fff}
+.fc27-search-box input{flex:1;min-width:0;background:transparent;border:0;outline:0;color:#fff;font-size:13px}
+.fc27-search-box input::placeholder{color:rgba(255,255,255,.3)}
+
+.fc27-filters-panel{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:16px;border-radius:16px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.02)}
+@media(min-width:700px){.fc27-filters-panel{grid-template-columns:repeat(3,1fr)}}
+@media(min-width:1024px){.fc27-filters-panel{grid-template-columns:repeat(4,1fr)}}
+.fc27-field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.fc27-field label{font-family:var(--font-mono);font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.4)}
+.fc27-field select,.fc27-field input{min-height:40px;border-radius:10px;border:1px solid rgba(255,255,255,.1);background:rgba(0,0,0,.2);padding:0 10px;font-size:12.5px;color:#fff}
+.fc27-field input::placeholder{color:rgba(255,255,255,.3)}
+
+/* The frame-based base card (Step 5D) carries more detail (6 stat labels,
+   full name, flag+crest) than the old flat rectangle tile, so it needs
+   more width per card before text stays comfortably readable - narrower
+   breakpoints than Step 5C's grid, starting at 1 column instead of 2. */
+.fc27-grid{display:grid;grid-template-columns:1fr;gap:14px}
+@media(min-width:480px){.fc27-grid{grid-template-columns:repeat(2,1fr)}}
+@media(min-width:768px){.fc27-grid{grid-template-columns:repeat(3,1fr)}}
+@media(min-width:1024px){.fc27-grid{grid-template-columns:repeat(4,1fr);gap:16px}}
+@media(min-width:1280px){.fc27-grid{grid-template-columns:repeat(5,1fr)}}
+@media(min-width:1536px){.fc27-grid{grid-template-columns:repeat(6,1fr)}}
+
+.fc27-portrait-img{width:100%;height:100%;object-fit:cover;object-position:top center;display:block}
+.fc27-portrait-img-contain{width:100%;height:100%;object-fit:contain;object-position:bottom center;display:block}
+.fc27-portrait-fallback{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 30%,rgba(200,255,61,.09),transparent 65%),linear-gradient(160deg,#12150f,#080a08)}
+.fc27-portrait-fallback span{font-size:16cqw;font-weight:800;color:rgba(200,255,61,.35);letter-spacing:-.03em}
+
+/* FC27 base player card (Step 5D) - single component, tier-specific PNG
+   frame (public/fc27/cards/base-{tier}.png, the 3 user-approved assets) as
+   the background layer. Content zones are sized in percentages of the
+   card's own height via flexbox (not fixed units), so the identical
+   markup/CSS works for a small grid tile or a large detail card, and
+   adapts correctly even though the silver frame's canvas ratio (1060x1484)
+   differs slightly from bronze/gold (1024x1536) - the frame's true
+   aspect-ratio is set inline per tier by the component, so object-fit:cover
+   on the frame image never crops or stretches it. */
+.fc27-base-card-link{display:block;text-decoration:none;color:inherit;border-radius:10px;transition:transform .25s,filter .25s}
+.fc27-base-card-link:hover,.fc27-base-card-link:focus-visible{transform:translateY(-4px);filter:drop-shadow(0 6px 16px rgba(0,0,0,.35))}
+
+.fc27-base-card{container-type:inline-size;width:100%}
+.fc27-base-card-detail{max-width:300px;margin:0 auto}
+
+.fc27-base-card-frame{position:relative;width:100%;border-radius:10px;overflow:hidden;box-shadow:0 14px 30px rgba(0,0,0,.4)}
+.fc27-base-card-frame-bg{z-index:0}
+.fc27-base-card-content{position:absolute;inset:0}
+
+/* Typography refinement pass 5 - these coordinates are not estimated. They
+   were measured directly from the user-approved real FC27 Mbappé reference
+   image via pixel analysis (dark-pixel and background-delta scans against
+   the card's own detected frame bounding box), not eyeballed. See the
+   Step 5D geometry-calibration session notes for the raw scan output.
+   Measured anchors (% of card frame): OVR y=15-22% x=7-19%; POSITION
+   y=25-27% x=11-17%; PORTRAIT hair-top y=13%, photo-bottom y=63%, widest
+   (shoulders) x=20-85%; NAME y=66-71% x=31-62%; STATS y=74-82% x=8-86%
+   (values ~74-75%, gap, labels ~79-82%); ICONS y=87-91%. The previous pass
+   guessed the portrait was too large and shrank it - the measurement
+   proved the opposite: the real reference portrait spans hair-to-cutoff
+   at fully 13-63% of card height (50%), taller than any earlier guess: the
+   actual problem was that it started too low (21% instead of 13%) and
+   wasn't tall enough, which is what pushed name/stats down and cramped
+   them, not that it was oversized. */
+.fc27-base-card-rating-block{display:contents}
+.fc27-base-card-rating{position:absolute;z-index:3;left:7%;top:15%;font-family:var(--font-mono);font-weight:800;font-size:13cqw;line-height:.85;letter-spacing:-.02em;color:var(--card-text)}
+.fc27-base-card-position{position:absolute;z-index:3;left:11%;top:25%;font-family:var(--font-mono);font-weight:700;font-size:5cqw;line-height:1;letter-spacing:.05em;color:var(--card-text-muted);white-space:nowrap}
+
+.fc27-base-card-altpos-badge{position:absolute;z-index:3;right:7%;top:17%;padding:.7cqw 2.4cqw;border-radius:5cqw;background:rgba(255,255,255,.42);border:1px solid rgba(255,255,255,.55);font-family:var(--font-mono);font-weight:700;font-size:4.2cqw;line-height:1.5;color:var(--card-text)}
+.fc27-base-card-meta-badges{position:absolute;z-index:3;right:7%;top:27%;display:flex;flex-direction:column;align-items:flex-end;gap:1.6cqw}
+.fc27-base-card-meta-badge{padding:.6cqw 2.2cqw;border-radius:4cqw;background:rgba(255,255,255,.42);border:1px solid rgba(255,255,255,.55);font-family:var(--font-mono);font-weight:700;font-size:3.8cqw;line-height:1.5;color:var(--card-text)}
+
+/* left:20%/right:15% => width 65%, matching the measured shoulder-width
+   envelope (x=20-85%); top:13%/bottom:37% => spans to 63%, matching
+   measured hair-top(13%) to photo-bottom(63%). object-fit:contain still
+   letterboxes the actual photo within this box per its own aspect ratio -
+   the box is now sized to the reference's real portrait, not a guess. */
+.fc27-base-card-portrait-zone{position:absolute;z-index:1;left:20%;right:15%;top:13%;bottom:37%;overflow:hidden;display:flex;align-items:flex-end;justify-content:center}
+.fc27-base-card-portrait{filter:drop-shadow(0 6px 8px rgba(0,0,0,.3))}
+
+.fc27-base-card-nameplate{position:absolute;z-index:4;left:7%;right:7%;top:65%;height:6%;margin:0;display:flex;align-items:flex-start;justify-content:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center;font-weight:800;font-size:7.5cqw;line-height:1;letter-spacing:-.01em;color:var(--card-text)}
+
+.fc27-base-card-stats{position:absolute;z-index:4;left:8%;right:8%;top:74%;height:8%;display:grid;grid-template-columns:repeat(6,1fr);align-items:start;justify-items:center;column-gap:.5cqw}
+.fc27-base-card-stat{display:flex;flex-direction:column;align-items:center;line-height:.9}
+.fc27-base-card-stat-value{font-family:var(--font-mono);font-weight:800;font-size:5.4cqw;line-height:.9;color:var(--card-text)}
+.fc27-base-card-stat-label{margin-top:.8cqw;font-size:2.55cqw;line-height:1;font-weight:700;letter-spacing:.03em;color:var(--card-text-muted)}
+
+/* top:87% + 5% height ends at 92% - leaves a full 8% empty safe area
+   (was 6%) above the shield's pointed tip, per "visible empty frame below
+   them before the card tip". */
+.fc27-base-card-icons-row{position:absolute;z-index:4;left:0;right:0;top:87%;height:5%;display:flex;align-items:center;justify-content:center;gap:2.2cqw}
+.fc27-base-card-flag,.fc27-base-card-crest{width:5cqw;height:5cqw;object-fit:contain;filter:drop-shadow(0 1px 2px rgba(0,0,0,.35))}
+
+.fc27-base-card-tier-bronze{--card-text:#2a1206;--card-text-muted:rgba(42,18,6,.62);--card-divider:rgba(42,18,6,.22)}
+.fc27-base-card-tier-silver{--card-text:#1b1e21;--card-text-muted:rgba(27,30,33,.6);--card-divider:rgba(27,30,33,.2)}
+.fc27-base-card-tier-gold{--card-text:#241804;--card-text-muted:rgba(36,24,4,.62);--card-divider:rgba(36,24,4,.22)}
+
+.fc27-skeleton-card{border-radius:10px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.02);aspect-ratio:2/3}
+
+.fc27-pagination{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-top:24px}
+.fc27-pagination-info{font-size:12px;color:rgba(255,255,255,.4)}
+.fc27-pagination-buttons{display:flex;gap:8px}
+@media(max-width:640px){.fc27-filters-panel{grid-template-columns:1fr 1fr}}
+
+.fc27-back-link{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:rgba(255,255,255,.5);text-decoration:none;transition:color .2s}
+.fc27-back-link:hover{color:var(--lime)}
+
+.fc27-detail-top{display:grid;gap:32px;grid-template-columns:1fr}
+@media(min-width:768px){.fc27-detail-top{grid-template-columns:minmax(240px,320px) 1fr;align-items:start}}
+
+.fc27-chip-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+@media(min-width:480px){.fc27-chip-grid{grid-template-columns:repeat(3,1fr)}}
+.fc27-chip{border-radius:14px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.02);padding:10px 12px}
+.fc27-chip-label{display:block;font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:rgba(255,255,255,.4)}
+.fc27-chip-value{display:block;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px;font-weight:600;color:#fff}
+
+.fc27-attr-groups{display:grid;gap:18px;grid-template-columns:1fr}
+@media(min-width:768px){.fc27-attr-groups{grid-template-columns:repeat(2,1fr)}}
+@media(min-width:1100px){.fc27-attr-groups{grid-template-columns:repeat(3,1fr)}}
+.fc27-attr-groups-gk{grid-template-columns:1fr!important;max-width:520px}
+.fc27-attr-group{border-radius:20px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.02);padding:18px 20px}
+.fc27-attr-group-head{display:flex;align-items:center;justify-content:space-between;padding-bottom:12px;margin-bottom:12px;border-bottom:1px solid rgba(255,255,255,.08)}
+.fc27-attr-group-name{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.55)}
+.fc27-attr-group-face{display:flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:22px;font-weight:800;color:var(--lime)}
+
+.fc27-attr-rows{display:flex;flex-direction:column;gap:9px}
+.fc27-attr-row{display:grid;grid-template-columns:1fr 72px 24px auto;align-items:center;gap:10px}
+.fc27-attr-row-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12.5px;color:rgba(255,255,255,.65)}
+.fc27-attr-bar{position:relative;height:5px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden}
+.fc27-attr-bar-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,rgba(200,255,61,.55),var(--lime))}
+.fc27-attr-row-value{text-align:right;font-family:var(--font-mono);font-size:12.5px;font-weight:700;color:#fff}
+
+.fc27-diff-badge{display:inline-flex;align-items:center;gap:2px;font-size:10.5px;font-weight:700}
+.fc27-diff-arrow{width:8px;height:8px}
+.fc27-diff-up{color:#4ade80}
+.fc27-diff-down{color:#f87171}
+
