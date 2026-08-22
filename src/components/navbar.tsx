@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { PRODUCT } from "@/lib/copy";
+import type { Dictionary } from "@/lib/copy";
 import { useI18n } from "./i18n-provider";
 import { ChevronDownIcon, DownloadIcon, ExitIcon, ForgeMark, UserIcon } from "./icons";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
@@ -52,9 +54,119 @@ function NavAccount({ onNavigate }: { onNavigate?: () => void }) {
   );
 }
 
+// Permanent home for FC27 sub-sections (News/Players/Squad Builder today,
+// more later) - a real JS-controlled dropdown, not the hover/focus-within
+// CSS-only mechanism Features uses, because this one has explicit
+// requirements (Enter/Space opens via native button + focus-within;
+// Escape and click-outside both close) that plain hover doesn't cover.
+// Visually still reuses .nav-dropdown/.nav-dropdown-menu for parity with
+// Features - only an additional class + this component's own state decide
+// when the menu is forced open beyond what hover/focus-within already do.
+function Fc27NavDropdown({ t, pathname }: { t: Dictionary; pathname: string | null }) {
+  const [open, setOpen] = useState(false);
+  const [menuPos, setMenuPos] = useState<{ top: number; left: number } | null>(null);
+  const ref = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const active = pathname?.startsWith("/fc27") ?? false;
+
+  // .nav-center scrolls horizontally (overflow-x:auto), which per the CSS
+  // overflow spec forces overflow-y to auto too - any absolutely positioned
+  // dropdown nested inside it gets clipped no matter what overflow-y is set
+  // to explicitly. Rendering the menu through a portal at the very end of
+  // <body>, fixed-positioned from the trigger's measured rect, is the only
+  // way to escape that clip (this affects the pre-existing Features dropdown
+  // too, but fixing that is out of scope here - this only changes this menu).
+  // The portal also detaches the menu from .nav-dropdown's DOM subtree, so
+  // the CSS-only :hover/:focus-within reveal Features relies on can't reach
+  // it - hover open/close is reimplemented in JS below for parity.
+  function clearCloseTimer() {
+    if (closeTimer.current) {
+      clearTimeout(closeTimer.current);
+      closeTimer.current = null;
+    }
+  }
+
+  function openMenu() {
+    clearCloseTimer();
+    if (ref.current) {
+      const rect = ref.current.getBoundingClientRect();
+      setMenuPos({ top: rect.bottom + 10, left: rect.left });
+    }
+    setOpen(true);
+  }
+
+  function scheduleClose() {
+    clearCloseTimer();
+    closeTimer.current = setTimeout(() => setOpen(false), 150);
+  }
+
+  useEffect(() => {
+    if (!open) return;
+    function onDocMouseDown(e: MouseEvent) {
+      const target = e.target as Node;
+      if (ref.current?.contains(target)) return;
+      if (menuRef.current?.contains(target)) return;
+      setOpen(false);
+    }
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("mousedown", onDocMouseDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onDocMouseDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open]);
+
+  useEffect(() => () => clearCloseTimer(), []);
+
+  const items = [
+    [t.nav.fc27News, "/fc27/news"],
+    [t.nav.players, "/fc27/players"],
+    [t.nav.fc27SquadBuilder, "/fc27/squad-builder"],
+  ] as const;
+
+  const menu = (
+    <div
+      ref={menuRef}
+      className={`glass nav-dropdown-menu${open ? " nav-dropdown-menu-open" : ""}`}
+      role="menu"
+      style={menuPos ? { position: "fixed", top: menuPos.top, left: menuPos.left } : undefined}
+      onMouseEnter={clearCloseTimer}
+      onMouseLeave={scheduleClose}
+    >
+      {items.map(([label, href]) => (
+        <Link key={href} href={href} role="menuitem" onClick={() => setOpen(false)} className={pathname === href ? "nav-dropdown-item-active" : ""}>
+          <b>{label}</b>
+        </Link>
+      ))}
+    </div>
+  );
+
+  return (
+    <div className="nav-dropdown" ref={ref} onMouseEnter={openMenu} onMouseLeave={scheduleClose}>
+      <button
+        type="button"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={openMenu}
+        className={active ? "nav-dropdown-trigger-active" : ""}
+      >
+        {t.nav.fc27}<ChevronDownIcon className="nav-dropdown-chevron size-3.5" />
+      </button>
+      {typeof document !== "undefined" ? createPortal(menu, document.body) : menu}
+    </div>
+  );
+}
+
 export function Navbar() {
   const [open, setOpen] = useState(false);
   const { locale, setLocale, t } = useI18n();
+  const pathname = usePathname();
+  const fc27Active = pathname?.startsWith("/fc27") ?? false;
+  const [fc27MobileOpen, setFc27MobileOpen] = useState(fc27Active);
 
   const featuresMenu = [
     [t.nav.featuresOverview, "/features", t.featuresPage.title],
@@ -66,13 +178,16 @@ export function Navbar() {
     [t.nav.howItWorks, "/how-it-works"],
     [t.nav.faq, "/faq"],
     [t.nav.partners, "/partners"],
+  ] as const;
+  const fc27MobileItems = [
+    [t.nav.fc27News, "/fc27/news"],
     [t.nav.players, "/fc27/players"],
+    [t.nav.fc27SquadBuilder, "/fc27/squad-builder"],
   ] as const;
   const mobileLinks = [
     [t.nav.featuresOverview, "/features"],
     [t.nav.evoLab, "/features/evo-lab"],
     [t.nav.sbc, "/features/sbc"],
-    ...flatLinks,
   ] as const;
 
   return (
@@ -89,6 +204,7 @@ export function Navbar() {
             </div>
           </div>
           {flatLinks.map(([label, href]) => <Link key={href} href={href}>{label}</Link>)}
+          <Fc27NavDropdown t={t} pathname={pathname} />
         </div>
         <div className="nav-actions min-w-0 justify-self-end">
           <div className="language-switcher desktop-language" role="group" aria-label={t.nav.language}>
@@ -106,7 +222,27 @@ export function Navbar() {
           <a href="/download" className="button-primary nav-download !min-h-11 !px-3 text-sm"><DownloadIcon className="size-4" /><span className="nav-cta-full">{t.nav.cta}</span><span className="nav-cta-short">{t.nav.download}</span></a>
           <button className={`menu-button ${open ? "open" : ""}`} onClick={() => setOpen(!open)} aria-expanded={open} aria-controls="mobile-navigation" aria-label={open ? t.nav.close : t.nav.open}><span /><span /></button>
         </div>
-        {open && <div id="mobile-navigation" className="glass mobile-menu absolute left-3 right-3 top-[64px] flex flex-col rounded-2xl p-2 lg:hidden">{mobileLinks.map(([label, href], index) => <a key={href} href={href} onClick={() => setOpen(false)}>{label}<span>0{index + 1}</span></a>)}<div className="mt-1 border-t border-white/10 px-3 py-3"><NavAccount onNavigate={() => setOpen(false)} /></div><div className="mobile-language" role="group" aria-label={t.nav.language}><span>{t.nav.language}</span>{(["en", "it"] as const).map((item) => <button key={item} type="button" className={locale === item ? "active" : ""} onClick={() => { setLocale(item); setOpen(false); }} aria-pressed={locale === item}>{item.toUpperCase()} · {item === "en" ? "English" : "Italiano"}</button>)}</div></div>}
+        {open && (
+          <div id="mobile-navigation" className="glass mobile-menu absolute left-3 right-3 top-[64px] flex flex-col rounded-2xl p-2 lg:hidden">
+            {mobileLinks.map(([label, href], index) => <a key={href} href={href} onClick={() => setOpen(false)}>{label}<span>0{index + 1}</span></a>)}
+            <div className="mobile-menu-group">
+              <button type="button" className={`mobile-menu-accordion-trigger${fc27Active ? " active" : ""}`} onClick={() => setFc27MobileOpen((v) => !v)} aria-expanded={fc27MobileOpen}>
+                {t.nav.fc27}
+                <ChevronDownIcon className={`size-3.5 transition-transform ${fc27MobileOpen ? "rotate-180" : ""}`} />
+              </button>
+              {fc27MobileOpen && (
+                <div className="mobile-menu-accordion-panel">
+                  {fc27MobileItems.map(([label, href]) => (
+                    <a key={href} href={href} onClick={() => setOpen(false)} className={pathname === href ? "active" : ""}>{label}</a>
+                  ))}
+                </div>
+              )}
+            </div>
+            {flatLinks.map(([label, href], index) => <a key={href} href={href} onClick={() => setOpen(false)}>{label}<span>0{index + 4}</span></a>)}
+            <div className="mt-1 border-t border-white/10 px-3 py-3"><NavAccount onNavigate={() => setOpen(false)} /></div>
+            <div className="mobile-language" role="group" aria-label={t.nav.language}><span>{t.nav.language}</span>{(["en", "it"] as const).map((item) => <button key={item} type="button" className={locale === item ? "active" : ""} onClick={() => { setLocale(item); setOpen(false); }} aria-pressed={locale === item}>{item.toUpperCase()} · {item === "en" ? "English" : "Italiano"}</button>)}</div>
+          </div>
+        )}
       </nav>
     </header>
   );

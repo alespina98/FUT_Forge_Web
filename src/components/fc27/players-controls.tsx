@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { SearchIcon, SlidersIcon, RefreshIcon } from "@/components/icons";
+import { SlidersIcon, RefreshIcon } from "@/components/icons";
+import { Fc27PlayerSearchAutocomplete } from "./player-search-autocomplete";
 import type { Dictionary } from "@/lib/copy";
 import type { FilterOptions } from "@/lib/fc27/players";
 
@@ -32,10 +33,6 @@ export function Fc27PlayersControls({ t, filterOptions }: { t: Fc27Copy; filterO
   // search-only no-results state still needs a one-click way out.
   const hasAnyQueryState = hasActiveFilters || !!searchParams.get("q");
   const [filtersOpen, setFiltersOpen] = useState(hasActiveFilters);
-  const [searchValue, setSearchValue] = useState(searchParams.get("q") ?? "");
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => { setSearchValue(searchParams.get("q") ?? ""); }, [searchParams]);
 
   function buildUrl(overrides: Record<string, string | null>): string {
     const params = new URLSearchParams(searchParams.toString());
@@ -54,15 +51,11 @@ export function Fc27PlayersControls({ t, filterOptions }: { t: Fc27Copy; filterO
     else router.push(url, { scroll: false });
   }
 
-  function onSearchChange(value: string) {
-    setSearchValue(value);
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => setParam("q", value.trim() || null, true), 350);
+  function commitFullSearch(value: string) {
+    setParam("q", value.trim() || null);
   }
 
   function resetFilters() {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    setSearchValue("");
     router.push(pathname, { scroll: false });
   }
 
@@ -71,11 +64,11 @@ export function Fc27PlayersControls({ t, filterOptions }: { t: Fc27Copy; filterO
   return (
     <div className="mb-6 flex flex-col gap-4">
       <div className="fc27-toolbar">
-        <label className="fc27-search-box">
-          <SearchIcon className="size-4 shrink-0 text-white/40" />
-          <span className="sr-only">{t.searchLabel}</span>
-          <input value={searchValue} onChange={(e) => onSearchChange(e.target.value)} placeholder={t.searchPlaceholder} type="search" />
-        </label>
+        <Fc27PlayerSearchAutocomplete
+          initialQuery={searchParams.get("q") ?? ""}
+          onCommitSearch={commitFullSearch}
+          t={{ searchLabel: t.searchLabel, searchPlaceholder: t.searchPlaceholder, searching: t.searching, noResultsTitle: t.noResultsTitle }}
+        />
         <select className="select-dark fc27-sort-select" value={sort} onChange={(e) => setParam("sort", e.target.value === "overall_desc" ? null : e.target.value)} aria-label={t.sortLabel}>
           {SORT_KEYS.map((key) => <option key={key} value={key}>{t.sort[key]}</option>)}
         </select>

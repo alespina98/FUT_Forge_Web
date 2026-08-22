@@ -198,6 +198,27 @@ main{background-image:radial-gradient(ellipse 72% 18% at 50% 31%,rgba(200,255,61
 .nav-dropdown-menu a b{font-size:12px;font-weight:600}
 .nav-dropdown-menu a span{font-size:10px;color:rgba(255,255,255,.35)}
 
+/* EA FC 27 dropdown additions - JS-controlled open state (Fc27NavDropdown
+   in navbar.tsx) layers on top of the existing hover/focus-within
+   mechanism rather than replacing it, so mouse hover still works exactly
+   like Features while click/Enter/Escape also work. */
+.nav-dropdown-menu.nav-dropdown-menu-open{opacity:1;transform:translateY(0);pointer-events:auto}
+.nav-dropdown-trigger-active{color:var(--lime)}
+.nav-dropdown-item-active{color:var(--lime)!important}
+
+/* Mobile EA FC 27 accordion - same row look as the other .mobile-menu a
+   links (see the trigger's shared visual weight), expands in place rather
+   than opening a second overlay, so it never conflicts with the sheet's
+   own open/close state. */
+.mobile-menu-group{display:flex;flex-direction:column}
+.mobile-menu-accordion-trigger{display:flex;width:100%;align-items:center;justify-content:space-between;border-radius:12px;border:0;background:transparent;padding:13px 14px;font:inherit;text-align:left;color:rgba(255,255,255,.7)}
+.mobile-menu-accordion-trigger:hover{background:rgba(255,255,255,.05);color:#fff}
+.mobile-menu-accordion-trigger.active{color:var(--lime)}
+.mobile-menu-accordion-panel{display:flex;flex-direction:column;padding-left:12px}
+.mobile-menu-accordion-panel a{display:flex;justify-content:space-between;border-radius:12px;padding:11px 14px;font-size:13.5px;color:rgba(255,255,255,.55)}
+.mobile-menu-accordion-panel a:hover{background:rgba(255,255,255,.05);color:#fff}
+.mobile-menu-accordion-panel a.active{color:var(--lime)}
+
 .partner-grid{display:grid;gap:16px}
 .partner-card{display:flex;flex-direction:column;gap:10px;border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:20px;background:rgba(255,255,255,.02)}
 .partner-card strong{font-size:13px;font-weight:700}
@@ -356,10 +377,27 @@ main{background-image:radial-gradient(ellipse 72% 18% at 50% 31%,rgba(200,255,61
 .fc27-count-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;border:1px solid rgba(200,255,61,.18);background:rgba(200,255,61,.05);font-family:var(--font-mono);font-size:10px;letter-spacing:.08em;color:var(--lime)}
 
 .fc27-toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
-.fc27-search-box{display:flex;flex:1 1 260px;min-width:0;align-items:center;gap:8px;padding:0 14px;min-height:46px;border-radius:14px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03)}
+.fc27-search-box-wrap{position:relative;flex:1 1 260px;min-width:0}
+.fc27-search-box{display:flex;width:100%;min-width:0;align-items:center;gap:8px;padding:0 14px;min-height:46px;border-radius:14px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03)}
 .fc27-sort-select{min-height:46px;border-radius:14px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);padding:0 12px;font-size:12.5px;color:#fff}
 .fc27-search-box input{flex:1;min-width:0;background:transparent;border:0;outline:0;color:#fff;font-size:13px}
 .fc27-search-box input::placeholder{color:rgba(255,255,255,.3)}
+.fc27-search-box input::-webkit-search-cancel-button{display:none}
+
+.fc27-search-spinner{width:14px;height:14px;flex-shrink:0;border-radius:50%;border:2px solid rgba(255,255,255,.15);border-top-color:var(--lime);animation:fc27-spin .7s linear infinite}
+@keyframes fc27-spin{to{transform:rotate(360deg)}}
+
+/* Autocomplete dropdown - compact FUT Forge popover, distinct from full
+   player cards per spec (name/OVR/position/club rows only). */
+.fc27-search-dropdown{position:absolute;left:0;right:0;top:calc(100% + 8px);z-index:60;max-height:360px;overflow-y:auto;border-radius:14px;border:1px solid rgba(255,255,255,.1);background:#0a0c09;box-shadow:0 20px 44px rgba(0,0,0,.5);padding:6px}
+.fc27-search-status{margin:0;padding:14px 12px;font-size:12.5px;color:rgba(255,255,255,.4);text-align:center}
+.fc27-search-option{display:flex;width:100%;flex-direction:column;gap:2px;border-radius:10px;padding:8px 10px;text-align:left;background:transparent;border:0;cursor:pointer}
+.fc27-search-option:hover,.fc27-search-option-active{background:rgba(200,255,61,.08)}
+.fc27-search-option-name{font-size:13px;font-weight:600;color:#fff}
+.fc27-search-option-meta{display:flex;align-items:center;gap:6px;font-size:11px;color:rgba(255,255,255,.4)}
+.fc27-search-option-meta b{font-family:var(--font-mono);color:var(--lime)}
+.fc27-search-option-meta em{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-style:normal;color:rgba(255,255,255,.3)}
+.fc27-search-option-meta em:before{content:"·";margin-right:6px}
 
 .fc27-filters-panel{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:16px;border-radius:16px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.02)}
 @media(min-width:700px){.fc27-filters-panel{grid-template-columns:repeat(3,1fr)}}
