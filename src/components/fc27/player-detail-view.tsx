@@ -18,7 +18,7 @@ type FaceKey = "pace" | "shooting" | "passing" | "dribbling" | "defending" | "ph
 // camelCase key in copy.ts's fc27PlayerDetailPage.stats. Every group here
 // mirrors the task's fixed PACE/SHOOTING/PASSING/DRIBBLING/DEFENDING/
 // PHYSICAL -> sub-attribute mapping - nothing invented beyond it.
-const ATTRIBUTE_GROUPS: Array<{ key: GroupKey; face: FaceKey; stats: Array<{ db: string; copy: StatKey }> }> = [
+export const ATTRIBUTE_GROUPS: Array<{ key: GroupKey; face: FaceKey; stats: Array<{ db: string; copy: StatKey }> }> = [
   { key: "pace", face: "pace", stats: [
     { db: "acceleration", copy: "acceleration" }, { db: "sprint_speed", copy: "sprintSpeed" },
   ] },
@@ -46,7 +46,7 @@ const ATTRIBUTE_GROUPS: Array<{ key: GroupKey; face: FaceKey; stats: Array<{ db:
 // gk = the snake_case key inside PlayerDetail.goalkeeping (same source file,
 // the goalkeeping block). Shown instead of ATTRIBUTE_GROUPS for goalkeepers
 // per the task's explicit "don't force the outfield layout on GKs" rule.
-const GK_STATS: Array<{ gk: string; copy: StatKey }> = [
+export const GK_STATS: Array<{ gk: string; copy: StatKey }> = [
   { gk: "gk_diving", copy: "gkDiving" }, { gk: "gk_handling", copy: "gkHandling" }, { gk: "gk_kicking", copy: "gkKicking" },
   { gk: "gk_positioning", copy: "gkPositioning" }, { gk: "gk_reflexes", copy: "gkReflexes" },
 ];

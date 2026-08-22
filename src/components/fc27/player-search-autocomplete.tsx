@@ -22,7 +22,7 @@ type Copy = {
 // touches the full grid. The existing full-search (?q=, filters the grid)
 // is preserved as a fallback: Enter with nothing highlighted calls
 // onCommitSearch, same as the old per-keystroke-debounced behavior used to.
-export function Fc27PlayerSearchAutocomplete({ initialQuery, onCommitSearch, t }: { initialQuery: string; onCommitSearch: (value: string) => void; t: Copy }) {
+export function Fc27PlayerSearchAutocomplete({ initialQuery, onCommitSearch, onSelect, inputId = "fc27-search", t }: { initialQuery: string; onCommitSearch?: (value: string) => void; onSelect?: (player: PlayerSuggestion) => void; inputId?: string; t: Copy }) {
   const router = useRouter();
   const [value, setValue] = useState(initialQuery);
   const [suggestions, setSuggestions] = useState<PlayerSuggestion[]>([]);
@@ -36,6 +36,7 @@ export function Fc27PlayerSearchAutocomplete({ initialQuery, onCommitSearch, t }
 
   // Keeps the box in sync with browser back/forward or a direct ?q= link -
   // same role the old inline effect in players-controls.tsx played.
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- prop changes are external URL/navigation state that must replace the controlled input value.
   useEffect(() => setValue(initialQuery), [initialQuery]);
 
   useEffect(() => {
@@ -89,7 +90,12 @@ export function Fc27PlayerSearchAutocomplete({ initialQuery, onCommitSearch, t }
 
   function goToPlayer(s: PlayerSuggestion) {
     setOpen(false);
-    router.push(`/fc27/players/${playerUrlSlug(s.ea_player_id, s.slug)}`);
+    if (onSelect) {
+      setValue(s.display_name);
+      onSelect(s);
+    } else {
+      router.push(`/fc27/players/${playerUrlSlug(s.ea_player_id, s.slug)}`);
+    }
   }
 
   function onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -107,7 +113,7 @@ export function Fc27PlayerSearchAutocomplete({ initialQuery, onCommitSearch, t }
         goToPlayer(suggestions[highlighted]);
       } else {
         setOpen(false);
-        onCommitSearch(value);
+        onCommitSearch?.(value);
       }
     } else if (e.key === "Escape") {
       if (open) { e.preventDefault(); setOpen(false); }
@@ -131,16 +137,16 @@ export function Fc27PlayerSearchAutocomplete({ initialQuery, onCommitSearch, t }
           type="search"
           role="combobox"
           aria-expanded={open}
-          aria-controls="fc27-search-listbox"
+          aria-controls={`${inputId}-listbox`}
           aria-autocomplete="list"
-          aria-activedescendant={highlighted >= 0 ? `fc27-search-option-${highlighted}` : undefined}
+          aria-activedescendant={highlighted >= 0 ? `${inputId}-option-${highlighted}` : undefined}
           autoComplete="off"
         />
         {loading && <span className="fc27-search-spinner" aria-hidden />}
       </label>
 
       {open && (
-        <div id="fc27-search-listbox" role="listbox" className="fc27-search-dropdown">
+        <div id={`${inputId}-listbox`} role="listbox" className="fc27-search-dropdown">
           {loading && suggestions.length === 0 ? (
             <p className="fc27-search-status">{t.searching}</p>
           ) : showNoResults ? (
@@ -149,7 +155,7 @@ export function Fc27PlayerSearchAutocomplete({ initialQuery, onCommitSearch, t }
             suggestions.map((s, i) => (
               <button
                 key={s.ea_player_id}
-                id={`fc27-search-option-${i}`}
+                id={`${inputId}-option-${i}`}
                 role="option"
                 aria-selected={i === highlighted}
                 type="button"

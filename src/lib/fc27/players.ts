@@ -252,3 +252,15 @@ export async function fetchPlayerById(eaPlayerId: number): Promise<PlayerDetail 
   const rows = (await response.json()) as PlayerDetail[];
   return rows[0] ?? null;
 }
+
+export async function fetchPlayersByIds(eaPlayerIds: number[]): Promise<PlayerDetail[]> {
+  const ids = [...new Set(eaPlayerIds.filter((id) => Number.isSafeInteger(id) && id > 0))].slice(0, 2);
+  if (ids.length === 0) return [];
+  const params = new URLSearchParams({ select: DETAIL_COLUMNS, ea_player_id: `in.(${ids.join(",")})` });
+  const response = await fetch(`${supabaseUrl}/rest/v1/fc27_players?${params}`, {
+    headers: { apikey: anonKey, Authorization: `Bearer ${anonKey}` },
+    next: { revalidate: 300 },
+  });
+  if (!response.ok) throw new Error(`Unable to load comparison players (${response.status})`);
+  return (await response.json()) as PlayerDetail[];
+}
