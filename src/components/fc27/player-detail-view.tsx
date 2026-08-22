@@ -140,6 +140,11 @@ export function Fc27PlayerDetailView({ player }: { player: PlayerDetail }) {
               <span>{player.nationality_name}</span>
             </p>
 
+            <Link href={`/fc27/compare?a=${player.ea_player_id}`} className="fc27-detail-compare-cta">
+              {p.compareAction}
+              <Arrow className="size-4" />
+            </Link>
+
             {/* skill_moves_raw can exceed 5 (e.g. Mbappe stores 6) while EA's
                 own live ratings page still renders a 5-star max for that
                 same player - verified directly against ea.com - so display

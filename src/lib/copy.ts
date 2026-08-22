@@ -724,6 +724,7 @@ export const copy = {
     fc27PlayerDetailPage: {
       backToPlayers: "Back to Players",
       playerDetails: "Player details",
+      compareAction: "Compare",
       notFoundTitle: "Player not found",
       notFoundBody: "This player doesn't exist in the FC 27 database.",
       errorTitle: "Couldn't load this player",
@@ -1484,6 +1485,7 @@ export const copy = {
     fc27PlayerDetailPage: {
       backToPlayers: "Torna ai giocatori",
       playerDetails: "Dettagli giocatore",
+      compareAction: "Confronta",
       notFoundTitle: "Giocatore non trovato",
       notFoundBody: "Questo giocatore non esiste nel database di FC 27.",
       errorTitle: "Impossibile caricare il giocatore",
