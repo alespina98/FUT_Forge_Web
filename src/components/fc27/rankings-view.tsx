@@ -15,6 +15,6 @@ export function Fc27RankingsView({ players, stat, options }: { players: RankingP
     <section className="mt-6" aria-labelledby="ranking-heading"><div className="fc27-ranking-heading"><div><h2 id="ranking-heading">{c.top50} · {c.stats[stat]}</h2><p>{c.gkNotice}</p></div><Link href="/fc27/players">{c.browsePlayers}</Link></div>
       {players.length===0?<div className="fc27-ranking-empty"><p>{c.noPlayers}</p><Link href="/fc27/rankings">{c.resetFilters}</Link></div>:<Fc27RankingList players={players} stat={stat} labels={{rank:c.rank,viewPlayer:c.viewPlayer,compare:c.compare,metric:c.shortStats[stat]}}/>}
     </section>
-    <section className="fc27-ranking-seo"><h2>{c.aboutTitle}</h2><p>{c.aboutBody}</p><Link className="fc27-ranking-position-link" href="/fc27/best/st">{c.browseByPosition}</Link></section>
+    <section className="fc27-ranking-seo"><h2>{c.aboutTitle}</h2><p>{c.aboutBody}</p><div className="fc27-best-links"><Link href="/fc27/best/st">{c.browseByPosition}</Link><Link href="/fc27/stat-finder">{c.advancedStatFinder}</Link></div></section>
   </div></div>;
 }
