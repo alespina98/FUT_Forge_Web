@@ -92,6 +92,7 @@ export function Fc27PlayerDetailView({ player, returnTo }: { player: PlayerDetai
   const backLabel = returnContext.kind === "hiddenGems" ? (locale === "it" ? `Torna alle ${t.nav.fc27HiddenGems}` : `Back to ${t.nav.fc27HiddenGems}`)
     : returnContext.kind === "statFinder" ? (locale === "it" ? `Torna alla ${t.nav.fc27StatFinder}` : `Back to ${t.nav.fc27StatFinder}`)
     : returnContext.kind === "rankings" ? (locale === "it" ? `Torna alle ${t.nav.fc27Rankings}` : `Back to ${t.nav.fc27Rankings}`)
+    : returnContext.kind === "similar" ? (locale === "it" ? "Torna ai giocatori simili" : "Back to Similar Players")
     : returnContext.kind === "best" && positionName ? (locale === "it" ? `Torna ai migliori ${positionName}` : `Back to Best ${positionName}`)
     : p.backToPlayers;
 
@@ -148,6 +149,10 @@ export function Fc27PlayerDetailView({ player, returnTo }: { player: PlayerDetai
               <span>{player.nationality_name}</span>
             </p>
 
+            <Link href={`/fc27/similar/${player.ea_player_id}-${player.slug.replace(new RegExp(`-${player.ea_player_id}$`), "")}`} className="fc27-detail-similar-cta">
+              {locale === "it" ? "Trova Giocatori Simili" : "Find Similar Players"}
+              <Arrow className="size-4" />
+            </Link>
             <Link href={`/fc27/compare?a=${player.ea_player_id}`} className="fc27-detail-compare-cta">
               {p.compareAction}
               <Arrow className="size-4" />

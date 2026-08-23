@@ -237,7 +237,7 @@ export type PlayerDetail = {
   avatar_url: string | null;
 };
 
-const DETAIL_COLUMNS = "ea_player_id,slug,first_name,last_name,common_name,display_name,overall,rank,pace,shooting,passing,dribbling,defending,physicality,face_stat_diffs,position_id,position_short_label,position_label,position_type_id,position_type_name,alternate_positions,nationality_id,nationality_name,nationality_image_url,club_id,club_name,club_image_url,league_name,birthdate,skill_moves_raw,weak_foot,preferred_foot_code,height_cm,weight_kg,detailed_attributes,goalkeeping,player_abilities_raw,avatar_url";
+export const DETAIL_COLUMNS = "ea_player_id,slug,first_name,last_name,common_name,display_name,overall,rank,pace,shooting,passing,dribbling,defending,physicality,face_stat_diffs,position_id,position_short_label,position_label,position_type_id,position_type_name,alternate_positions,nationality_id,nationality_name,nationality_image_url,club_id,club_name,club_image_url,league_name,birthdate,skill_moves_raw,weak_foot,preferred_foot_code,height_cm,weight_kg,detailed_attributes,goalkeeping,player_abilities_raw,avatar_url";
 
 // Single-player fetch for the detail page - never used by the list page,
 // so the heavy JSONB columns (detailed_attributes/goalkeeping) only ever
@@ -253,6 +253,14 @@ export async function fetchPlayerById(eaPlayerId: number): Promise<PlayerDetail 
   return rows[0] ?? null;
 }
 
+export async function fetchSimilarityCandidates(source: PlayerDetail, positions: string[]): Promise<PlayerDetail[]> {
+  const params = new URLSearchParams({ select: DETAIL_COLUMNS, position_short_label: `in.(${positions.join(",")})`, overall: `gte.${Math.max(1, source.overall - 14)}`, order: "overall.desc,ea_player_id.asc", limit: "900" });
+  params.append("overall", `lte.${Math.min(99, source.overall + 14)}`);
+  params.set("ea_player_id", `neq.${source.ea_player_id}`);
+  const response = await fetch(`${supabaseUrl}/rest/v1/fc27_players?${params}`, { headers: { apikey: anonKey, Authorization: `Bearer ${anonKey}` }, next: { revalidate: 300 } });
+  if (!response.ok) throw new Error(`Unable to load similarity candidates (${response.status})`);
+  return (await response.json()) as PlayerDetail[];
+}
 export async function fetchPlayersByIds(eaPlayerIds: number[]): Promise<PlayerDetail[]> {
   const ids = [...new Set(eaPlayerIds.filter((id) => Number.isSafeInteger(id) && id > 0))].slice(0, 2);
   if (ids.length === 0) return [];
