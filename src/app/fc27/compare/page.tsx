@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Fc27CompareView } from "@/components/fc27/player-compare-view";
 import { fetchPlayersByIds } from "@/lib/fc27/players";
 import { copy, siteCopy } from "@/lib/copy";
+import { JsonLd } from "@/components/json-ld";
+import { pageJsonLd } from "@/lib/fc27/structured-data";
 
 export const metadata: Metadata = {
   title: { absolute: copy.en.fc27ComparePage.metaTitle },
@@ -24,5 +26,6 @@ export default async function Fc27ComparePage({ searchParams }: { searchParams: 
   const aId = parseId(params.a);
   const bId = parseId(params.b);
   const players = await fetchPlayersByIds([aId, bId].filter((id): id is number => id !== null));
-  return <Fc27CompareView aId={aId} bId={bId} playerA={players.find((p) => p.ea_player_id === aId) ?? null} playerB={players.find((p) => p.ea_player_id === bId) ?? null} />;
+  const jsonLd = pageJsonLd({ path: "/fc27/compare", name: copy.en.fc27ComparePage.metaTitle, description: copy.en.fc27ComparePage.metaDescription, breadcrumbs: [{ name: "EA FC 27", path: "/fc27/players" }, { name: "Players", path: "/fc27/players" }, { name: "Compare Players", path: "/fc27/compare" }] });
+  return <><JsonLd data={jsonLd} /><Fc27CompareView aId={aId} bId={bId} playerA={players.find((p) => p.ea_player_id === aId) ?? null} playerB={players.find((p) => p.ea_player_id === bId) ?? null} /></>;
 }

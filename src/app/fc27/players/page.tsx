@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Fc27PlayersView } from "@/components/fc27/players-view";
 import { fetchPlayers, fetchFilterOptions, isSortKey, type PlayersQuery } from "@/lib/fc27/players";
 import { copy, siteCopy } from "@/lib/copy";
+import { JsonLd } from "@/components/json-ld";
+import { pageJsonLd } from "@/lib/fc27/structured-data";
 
 export const metadata: Metadata = {
   title: copy.en.fc27PlayersPage.metaTitle,
@@ -71,5 +73,6 @@ export default async function Fc27PlayersPage({ searchParams }: { searchParams: 
   // (reset() re-runs this server component) rather than a dead-end message.
   const [{ players, total, page, pageCount }, filterOptions] = await Promise.all([fetchPlayers(query), fetchFilterOptions()]);
 
-  return <Fc27PlayersView players={players} total={total} page={page} pageCount={pageCount} baseQuery={baseQuery} filterOptions={filterOptions} />;
+  const jsonLd = pageJsonLd({ path: "/fc27/players", name: copy.en.fc27PlayersPage.metaTitle, description: copy.en.fc27PlayersPage.metaDescription, type: "CollectionPage", breadcrumbs: [{ name: "EA FC 27", path: "/fc27/players" }, { name: "Players", path: "/fc27/players" }] });
+  return <><JsonLd data={jsonLd} /><Fc27PlayersView players={players} total={total} page={page} pageCount={pageCount} baseQuery={baseQuery} filterOptions={filterOptions} /></>;
 }

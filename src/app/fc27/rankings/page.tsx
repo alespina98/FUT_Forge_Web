@@ -4,6 +4,8 @@ import { fetchFilterOptions } from "@/lib/fc27/players";
 import { fetchRankings, type RankingQuery } from "@/lib/fc27/rankings";
 import { isRankingStat } from "@/lib/fc27/rankings-shared";
 import { copy, siteCopy } from "@/lib/copy";
+import { JsonLd } from "@/components/json-ld";
+import { rankingPageJsonLd } from "@/lib/fc27/structured-data";
 
 export const metadata: Metadata = {
   title: { absolute: copy.en.fc27RankingsPage.metaTitle }, description: copy.en.fc27RankingsPage.metaDescription,
@@ -17,5 +19,6 @@ export default async function Fc27RankingsPage({searchParams}:{searchParams:Prom
   const sp=await searchParams;const raw=value(sp.stat);const stat=isRankingStat(raw)?raw:"overall";
   const query:RankingQuery={stat,position:value(sp.position),nation:value(sp.nation),club:value(sp.club),league:value(sp.league)};
   const [players,options]=await Promise.all([fetchRankings(query),fetchFilterOptions()]);
-  return <Fc27RankingsView players={players} stat={stat} options={options}/>;
+  const jsonLd=rankingPageJsonLd({path:"/fc27/rankings",name:copy.en.fc27RankingsPage.metaTitle,description:copy.en.fc27RankingsPage.metaDescription,breadcrumbName:"Rankings",players});
+  return <><JsonLd data={jsonLd}/><Fc27RankingsView players={players} stat={stat} options={options}/></>;
 }

@@ -5,6 +5,8 @@ import { playerUrlSlug } from "@/lib/fc27/player-slug";
 import { Fc27PlayerDetailView } from "@/components/fc27/player-detail-view";
 import { siteCopy } from "@/lib/copy";
 import type { PlayerDetail } from "@/lib/fc27/players";
+import { JsonLd } from "@/components/json-ld";
+import { playerDetailJsonLd } from "@/lib/fc27/structured-data";
 
 type Props = { params: Promise<{ idSlug: string }> };
 
@@ -73,5 +75,7 @@ export default async function Fc27PlayerDetailPage({ params }: Props) {
   const canonicalIdSlug = playerUrlSlug(player.ea_player_id, player.slug);
   if (idSlug !== canonicalIdSlug) redirect(`/fc27/players/${canonicalIdSlug}`);
 
-  return <Fc27PlayerDetailView player={player} />;
+  const title = `${player.display_name} EA FC 27 Rating ${player.overall}, Stats & Card | FUT Forge`;
+  const jsonLd = playerDetailJsonLd(player, title, playerMetaDescription(player));
+  return <><JsonLd data={jsonLd} /><Fc27PlayerDetailView player={player} /></>;
 }

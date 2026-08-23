@@ -4,6 +4,8 @@ import { copy, siteCopy } from "@/lib/copy";
 import { fetchFilterOptions } from "@/lib/fc27/players";
 import { fetchStatFinder } from "@/lib/fc27/stat-finder";
 import { DETAIL_GROUPS, FACE_FILTERS, GK_FILTERS, isStatFinderSort, type NumericParam, type StatFinderQuery } from "@/lib/fc27/stat-finder-shared";
+import { JsonLd } from "@/components/json-ld";
+import { pageJsonLd } from "@/lib/fc27/structured-data";
 
 export const metadata:Metadata={title:{absolute:copy.en.fc27StatFinderPage.metaTitle},description:copy.en.fc27StatFinderPage.metaDescription,alternates:{canonical:"/fc27/stat-finder"},robots:{index:true,follow:true},openGraph:{type:"website",url:"/fc27/stat-finder",title:copy.en.fc27StatFinderPage.metaTitle,description:copy.en.fc27StatFinderPage.metaDescription,siteName:siteCopy.applicationName,locale:"en_US",alternateLocale:["it_IT"]},twitter:{card:"summary",title:copy.en.fc27StatFinderPage.metaTitle,description:copy.en.fc27StatFinderPage.metaDescription}};
 type Params=Record<string,string|string[]|undefined>;
@@ -21,5 +23,6 @@ export default async function Fc27StatFinderPage({searchParams}:{searchParams:Pr
   const club=text("club");if(position)initial.position=position;const footRaw=first(raw.preferredFoot);const foot=footRaw==="Right"||footRaw==="Left"?footRaw:undefined;if(foot)initial.preferredFoot=foot;
   const sortRaw=first(raw.sort);const sort=isStatFinderSort(sortRaw)?sortRaw:"overall";if(sort!=="overall")initial.sort=sort;const page=Math.max(1,numeric(first(raw.page),9999)??1);if(page>1)initial.page=String(page);
   const query:StatFinderQuery={q,position,nation,league,club,preferredFoot:foot,sort,page,numeric:numericValues};const result=await fetchStatFinder(query);
-  return <Fc27StatFinderView result={result} options={options} initial={initial}/>;
+  const jsonLd=pageJsonLd({path:"/fc27/stat-finder",name:copy.en.fc27StatFinderPage.metaTitle,description:copy.en.fc27StatFinderPage.metaDescription,breadcrumbs:[{name:"EA FC 27",path:"/fc27/players"},{name:"Players",path:"/fc27/players"},{name:"Stat Finder",path:"/fc27/stat-finder"}]});
+  return <><JsonLd data={jsonLd}/><Fc27StatFinderView result={result} options={options} initial={initial}/></>;
 }

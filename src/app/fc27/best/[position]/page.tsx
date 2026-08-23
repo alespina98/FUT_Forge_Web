@@ -4,6 +4,8 @@ import { Fc27BestPositionView } from "@/components/fc27/best-position-view";
 import { FC27_POSITIONS, isFc27Position, positionSlug, type Fc27Position } from "@/lib/fc27/best-positions";
 import { fetchRankings } from "@/lib/fc27/rankings";
 import { copy, siteCopy } from "@/lib/copy";
+import { JsonLd } from "@/components/json-ld";
+import { rankingPageJsonLd } from "@/lib/fc27/structured-data";
 
 type Props = { params: Promise<{ position: string }> };
 export function generateStaticParams(){return FC27_POSITIONS.map(position=>({position:positionSlug(position)}));}
@@ -19,5 +21,9 @@ export async function generateMetadata({params}:Props):Promise<Metadata>{
 export default async function Fc27BestPositionPage({params}:Props){
   const raw=(await params).position; if(!isFc27Position(raw)) notFound(); const position=raw.toUpperCase() as Fc27Position;
   const players=await fetchRankings({stat:"overall",position});
-  return <Fc27BestPositionView players={players} position={position}/>;
+  const name=copy.en.fc27BestPage.positions[position];const path=`/fc27/best/${raw.toLowerCase()}`;
+  const title=copy.en.fc27BestPage.metaTitle.replace("{position}",name).replace("{code}",position);
+  const description=copy.en.fc27BestPage.metaDescription.replace("{position}",name.toLowerCase());
+  const jsonLd=rankingPageJsonLd({path,name:title,description,breadcrumbName:`Best ${position} Players`,players});
+  return <><JsonLd data={jsonLd}/><Fc27BestPositionView players={players} position={position}/></>;
 }
