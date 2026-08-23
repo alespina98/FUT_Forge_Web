@@ -4,6 +4,7 @@ import { fetchPlayerById } from "@/lib/fc27/players";
 import { playerUrlSlug } from "@/lib/fc27/player-slug";
 import { Fc27PlayerDetailView } from "@/components/fc27/player-detail-view";
 import { siteCopy } from "@/lib/copy";
+import type { PlayerDetail } from "@/lib/fc27/players";
 
 type Props = { params: Promise<{ idSlug: string }> };
 
@@ -16,6 +17,30 @@ function parseIdSlug(idSlug: string): number | null {
   return Number.isFinite(id) && id > 0 ? id : null;
 }
 
+function playerMetaDescription(player: PlayerDetail): string {
+  const statLabels = player.position_short_label === "GK"
+    ? ["DIV", "HAN", "KIC", "REF", "SPD", "POS"]
+    : ["PAC", "SHO", "PAS", "DRI", "DEF", "PHY"];
+  const statValues = [
+    player.pace,
+    player.shooting,
+    player.passing,
+    player.dribbling,
+    player.defending,
+    player.physicality,
+  ];
+  const details = [
+    player.position_short_label,
+    player.club_name,
+    player.nationality_name,
+    ...statValues.flatMap((value, index) => value == null ? [] : [`${value} ${statLabels[index]}`]),
+  ].filter((value): value is string => Boolean(value));
+  const statsLabel = player.position_short_label === "GK" ? "full goalkeeping stats" : "full detailed stats";
+  const ratingArticle = String(player.overall).startsWith("8") ? "an" : "a";
+
+  return `${player.display_name} has ${ratingArticle} ${player.overall} rating in EA FC 27. View ${details.join(", ")} and ${statsLabel}.`;
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { idSlug } = await params;
   const id = parseIdSlug(idSlug);
@@ -23,11 +48,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const player = await fetchPlayerById(id).catch(() => null);
   if (!player) return {};
 
-  const title = `${player.display_name} FC 27 Rating & Stats | FUT Forge`;
-  const description = `View ${player.display_name}'s EA SPORTS FC 27 rating, attributes, positions and detailed stats on FUT Forge.`;
+  const title = `${player.display_name} EA FC 27 Rating ${player.overall}, Stats & Card | FUT Forge`;
+  const description = playerMetaDescription(player);
   const canonicalPath = `/fc27/players/${playerUrlSlug(player.ea_player_id, player.slug)}`;
   return {
-    title,
+    title: { absolute: title },
     description,
     alternates: { canonical: canonicalPath },
     openGraph: { type: "website", url: canonicalPath, title, description, siteName: siteCopy.applicationName, locale: "en_US", alternateLocale: ["it_IT"] },
