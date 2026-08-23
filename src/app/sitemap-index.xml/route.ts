@@ -9,6 +9,9 @@ export async function GET(): Promise<Response> {
   const chunkCount = Math.ceil(playerCount / PLAYER_SITEMAP_CHUNK_SIZE);
   const sitemapUrls = [
     `${siteCopy.url}/sitemap.xml`,
+    `${siteCopy.url}/sitemaps/fc27-nations.xml`,
+    `${siteCopy.url}/sitemaps/fc27-clubs.xml`,
+    `${siteCopy.url}/sitemaps/fc27-leagues.xml`,
     ...Array.from(
       { length: chunkCount },
       (_, index) => `${siteCopy.url}/sitemaps/fc27-players-${index + 1}.xml`,

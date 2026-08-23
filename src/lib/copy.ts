@@ -37,6 +37,7 @@ export const copy = {
       // EA FC 27 dropdown - same label in both locales per spec.
       fc27: "EA FC 27",
       fc27News: "News",
+      fc27Browse: "Browse",
       fc27Compare: "Compare",
       fc27Rankings: "Rankings",
       fc27StatFinder: "Stat Finder",
@@ -831,6 +832,7 @@ export const copy = {
       players: "Giocatori",
       fc27: "EA FC 27",
       fc27News: "News",
+      fc27Browse: "Esplora",
       fc27Compare: "Confronta",
       fc27Rankings: "Classifiche",
       fc27StatFinder: "Ricerca Avanzata",

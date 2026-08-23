@@ -125,12 +125,14 @@ function Fc27NavDropdown({ t, pathname }: { t: Dictionary; pathname: string | nu
   const items = [
     [t.nav.fc27News, "/fc27/news"],
     [t.nav.players, "/fc27/players"],
+    [t.nav.fc27Browse, "/fc27/browse"],
     [t.nav.fc27Compare, "/fc27/compare"],
     [t.nav.fc27Rankings, "/fc27/rankings"],
     [t.nav.fc27StatFinder, "/fc27/stat-finder"],
     [t.nav.fc27HiddenGems, "/fc27/hidden-gems"],
     [t.nav.fc27SquadBuilder, "/fc27/squad-builder"],
   ] as const;
+  const itemActive = (href: string) => pathname === href || href === "/fc27/browse" && ["/fc27/nations", "/fc27/clubs", "/fc27/leagues"].some((base) => pathname === base || pathname?.startsWith(`${base}/`));
 
   const menu = (
     <div
@@ -142,7 +144,7 @@ function Fc27NavDropdown({ t, pathname }: { t: Dictionary; pathname: string | nu
       onMouseLeave={scheduleClose}
     >
       {items.map(([label, href]) => (
-        <Link key={href} href={href} role="menuitem" onClick={() => setOpen(false)} className={pathname === href ? "nav-dropdown-item-active" : ""}>
+        <Link key={href} href={href} role="menuitem" onClick={() => setOpen(false)} className={itemActive(href) ? "nav-dropdown-item-active" : ""} aria-current={itemActive(href) ? "page" : undefined}>
           <b>{label}</b>
         </Link>
       ))}
@@ -186,12 +188,14 @@ export function Navbar() {
   const fc27MobileItems = [
     [t.nav.fc27News, "/fc27/news"],
     [t.nav.players, "/fc27/players"],
+    [t.nav.fc27Browse, "/fc27/browse"],
     [t.nav.fc27Compare, "/fc27/compare"],
     [t.nav.fc27Rankings, "/fc27/rankings"],
     [t.nav.fc27StatFinder, "/fc27/stat-finder"],
     [t.nav.fc27HiddenGems, "/fc27/hidden-gems"],
     [t.nav.fc27SquadBuilder, "/fc27/squad-builder"],
   ] as const;
+  const fc27ItemActive = (href: string) => pathname === href || href === "/fc27/browse" && ["/fc27/nations", "/fc27/clubs", "/fc27/leagues"].some((base) => pathname === base || pathname?.startsWith(`${base}/`));
   const mobileLinks = [
     [t.nav.featuresOverview, "/features"],
     [t.nav.evoLab, "/features/evo-lab"],
@@ -241,7 +245,7 @@ export function Navbar() {
               {fc27MobileOpen && (
                 <div className="mobile-menu-accordion-panel">
                   {fc27MobileItems.map(([label, href]) => (
-                    <a key={href} href={href} onClick={() => setOpen(false)} className={pathname === href ? "active" : ""}>{label}</a>
+                    <a key={href} href={href} onClick={() => setOpen(false)} className={fc27ItemActive(href) ? "active" : ""} aria-current={fc27ItemActive(href) ? "page" : undefined}>{label}</a>
                   ))}
                 </div>
               )}

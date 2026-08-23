@@ -105,6 +105,53 @@ export function rankingPageJsonLd({
   };
 }
 
+export function aggregatePageJsonLd({
+  path,
+  name,
+  description,
+  breadcrumbs,
+  players,
+}: {
+  path: string;
+  name: string;
+  description: string;
+  breadcrumbs: Array<{ name: string; path: string }>;
+  players: RankingPlayer[];
+}) {
+  const url = absoluteUrl(path);
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "CollectionPage",
+        "@id": `${url}#webpage`,
+        url,
+        name,
+        description,
+        inLanguage: "en",
+        breadcrumb: { "@id": `${url}#breadcrumb` },
+        mainEntity: { "@id": `${url}#itemlist` },
+      },
+      breadcrumbSchema(url, [homeBreadcrumb, ...breadcrumbs]),
+      {
+        "@type": "ItemList",
+        "@id": `${url}#itemlist`,
+        name,
+        numberOfItems: players.length,
+        itemListElement: players.map((player, index) => ({
+          "@type": "ListItem",
+          position: index + 1,
+          item: {
+            "@type": "Person",
+            name: player.display_name,
+            url: absoluteUrl(`/fc27/players/${playerUrlSlug(player.ea_player_id, player.slug)}`),
+          },
+        })),
+      },
+    ],
+  };
+}
+
 function propertyValue(name: string, value: string | number) {
   return { "@type": "PropertyValue", name, value };
 }

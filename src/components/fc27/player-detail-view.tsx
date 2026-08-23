@@ -83,7 +83,7 @@ function Chip({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
-export function Fc27PlayerDetailView({ player, returnTo }: { player: PlayerDetail; returnTo: string }) {
+export function Fc27PlayerDetailView({ player, returnTo, entityLinks }: { player: PlayerDetail; returnTo: string; entityLinks: { nation: string | null; club: string | null; league: string | null } }) {
   const { t, locale } = useI18n();
   const p: DetailCopy = t.fc27PlayerDetailPage;
   const isGK = player.position_short_label === "GK";
@@ -169,9 +169,9 @@ export function Fc27PlayerDetailView({ player, returnTo }: { player: PlayerDetai
               <Chip label={p.overall} value={player.overall} />
               <Chip label={p.position} value={player.position_label} />
               <Chip label={p.alternatePositions} value={altPositions} />
-              <Chip label={p.club} value={player.club_name ?? "—"} />
-              <Chip label={p.league} value={player.league_name ?? "—"} />
-              <Chip label={p.nation} value={player.nationality_name} />
+              <Chip label={p.club} value={entityLinks.club && player.club_name ? <Link href={entityLinks.club}>{player.club_name}</Link> : player.club_name ?? "—"} />
+              <Chip label={p.league} value={entityLinks.league && player.league_name ? <Link href={entityLinks.league}>{player.league_name}</Link> : player.league_name ?? "—"} />
+              <Chip label={p.nation} value={entityLinks.nation ? <Link href={entityLinks.nation}>{player.nationality_name}</Link> : player.nationality_name} />
               <Chip label={p.dateOfBirth} value={dob} />
               <Chip label={p.preferredFoot} value={footLabel} />
               <Chip label={p.skillMoves} value={`${Math.min(player.skill_moves_raw, 5)}/5`} />
