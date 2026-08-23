@@ -6,6 +6,7 @@ import { Arrow } from "@/components/icons";
 import { Fc27BasePlayerCard } from "./fc27-base-player-card";
 import type { PlayerDetail } from "@/lib/fc27/players";
 import type { Dictionary } from "@/lib/copy";
+import { fc27ReturnContext } from "@/lib/fc27/return-navigation";
 
 type DetailCopy = Dictionary["fc27PlayerDetailPage"];
 type StatKey = keyof DetailCopy["stats"];
@@ -82,10 +83,17 @@ function Chip({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
-export function Fc27PlayerDetailView({ player }: { player: PlayerDetail }) {
+export function Fc27PlayerDetailView({ player, returnTo }: { player: PlayerDetail; returnTo: string }) {
   const { t, locale } = useI18n();
   const p: DetailCopy = t.fc27PlayerDetailPage;
   const isGK = player.position_short_label === "GK";
+  const returnContext = fc27ReturnContext(returnTo);
+  const positionName = returnContext.position ? t.fc27BestPage.positions[returnContext.position as keyof typeof t.fc27BestPage.positions] : undefined;
+  const backLabel = returnContext.kind === "hiddenGems" ? (locale === "it" ? `Torna alle ${t.nav.fc27HiddenGems}` : `Back to ${t.nav.fc27HiddenGems}`)
+    : returnContext.kind === "statFinder" ? (locale === "it" ? `Torna alla ${t.nav.fc27StatFinder}` : `Back to ${t.nav.fc27StatFinder}`)
+    : returnContext.kind === "rankings" ? (locale === "it" ? `Torna alle ${t.nav.fc27Rankings}` : `Back to ${t.nav.fc27Rankings}`)
+    : returnContext.kind === "best" && positionName ? (locale === "it" ? `Torna ai migliori ${positionName}` : `Back to Best ${positionName}`)
+    : p.backToPlayers;
 
   const dobDate = new Date(player.birthdate);
   const dob = Number.isNaN(dobDate.getTime())
@@ -99,9 +107,9 @@ export function Fc27PlayerDetailView({ player }: { player: PlayerDetail }) {
     <div className="hero-grid relative px-4 pb-24 pt-40 sm:px-6 sm:pt-48">
       <div className="hero-noise" /><div className="hero-orb hero-orb-primary" />
       <div className="relative mx-auto max-w-6xl">
-        <Link href="/fc27/players" className="fc27-back-link">
+        <Link href={returnTo} className="fc27-back-link">
           <Arrow className="size-4 rotate-180" />
-          {p.backToPlayers}
+          {backLabel}
         </Link>
 
         <div className="fc27-detail-top mt-8">

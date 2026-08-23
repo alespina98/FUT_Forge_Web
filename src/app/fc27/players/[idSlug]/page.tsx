@@ -5,10 +5,11 @@ import { playerUrlSlug } from "@/lib/fc27/player-slug";
 import { Fc27PlayerDetailView } from "@/components/fc27/player-detail-view";
 import { siteCopy } from "@/lib/copy";
 import type { PlayerDetail } from "@/lib/fc27/players";
+import { playerHrefWithReturn, safeFc27ReturnTo } from "@/lib/fc27/return-navigation";
 import { JsonLd } from "@/components/json-ld";
 import { playerDetailJsonLd } from "@/lib/fc27/structured-data";
 
-type Props = { params: Promise<{ idSlug: string }> };
+type Props = { params: Promise<{ idSlug: string }>; searchParams: Promise<{ returnTo?: string | string[] }> };
 
 // ea_player_id is authoritative, slug is cosmetic - only the leading
 // digits of the URL segment are ever trusted as identity.
@@ -62,8 +63,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function Fc27PlayerDetailPage({ params }: Props) {
+export default async function Fc27PlayerDetailPage({ params, searchParams }: Props) {
   const { idSlug } = await params;
+  const rawReturnTo = (await searchParams).returnTo;
+  const returnTo = safeFc27ReturnTo(Array.isArray(rawReturnTo) ? rawReturnTo[0] : rawReturnTo);
   const id = parseIdSlug(idSlug);
   if (!id) notFound();
 
@@ -73,9 +76,9 @@ export default async function Fc27PlayerDetailPage({ params }: Props) {
   if (!player) notFound();
 
   const canonicalIdSlug = playerUrlSlug(player.ea_player_id, player.slug);
-  if (idSlug !== canonicalIdSlug) redirect(`/fc27/players/${canonicalIdSlug}`);
+  if (idSlug !== canonicalIdSlug) redirect(playerHrefWithReturn(`/fc27/players/${canonicalIdSlug}`, returnTo));
 
   const title = `${player.display_name} EA FC 27 Rating ${player.overall}, Stats & Card | FUT Forge`;
   const jsonLd = playerDetailJsonLd(player, title, playerMetaDescription(player));
-  return <><JsonLd data={jsonLd} /><Fc27PlayerDetailView player={player} /></>;
+  return <><JsonLd data={jsonLd} /><Fc27PlayerDetailView player={player} returnTo={returnTo} /></>;
 }

@@ -1,7 +1,11 @@
+"use client";
+
 import Link from "next/link";
 import { Fc27BasePlayerCard } from "./fc27-base-player-card";
 import { playerUrlSlug } from "@/lib/fc27/player-slug";
 import type { PlayerListItem } from "@/lib/fc27/players";
+import { playerHrefWithReturn } from "@/lib/fc27/return-navigation";
+import { useFc27ReturnPath } from "@/lib/fc27/use-fc27-return-path";
 
 // Whole card is a real <Link> (not a div with a click handler) - works
 // with ctrl/cmd-click, keyboard focus/Enter, and middle-click open in new
@@ -9,8 +13,10 @@ import type { PlayerListItem } from "@/lib/fc27/players";
 // Gold item presentation - rating, position, portrait, name, nation, club
 // and all 6 headline stats - so nothing is duplicated below it.
 export function PlayerCard({ player }: { player: PlayerListItem }) {
+  const returnTo = useFc27ReturnPath();
+  const href = playerHrefWithReturn(`/fc27/players/${playerUrlSlug(player.ea_player_id, player.slug)}`, returnTo);
   return (
-    <Link href={`/fc27/players/${playerUrlSlug(player.ea_player_id, player.slug)}`} className="fc27-base-card-link">
+    <Link href={href} className="fc27-base-card-link">
       <Fc27BasePlayerCard
         eaPlayerId={player.ea_player_id}
         overall={player.overall}

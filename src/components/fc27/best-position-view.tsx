@@ -12,7 +12,7 @@ export function Fc27BestPositionView({ players, position }: { players: RankingPl
     <p className="section-label">{c.eyebrow}</p><h1 className="mt-3 text-4xl font-bold sm:text-5xl">{c.title.replace("{position}",name)}</h1><p className="mt-3 max-w-2xl text-sm text-white/55 sm:text-base">{c.subtitle.replace("{code}",position)}</p>
     <nav className="fc27-best-position-tabs mt-8" aria-label={c.positionNavigation}>{FC27_POSITIONS.map(code=><Link key={code} href={`/fc27/best/${positionSlug(code)}`} aria-current={code===position?"page":undefined} className={code===position?"active":""}>{code}</Link>)}</nav>
     <section className="mt-6" aria-labelledby="best-position-heading"><div className="fc27-ranking-heading"><div><h2 id="best-position-heading">{c.top50} {name}</h2><p>{c.orderedByOverall}</p></div><Link href="/fc27/rankings">{c.allRankings}</Link></div>
-      <Fc27RankingList players={players} stat="overall" labels={{rank:c.rank,viewPlayer:c.viewPlayer,compare:c.compare,metric:"OVR"}}/>
+      <Fc27RankingList players={players} stat="overall" labels={{rank:c.rank,viewPlayer:c.viewPlayer,compare:c.compare,metric:"OVR"}} returnTo={`/fc27/best/${positionSlug(position)}`}/>
     </section>
     <section className="fc27-ranking-seo"><h2>{c.aboutTitle.replace("{position}",name)}</h2><p>{c.aboutBody.replace("{position}",name.toLowerCase())}</p><div className="fc27-best-links"><Link href="/fc27/players">{c.browsePlayers}</Link><Link href="/fc27/rankings">{c.allRankings}</Link><Link href="/fc27/compare">{c.comparePlayers}</Link></div></section>
   </div></div>;

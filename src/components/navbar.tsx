@@ -128,6 +128,7 @@ function Fc27NavDropdown({ t, pathname }: { t: Dictionary; pathname: string | nu
     [t.nav.fc27Compare, "/fc27/compare"],
     [t.nav.fc27Rankings, "/fc27/rankings"],
     [t.nav.fc27StatFinder, "/fc27/stat-finder"],
+    [t.nav.fc27HiddenGems, "/fc27/hidden-gems"],
     [t.nav.fc27SquadBuilder, "/fc27/squad-builder"],
   ] as const;
 
@@ -188,6 +189,7 @@ export function Navbar() {
     [t.nav.fc27Compare, "/fc27/compare"],
     [t.nav.fc27Rankings, "/fc27/rankings"],
     [t.nav.fc27StatFinder, "/fc27/stat-finder"],
+    [t.nav.fc27HiddenGems, "/fc27/hidden-gems"],
     [t.nav.fc27SquadBuilder, "/fc27/squad-builder"],
   ] as const;
   const mobileLinks = [
