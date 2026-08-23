@@ -14,6 +14,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${siteCopy.url}/partners`, changeFrequency: "monthly", priority: 0.5 },
     { url: `${siteCopy.url}/fc27/players`, changeFrequency: "daily", priority: 0.8 },
     { url: `${siteCopy.url}/fc27/browse`, changeFrequency: "weekly", priority: 0.7 },
+    { url: `${siteCopy.url}/fc27/positions`, changeFrequency: "weekly", priority: 0.7 },
     { url: `${siteCopy.url}/fc27/nations`, changeFrequency: "weekly", priority: 0.7 },
     { url: `${siteCopy.url}/fc27/clubs`, changeFrequency: "weekly", priority: 0.7 },
     { url: `${siteCopy.url}/fc27/leagues`, changeFrequency: "weekly", priority: 0.7 },

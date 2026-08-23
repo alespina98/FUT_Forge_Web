@@ -58,6 +58,18 @@ export function pageJsonLd({
   };
 }
 
+export function positionHubJsonLd({ path, name, description, positions }: { path: string; name: string; description: string; positions: Array<{ name: string; path: string }> }) {
+  const url = absoluteUrl(path);
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      { "@type": "CollectionPage", "@id": `${url}#webpage`, url, name, description, inLanguage: "en", breadcrumb: { "@id": `${url}#breadcrumb` }, mainEntity: { "@id": `${url}#itemlist` } },
+      breadcrumbSchema(url, [homeBreadcrumb, fc27Breadcrumb, { name: "Positions", path }]),
+      { "@type": "ItemList", "@id": `${url}#itemlist`, name: "EA FC 27 positions", numberOfItems: positions.length, itemListElement: positions.map((position, index) => ({ "@type": "ListItem", position: index + 1, name: position.name, url: absoluteUrl(position.path) })) },
+    ],
+  };
+}
+
 export function rankingPageJsonLd({
   path,
   name,
