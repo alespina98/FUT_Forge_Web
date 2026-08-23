@@ -20,6 +20,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${siteCopy.url}/fc27/leagues`, changeFrequency: "weekly", priority: 0.7 },
     { url: `${siteCopy.url}/fc27/compare`, changeFrequency: "weekly", priority: 0.7 },
     { url: `${siteCopy.url}/fc27/rankings`, changeFrequency: "weekly", priority: 0.7 },
+    { url: `${siteCopy.url}/fc27/meta-rankings`, changeFrequency: "weekly", priority: 0.7 },
     { url: `${siteCopy.url}/fc27/stat-finder`, changeFrequency: "weekly", priority: 0.7 },
     { url: `${siteCopy.url}/fc27/hidden-gems`, changeFrequency: "weekly", priority: 0.7 },
     ...FC27_POSITIONS.map((position) => ({ url: `${siteCopy.url}/fc27/best/${positionSlug(position)}`, changeFrequency: "weekly" as const, priority: 0.7 })),

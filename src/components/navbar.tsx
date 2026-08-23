@@ -54,21 +54,30 @@ function NavAccount({ onNavigate }: { onNavigate?: () => void }) {
   );
 }
 
-// Permanent home for FC27 sub-sections (News/Players/Squad Builder today,
-// more later) - a real JS-controlled dropdown, not the hover/focus-within
-// CSS-only mechanism Features uses, because this one has explicit
-// requirements (Enter/Space opens via native button + focus-within;
-// Escape and click-outside both close) that plain hover doesn't cover.
-// Visually still reuses .nav-dropdown/.nav-dropdown-menu for parity with
-// Features - only an additional class + this component's own state decide
-// when the menu is forced open beyond what hover/focus-within already do.
+// Player discovery uses a click-controlled portal so the menu escapes the
+// horizontally scrollable desktop nav while retaining keyboard and outside-
+// click behavior.
+function isPlayersRoute(pathname: string | null) {
+  if (!pathname) return false;
+  return ["/fc27/players", "/fc27/meta-rankings", "/fc27/rankings", "/fc27/positions", "/fc27/best", "/fc27/stat-finder", "/fc27/hidden-gems", "/fc27/nations", "/fc27/clubs", "/fc27/leagues", "/fc27/similar"]
+    .some((base) => pathname === base || pathname.startsWith(`${base}/`));
+}
+
+function playersMenuGroups(t: Dictionary) {
+  return [
+    { label: t.nav.navCore, items: [[t.nav.playersDatabase, "/fc27/players"], [t.nav.baseMetaRankings, "/fc27/meta-rankings"], [t.nav.fc27Rankings, "/fc27/rankings"]] },
+    { label: t.nav.navDiscovery, items: [[t.nav.bestByPosition, "/fc27/positions"], [t.nav.fc27StatFinder, "/fc27/stat-finder"], [t.nav.fc27HiddenGems, "/fc27/hidden-gems"]] },
+    { label: t.nav.navExploreDatabase, items: [[t.nav.nations, "/fc27/nations"], [t.nav.clubs, "/fc27/clubs"], [t.nav.leagues, "/fc27/leagues"]] },
+  ] as const;
+}
+
 function Fc27NavDropdown({ t, pathname }: { t: Dictionary; pathname: string | null }) {
   const [open, setOpen] = useState(false);
   const [menuPos, setMenuPos] = useState<{ top: number; left: number } | null>(null);
   const ref = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const active = pathname?.startsWith("/fc27") ?? false;
+  const active = isPlayersRoute(pathname);
 
   // .nav-center scrolls horizontally (overflow-x:auto), which per the CSS
   // overflow spec forces overflow-y to auto too - any absolutely positioned
@@ -91,9 +100,11 @@ function Fc27NavDropdown({ t, pathname }: { t: Dictionary; pathname: string | nu
     clearCloseTimer();
     if (ref.current) {
       const rect = ref.current.getBoundingClientRect();
-      setMenuPos({ top: rect.bottom + 10, left: rect.left });
+      const menuWidth = 620;
+      setMenuPos({ top: rect.bottom + 10, left: Math.max(12, Math.min(rect.right - menuWidth, window.innerWidth - menuWidth - 12)) });
     }
     setOpen(true);
+    window.requestAnimationFrame(() => menuRef.current?.querySelector("a")?.focus());
   }
 
   function scheduleClose() {
@@ -110,7 +121,10 @@ function Fc27NavDropdown({ t, pathname }: { t: Dictionary; pathname: string | nu
       setOpen(false);
     }
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") {
+        setOpen(false);
+        ref.current?.querySelector("button")?.focus();
+      }
     }
     document.addEventListener("mousedown", onDocMouseDown);
     document.addEventListener("keydown", onKeyDown);
@@ -121,46 +135,39 @@ function Fc27NavDropdown({ t, pathname }: { t: Dictionary; pathname: string | nu
   }, [open]);
 
   useEffect(() => () => clearCloseTimer(), []);
+  useEffect(() => {
+    const timer = window.setTimeout(() => setOpen(false), 0);
+    return () => window.clearTimeout(timer);
+  }, [pathname]);
 
-  const items = [
-    [t.nav.fc27News, "/fc27/news"],
-    [t.nav.players, "/fc27/players"],
-    [t.nav.fc27Browse, "/fc27/browse"],
-    [t.nav.fc27Compare, "/fc27/compare"],
-    [t.nav.fc27Rankings, "/fc27/rankings"],
-    [t.nav.fc27StatFinder, "/fc27/stat-finder"],
-    [t.nav.fc27HiddenGems, "/fc27/hidden-gems"],
-    [t.nav.fc27SquadBuilder, "/fc27/squad-builder"],
-  ] as const;
-  const itemActive = (href: string) => pathname === href || href === "/fc27/browse" && ["/fc27/nations", "/fc27/clubs", "/fc27/leagues"].some((base) => pathname === base || pathname?.startsWith(`${base}/`));
+  const groups = playersMenuGroups(t);
+  const itemActive = (href: string) => pathname === href || pathname?.startsWith(`${href}/`) || href === "/fc27/positions" && pathname?.startsWith("/fc27/best/");
 
   const menu = (
     <div
       ref={menuRef}
-      className={`glass nav-dropdown-menu${open ? " nav-dropdown-menu-open" : ""}`}
+      id="desktop-players-menu"
+      className={`glass nav-dropdown-menu players-mega-menu${open ? " nav-dropdown-menu-open" : ""}`}
       role="menu"
       style={menuPos ? { position: "fixed", top: menuPos.top, left: menuPos.left } : undefined}
       onMouseEnter={clearCloseTimer}
       onMouseLeave={scheduleClose}
     >
-      {items.map(([label, href]) => (
-        <Link key={href} href={href} role="menuitem" onClick={() => setOpen(false)} className={itemActive(href) ? "nav-dropdown-item-active" : ""} aria-current={itemActive(href) ? "page" : undefined}>
-          <b>{label}</b>
-        </Link>
-      ))}
+      {groups.map((group) => <section key={group.label} className="players-mega-group"><h2>{group.label}</h2>{group.items.map(([label,href]) => <Link key={href} href={href} role="menuitem" onClick={() => setOpen(false)} className={itemActive(href) ? "nav-dropdown-item-active" : ""} aria-current={itemActive(href) ? "page" : undefined}><b>{label}</b></Link>)}</section>)}
     </div>
   );
 
   return (
-    <div className="nav-dropdown" ref={ref} onMouseEnter={openMenu} onMouseLeave={scheduleClose}>
+    <div className="nav-dropdown" ref={ref}>
       <button
         type="button"
         aria-haspopup="menu"
         aria-expanded={open}
-        onClick={openMenu}
+        aria-controls="desktop-players-menu"
+        onClick={() => open ? setOpen(false) : openMenu()}
         className={active ? "nav-dropdown-trigger-active" : ""}
       >
-        {t.nav.fc27}<ChevronDownIcon className="nav-dropdown-chevron size-3.5" />
+        {t.nav.fc27}<ChevronDownIcon className={`nav-dropdown-chevron size-3.5 ${open ? "rotate-180" : ""}`} />
       </button>
       {typeof document !== "undefined" ? createPortal(menu, document.body) : menu}
     </div>
@@ -171,8 +178,8 @@ export function Navbar() {
   const [open, setOpen] = useState(false);
   const { locale, setLocale, t } = useI18n();
   const pathname = usePathname();
-  const fc27Active = pathname?.startsWith("/fc27") ?? false;
-  const [fc27MobileOpen, setFc27MobileOpen] = useState(fc27Active);
+  const playersActive = isPlayersRoute(pathname);
+  const [playersMobileOpen, setPlayersMobileOpen] = useState(playersActive);
 
   const featuresMenu = [
     [t.nav.featuresOverview, "/features", t.featuresPage.title],
@@ -185,17 +192,8 @@ export function Navbar() {
     [t.nav.faq, "/faq"],
     [t.nav.partners, "/partners"],
   ] as const;
-  const fc27MobileItems = [
-    [t.nav.fc27News, "/fc27/news"],
-    [t.nav.players, "/fc27/players"],
-    [t.nav.fc27Browse, "/fc27/browse"],
-    [t.nav.fc27Compare, "/fc27/compare"],
-    [t.nav.fc27Rankings, "/fc27/rankings"],
-    [t.nav.fc27StatFinder, "/fc27/stat-finder"],
-    [t.nav.fc27HiddenGems, "/fc27/hidden-gems"],
-    [t.nav.fc27SquadBuilder, "/fc27/squad-builder"],
-  ] as const;
-  const fc27ItemActive = (href: string) => pathname === href || href === "/fc27/browse" && ["/fc27/nations", "/fc27/clubs", "/fc27/leagues"].some((base) => pathname === base || pathname?.startsWith(`${base}/`));
+  const playerGroups = playersMenuGroups(t);
+  const playerItemActive = (href: string) => pathname === href || pathname?.startsWith(`${href}/`) || href === "/fc27/positions" && pathname?.startsWith("/fc27/best/");
   const mobileLinks = [
     [t.nav.featuresOverview, "/features"],
     [t.nav.evoLab, "/features/evo-lab"],
@@ -238,14 +236,19 @@ export function Navbar() {
           <div id="mobile-navigation" className="glass mobile-menu absolute left-3 right-3 top-[64px] flex flex-col rounded-2xl p-2 lg:hidden">
             {mobileLinks.map(([label, href], index) => <a key={href} href={href} onClick={() => setOpen(false)}>{label}<span>0{index + 1}</span></a>)}
             <div className="mobile-menu-group">
-              <button type="button" className={`mobile-menu-accordion-trigger${fc27Active ? " active" : ""}`} onClick={() => setFc27MobileOpen((v) => !v)} aria-expanded={fc27MobileOpen}>
+              <button type="button" className={`mobile-menu-accordion-trigger${playersActive ? " active" : ""}`} onClick={() => setPlayersMobileOpen((v) => !v)} aria-expanded={playersMobileOpen} aria-controls="mobile-players-menu">
                 {t.nav.fc27}
-                <ChevronDownIcon className={`size-3.5 transition-transform ${fc27MobileOpen ? "rotate-180" : ""}`} />
+                <ChevronDownIcon className={`size-3.5 transition-transform ${playersMobileOpen ? "rotate-180" : ""}`} />
               </button>
-              {fc27MobileOpen && (
-                <div className="mobile-menu-accordion-panel">
-                  {fc27MobileItems.map(([label, href]) => (
-                    <a key={href} href={href} onClick={() => setOpen(false)} className={fc27ItemActive(href) ? "active" : ""} aria-current={fc27ItemActive(href) ? "page" : undefined}>{label}</a>
+              {playersMobileOpen && (
+                <div id="mobile-players-menu" className="mobile-menu-accordion-panel">
+                  {playerGroups.map((group) => (
+                    <section key={group.label} className="mobile-players-group">
+                      <h3>{group.label}</h3>
+                      {group.items.map(([label, href]) => (
+                        <a key={href} href={href} onClick={() => setOpen(false)} className={playerItemActive(href) ? "active" : ""} aria-current={playerItemActive(href) ? "page" : undefined}>{label}</a>
+                      ))}
+                    </section>
                   ))}
                 </div>
               )}

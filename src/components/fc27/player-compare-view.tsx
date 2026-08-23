@@ -24,8 +24,8 @@ function WinnerValue({ value, other }: { value: number | null | undefined; other
   return <span className={wins ? "fc27-compare-value winner" : "fc27-compare-value"}>{wins && <span aria-hidden>▲ </span>}{value ?? "—"}<span className="sr-only">{wins ? " winner" : ""}</span></span>;
 }
 
-export function Fc27CompareView({ aId, bId, playerA, playerB }: { aId: number | null; bId: number | null; playerA: PlayerDetail | null; playerB: PlayerDetail | null }) {
-  const { t } = useI18n();
+export function Fc27CompareView({ aId, bId, playerA, playerB, baseMetaA, baseMetaB }: { aId: number | null; bId: number | null; playerA: PlayerDetail | null; playerB: PlayerDetail | null; baseMetaA: number | null; baseMetaB: number | null }) {
+  const { t, locale } = useI18n();
   const c = t.fc27ComparePage;
   const d = t.fc27PlayerDetailPage;
   const router = useRouter(); const pathname = usePathname(); const current = useSearchParams();
@@ -83,6 +83,7 @@ export function Fc27CompareView({ aId, bId, playerA, playerB }: { aId: number | 
     {!both&&!duplicate&&<div className="fc27-compare-empty">{playerA||playerB?c.selectOther:c.selectTwo}</div>}
     {both&&<><section className="fc27-compare-cards" aria-label={c.attributes}><div>{card(playerA)}{identity(playerA)}</div><strong>{c.versus}</strong><div>{card(playerB)}{identity(playerB)}</div></section>
       <section className="fc27-compare-panel"><h2>{c.overall}</h2><div className="fc27-compare-row fc27-compare-overall"><WinnerValue value={playerA.overall} other={playerB.overall}/><span>{c.overall}</span><WinnerValue value={playerB.overall} other={playerA.overall}/></div></section>
+      <section className="fc27-compare-panel fc27-compare-meta"><h2>{locale==="it"?"Meta Rating Base":"Base Meta Rating"}</h2><div className="fc27-compare-row fc27-compare-overall"><WinnerValue value={baseMetaA} other={baseMetaB}/><span>{locale==="it"?"Meta Rating Base":"Base Meta Rating"}</span><WinnerValue value={baseMetaB} other={baseMetaA}/></div><p>{locale==="it"?"Calcolato con i dati FC27 attualmente disponibili. PlayStyles, Ruoli e AcceleRATE saranno aggiunti quando EA li renderà disponibili.":"Calculated with currently available FC27 data. PlayStyles, Roles and AcceleRATE will be added when EA makes them available."}</p></section>
       <section className="fc27-compare-panel"><h2>{c.attributes}</h2>{faceRows()}</section>
       {faceWins&&<section className="fc27-compare-wins"><h2>{c.categoryWins}</h2><div><span>{playerA.display_name}<b>{faceWins.a}</b></span><span>{playerB.display_name}<b>{faceWins.b}</b></span><span>{c.ties}<b>{faceWins.ties}</b></span></div></section>}
       <section className="fc27-compare-panel"><h2>{c.detailedAttributes}</h2>{detailedRows()}</section></>}

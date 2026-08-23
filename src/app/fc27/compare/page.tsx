@@ -4,6 +4,7 @@ import { fetchPlayersByIds } from "@/lib/fc27/players";
 import { copy, siteCopy } from "@/lib/copy";
 import { JsonLd } from "@/components/json-ld";
 import { pageJsonLd } from "@/lib/fc27/structured-data";
+import { calculateMetaRating } from "@/lib/fc27/meta-rating";
 
 export const metadata: Metadata = {
   title: { absolute: copy.en.fc27ComparePage.metaTitle },
@@ -27,5 +28,6 @@ export default async function Fc27ComparePage({ searchParams }: { searchParams: 
   const bId = parseId(params.b);
   const players = await fetchPlayersByIds([aId, bId].filter((id): id is number => id !== null));
   const jsonLd = pageJsonLd({ path: "/fc27/compare", name: copy.en.fc27ComparePage.metaTitle, description: copy.en.fc27ComparePage.metaDescription, breadcrumbs: [{ name: "EA FC 27", path: "/fc27/players" }, { name: "Players", path: "/fc27/players" }, { name: "Compare Players", path: "/fc27/compare" }] });
-  return <><JsonLd data={jsonLd} /><Fc27CompareView aId={aId} bId={bId} playerA={players.find((p) => p.ea_player_id === aId) ?? null} playerB={players.find((p) => p.ea_player_id === bId) ?? null} /></>;
+  const playerA=players.find((p) => p.ea_player_id === aId) ?? null;const playerB=players.find((p) => p.ea_player_id === bId) ?? null;
+  return <><JsonLd data={jsonLd} /><div className="overflow-hidden"><Fc27CompareView aId={aId} bId={bId} playerA={playerA} playerB={playerB} baseMetaA={playerA?calculateMetaRating(playerA)?.meta??null:null} baseMetaB={playerB?calculateMetaRating(playerB)?.meta??null:null} /></div></>;
 }

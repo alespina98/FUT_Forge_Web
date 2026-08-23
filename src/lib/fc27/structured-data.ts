@@ -186,7 +186,7 @@ function playerProperties(player: PlayerDetail) {
   return properties;
 }
 
-export function playerDetailJsonLd(player: PlayerDetail, name: string, description: string) {
+export function playerDetailJsonLd(player: PlayerDetail, name: string, description: string, baseMetaRating: number | null = null) {
   const path = `/fc27/players/${playerUrlSlug(player.ea_player_id, player.slug)}`;
   const url = absoluteUrl(path);
   const person: Record<string, unknown> = {
@@ -196,6 +196,7 @@ export function playerDetailJsonLd(player: PlayerDetail, name: string, descripti
     url,
     additionalProperty: playerProperties(player),
   };
+  if (baseMetaRating != null) (person.additionalProperty as unknown[]).push(propertyValue("FUT Forge Base Meta Rating", baseMetaRating));
   if (player.nationality_name) person.nationality = { "@type": "Country", name: player.nationality_name };
   if (player.avatar_url) person.image = player.avatar_url;
   if (/^\d{4}-\d{2}-\d{2}$/.test(player.birthdate)) person.birthDate = player.birthdate;

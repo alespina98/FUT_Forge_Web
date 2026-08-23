@@ -83,7 +83,7 @@ function Chip({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
-export function Fc27PlayerDetailView({ player, returnTo, entityLinks }: { player: PlayerDetail; returnTo: string; entityLinks: { nation: string | null; club: string | null; league: string | null } }) {
+export function Fc27PlayerDetailView({ player, baseMetaRating, returnTo, entityLinks }: { player: PlayerDetail; baseMetaRating: number | null; returnTo: string; entityLinks: { nation: string | null; club: string | null; league: string | null } }) {
   const { t, locale } = useI18n();
   const p: DetailCopy = t.fc27PlayerDetailPage;
   const isGK = player.position_short_label === "GK";
@@ -105,7 +105,7 @@ export function Fc27PlayerDetailView({ player, returnTo, entityLinks }: { player
   const altPositions = player.alternate_positions.length > 0 ? player.alternate_positions.map((ap) => ap.short_label).join(", ") : "—";
 
   return (
-    <div className="hero-grid relative px-4 pb-24 pt-40 sm:px-6 sm:pt-48">
+    <div className="hero-grid relative overflow-hidden px-4 pb-24 pt-40 sm:px-6 sm:pt-48">
       <div className="hero-noise" /><div className="hero-orb hero-orb-primary" />
       <div className="relative mx-auto max-w-6xl">
         <Link href={returnTo} className="fc27-back-link">
@@ -166,6 +166,7 @@ export function Fc27PlayerDetailView({ player, returnTo, entityLinks }: { player
                 same player - verified directly against ea.com - so display
                 clamps to 5 without altering the stored raw value. */}
             <div className="fc27-chip-grid mt-8">
+              {baseMetaRating != null ? <div className="fc27-base-meta-detail"><span>{locale === "it" ? "Meta Rating Base" : "Base Meta Rating"}</span><strong>{baseMetaRating.toFixed(1)}</strong><p>{locale === "it" ? "Calcolato con il motore Meta Rating di FUT Forge utilizzando i dati FC27 attualmente disponibili. PlayStyles, Ruoli e AcceleRATE saranno inclusi quando EA li renderà disponibili." : "Calculated with FUT Forge’s Meta Rating engine using the FC27 data currently available. PlayStyles, Roles and AcceleRATE will be included when EA makes them available."}</p></div> : null}
               <Chip label={p.overall} value={player.overall} />
               <Chip label={p.position} value={player.position_label} />
               <Chip label={p.alternatePositions} value={altPositions} />

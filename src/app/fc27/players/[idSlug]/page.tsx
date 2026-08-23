@@ -9,6 +9,7 @@ import { playerHrefWithReturn, safeFc27ReturnTo } from "@/lib/fc27/return-naviga
 import { JsonLd } from "@/components/json-ld";
 import { playerDetailJsonLd } from "@/lib/fc27/structured-data";
 import { entityHref } from "@/lib/fc27/entities";
+import { calculateMetaRating } from "@/lib/fc27/meta-rating";
 
 type Props = { params: Promise<{ idSlug: string }>; searchParams: Promise<{ returnTo?: string | string[] }> };
 
@@ -80,7 +81,8 @@ export default async function Fc27PlayerDetailPage({ params, searchParams }: Pro
   if (idSlug !== canonicalIdSlug) redirect(playerHrefWithReturn(`/fc27/players/${canonicalIdSlug}`, returnTo));
 
   const title = `${player.display_name} EA FC 27 Rating ${player.overall}, Stats & Card | FUT Forge`;
-  const jsonLd = playerDetailJsonLd(player, title, playerMetaDescription(player));
+  const baseMetaRating = calculateMetaRating(player)?.meta ?? null;
+  const jsonLd = playerDetailJsonLd(player, title, playerMetaDescription(player), baseMetaRating);
   const [nation, club, league] = await Promise.all([entityHref("nations", player.nationality_name), entityHref("clubs", player.club_name), entityHref("leagues", player.league_name)]);
-  return <><JsonLd data={jsonLd} /><Fc27PlayerDetailView player={player} returnTo={returnTo} entityLinks={{ nation, club, league }} /></>;
+  return <><JsonLd data={jsonLd} /><Fc27PlayerDetailView player={player} baseMetaRating={baseMetaRating} returnTo={returnTo} entityLinks={{ nation, club, league }} /></>;
 }
