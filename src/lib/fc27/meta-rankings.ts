@@ -1,6 +1,8 @@
 import "server-only";
 
 import { calculateMetaRating, type Fc27MetaPlayer } from "./meta-rating";
+import { getAllPlayersStatic, isFc27ArtifactError, toRanking } from "./static-data";
+import { boundedFc27SupabaseFetch } from "./supabase-fallback";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://axjuxmjoowrzmvyhbdhv.supabase.co";
 const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "sb_publishable_bMremihmEy34CWp5rG6M-g_UuysymCX";
@@ -22,11 +24,12 @@ type SourcePlayer = Fc27MetaPlayer & {
 export type MetaRankingPlayer = SourcePlayer & { base_meta_rating: number };
 
 export async function fetchMetaRankings(position?: MetaPositionFilter): Promise<MetaRankingPlayer[]> {
+  try{return (await getAllPlayersStatic()).filter(p=>!position||p.position_short_label===position).flatMap(p=>{const rating=calculateMetaRating(p);return rating?[{...toRanking(p),skill_moves_raw:p.skill_moves_raw,weak_foot:p.weak_foot,player_abilities_raw:p.player_abilities_raw,base_meta_rating:rating.meta}]:[]}).sort((a,b)=>b.base_meta_rating-a.base_meta_rating||b.overall-a.overall||a.display_name.localeCompare(b.display_name,"en")||a.ea_player_id-b.ea_player_id).slice(0,100)}catch(error){if(!isFc27ArtifactError(error))throw error;console.warn(`[FC27 DATA] static artifact unavailable: meta-rankings (${error.artifact})`)}
   const players: SourcePlayer[] = [];
   for (let offset = 0; ; offset += 1000) {
     const params = new URLSearchParams({ select: COLUMNS, order: "ea_player_id.asc", offset: String(offset), limit: "1000" });
     if (position) params.set("position_short_label", `eq.${position}`);
-    const response = await fetch(`${supabaseUrl}/rest/v1/fc27_players?${params}`, {
+    const response = await boundedFc27SupabaseFetch("meta-rankings",`${supabaseUrl}/rest/v1/fc27_players?${params}`, {
       headers: { apikey: anonKey, Authorization: `Bearer ${anonKey}` },
       next: { revalidate: 3600 },
     });

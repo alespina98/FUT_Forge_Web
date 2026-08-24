@@ -1,38 +1,8 @@
 import "server-only";
-import type { RankingPlayer } from "./rankings-shared";
+import { foldStatic, getAllPlayersStatic, isFc27ArtifactError, toRanking } from "./static-data";
+import { boundedFc27SupabaseFetch } from "./supabase-fallback";
 import { DETAIL_GROUPS, FACE_FILTERS, GK_FILTERS, STAT_FINDER_PAGE_SIZE, type StatFinderQuery, type StatFinderResult } from "./stat-finder-shared";
-
-const DEFAULT_SUPABASE_URL="https://axjuxmjoowrzmvyhbdhv.supabase.co";
-const DEFAULT_SUPABASE_ANON_KEY="sb_publishable_bMremihmEy34CWp5rG6M-g_UuysymCX";
-const supabaseUrl=process.env.NEXT_PUBLIC_SUPABASE_URL||DEFAULT_SUPABASE_URL;
-const anonKey=process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY||DEFAULT_SUPABASE_ANON_KEY;
+import type { RankingPlayer } from "./rankings-shared";
 const COLUMNS="ea_player_id,slug,display_name,overall,position_short_label,nationality_name,nationality_image_url,club_name,club_image_url,league_name,avatar_url,pace,shooting,passing,dribbling,defending,physicality";
-const SORT_FIELD={overall:"overall",pace:"pace",shooting:"shooting",passing:"passing",dribbling:"dribbling",defending:"defending",physical:"physicality"} as const;
-
-export async function fetchStatFinder(query:StatFinderQuery):Promise<StatFinderResult>{
-  const offset=(query.page-1)*STAT_FINDER_PAGE_SIZE;
-  const order=query.sort==="name"?"display_name.asc,ea_player_id.asc":`${SORT_FIELD[query.sort]}.desc.nullslast,overall.desc,display_name.asc,ea_player_id.asc`;
-  const params=new URLSearchParams({select:COLUMNS,order,limit:String(STAT_FINDER_PAGE_SIZE),offset:String(offset)});
-  if(query.q){const safe=query.q.replace(/[*,()]/g," ").trim();if(safe){const fields=["display_name","first_name","last_name","common_name"];const conditions=fields.flatMap(field=>[`${field}.ilike.${safe}*`,`${field}.ilike.* ${safe}*`,`${field}.ilike.*-${safe}*`]);params.set("or",`(${conditions.join(",")})`);}}
-  if(query.position)params.set("position_short_label",`eq.${query.position}`);
-  if(query.nation)params.set("nationality_name",`eq.${query.nation}`);
-  if(query.league)params.set("league_name",`eq.${query.league}`);
-  if(query.club)params.set("club_name",`ilike.*${query.club.replace(/[*,()]/g," ").trim()}*`);
-  if(query.preferredFoot)params.set("preferred_foot_code",`eq.${query.preferredFoot==="Right"?1:2}`);
-  const n=query.numeric;
-  if(n.ovrMin)params.append("overall",`gte.${n.ovrMin}`);if(n.ovrMax)params.append("overall",`lte.${n.ovrMax}`);
-  if(n.skillMovesMin)params.set("skill_moves_raw",`gte.${n.skillMovesMin}`);if(n.weakFootMin)params.set("weak_foot",`gte.${n.weakFootMin}`);
-  if(query.position==="GK"){
-    for(const [param,field] of GK_FILTERS){const value=n[param];if(value)params.set(field,`gte.${value}`);}
-  }else{
-    const hasOutfieldStatFilter=FACE_FILTERS.some(([param])=>!!n[param])||Object.values(DETAIL_GROUPS).some(group=>group.some(([param])=>!!n[param]));
-    if(hasOutfieldStatFilter&&!query.position)params.set("position_short_label","neq.GK");
-    for(const [param,field] of FACE_FILTERS){const value=n[param];if(value)params.set(field,`gte.${value}`);}
-    for(const group of Object.values(DETAIL_GROUPS))for(const [param,field] of group){const value=n[param];if(value)params.set(`detailed_attributes->${field}->>value`,`gte.${value}`);}
-  }
-  const started=performance.now();
-  const response=await fetch(`${supabaseUrl}/rest/v1/fc27_players?${params}`,{headers:{apikey:anonKey,Authorization:`Bearer ${anonKey}`,Prefer:"count=exact"},next:{revalidate:60}});
-  if(!response.ok)throw new Error(`Unable to search FC27 players (${response.status})`);
-  const players=await response.json() as RankingPlayer[];const range=response.headers.get("content-range");const total=range?.includes("/")?Number(range.split("/")[1]):players.length;
-  return {players,total,page:query.page,pageCount:Math.max(1,Math.ceil(total/STAT_FINDER_PAGE_SIZE)),elapsedMs:Math.round(performance.now()-started)};
-}
+export async function fetchStatFinder(query:StatFinderQuery):Promise<StatFinderResult>{const started=performance.now();try{let rows=(await getAllPlayersStatic()).filter(p=>{if(query.q&&!foldStatic([p.display_name,p.first_name,p.last_name,p.common_name].filter(Boolean).join(" ")).includes(foldStatic(query.q)))return false;if(query.position&&p.position_short_label!==query.position)return false;if(query.nation&&p.nationality_name!==query.nation)return false;if(query.league&&p.league_name!==query.league)return false;if(query.club&&!foldStatic(p.club_name??"").includes(foldStatic(query.club)))return false;if(query.preferredFoot&&p.preferred_foot_code!==(query.preferredFoot==="Right"?1:2))return false;const n=query.numeric;if(n.ovrMin&&p.overall<n.ovrMin||n.ovrMax&&p.overall>n.ovrMax||n.skillMovesMin&&p.skill_moves_raw<n.skillMovesMin||n.weakFootMin&&p.weak_foot<n.weakFootMin)return false;for(const[param,field]of query.position==="GK"?GK_FILTERS:FACE_FILTERS){const min=n[param];if(min&&(p[field]??-1)<min)return false}if(query.position!=="GK")for(const group of Object.values(DETAIL_GROUPS))for(const[param,field]of group){const min=n[param];if(min&&(p.detailed_attributes[field]?.value??-1)<min)return false}return true});const field=query.sort==="physical"?"physicality":query.sort;rows=rows.sort((a,b)=>query.sort==="name"?a.display_name.localeCompare(b.display_name)||a.ea_player_id-b.ea_player_id:((b[field as keyof typeof b]as number|null)??-1)-((a[field as keyof typeof a]as number|null)??-1)||b.overall-a.overall||a.ea_player_id-b.ea_player_id);const total=rows.length,offset=(query.page-1)*STAT_FINDER_PAGE_SIZE;return{players:rows.slice(offset,offset+STAT_FINDER_PAGE_SIZE).map(toRanking),total,page:query.page,pageCount:Math.max(1,Math.ceil(total/STAT_FINDER_PAGE_SIZE)),elapsedMs:Math.round(performance.now()-started)}}catch(error){if(!isFc27ArtifactError(error))throw error;console.warn(`[FC27 DATA] static artifact unavailable: stat-finder (${error.artifact})`)}
+ const url=process.env.NEXT_PUBLIC_SUPABASE_URL||"https://axjuxmjoowrzmvyhbdhv.supabase.co",key=process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY||"sb_publishable_bMremihmEy34CWp5rG6M-g_UuysymCX",offset=(query.page-1)*STAT_FINDER_PAGE_SIZE,field=query.sort==="physical"?"physicality":query.sort,order=query.sort==="name"?"display_name.asc,ea_player_id.asc":`${field}.desc.nullslast,overall.desc,display_name.asc,ea_player_id.asc`,params=new URLSearchParams({select:COLUMNS,order,limit:String(STAT_FINDER_PAGE_SIZE),offset:String(offset)}),n=query.numeric;if(query.position)params.set("position_short_label",`eq.${query.position}`);if(query.nation)params.set("nationality_name",`eq.${query.nation}`);if(query.league)params.set("league_name",`eq.${query.league}`);if(query.club)params.set("club_name",`ilike.*${query.club.replace(/[*,()]/g," ").trim()}*`);if(query.preferredFoot)params.set("preferred_foot_code",`eq.${query.preferredFoot==="Right"?1:2}`);if(n.ovrMin)params.append("overall",`gte.${n.ovrMin}`);if(n.ovrMax)params.append("overall",`lte.${n.ovrMax}`);if(n.skillMovesMin)params.set("skill_moves_raw",`gte.${n.skillMovesMin}`);if(n.weakFootMin)params.set("weak_foot",`gte.${n.weakFootMin}`);for(const[param,f]of query.position==="GK"?GK_FILTERS:FACE_FILTERS){const min=n[param];if(min)params.set(f,`gte.${min}`)}if(query.position!=="GK")for(const group of Object.values(DETAIL_GROUPS))for(const[param,f]of group){const min=n[param];if(min)params.set(`detailed_attributes->${f}->>value`,`gte.${min}`)}const response=await boundedFc27SupabaseFetch("stat-finder",`${url}/rest/v1/fc27_players?${params}`,{headers:{apikey:key,Authorization:`Bearer ${key}`,Prefer:"count=exact"}});if(!response.ok)throw new Error(`Unable to search FC27 players (${response.status})`);const players=await response.json()as RankingPlayer[],range=response.headers.get("content-range"),total=range?.includes("/")?Number(range.split("/")[1]):players.length;return{players,total,page:query.page,pageCount:Math.max(1,Math.ceil(total/STAT_FINDER_PAGE_SIZE)),elapsedMs:Math.round(performance.now()-started)}}

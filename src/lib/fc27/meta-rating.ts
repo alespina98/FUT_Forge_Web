@@ -1,4 +1,5 @@
-import { FC26_GRADE_CONFIG } from "./meta-rating-config";
+// @ts-ignore Node's strip-types runner needs the explicit extension for the offline generator.
+import { FC26_GRADE_CONFIG } from "./meta-rating-config.ts";
 export type MetaRole="ST_CF"|"WIDE"|"CAM"|"CM"|"CDM"|"FULLBACK"|"CB"|"GK";
 export type Fc27MetaPlayer={ea_player_id:number;display_name:string;overall:number;position_short_label:string;pace:number|null;shooting:number|null;passing:number|null;dribbling:number|null;defending:number|null;physicality:number|null;skill_moves_raw:number;weak_foot:number;player_abilities_raw?:unknown[]};
 type RoleEntry={position:number;type:number};

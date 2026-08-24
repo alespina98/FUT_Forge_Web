@@ -1,4 +1,6 @@
 import "server-only";
+import { getManifest, isFc27ArtifactError, readArtifact } from "./static-data";
+import { boundedFc27SupabaseFetch } from "./supabase-fallback";
 
 // Autocomplete search - separate from the full grid search in players.ts.
 // Public/anon PostgREST reads only, same as the rest of this data layer.
@@ -52,6 +54,11 @@ export async function searchPlayerSuggestions(rawQuery: string): Promise<PlayerS
     .map((w) => w.replace(/[^a-z0-9]/g, "")) // strip anything that could break tsquery syntax (hyphens, apostrophes, etc.)
     .filter(Boolean);
   if (words.length === 0) return [];
+  try{const prefix=/^[a-z]/.test(words[0])?words[0][0]:"other";
+  if(!(await getManifest()).artifacts.search.includes(`search/${prefix}.json`))return[];
+  const ids=new Set(await readArtifact<number[]>(`search/${prefix}.json`));
+  const staticRows=(await readArtifact<Array<CandidateRow&{normalized_name:string}>>("search/index.json")).filter(row=>ids.has(row.ea_player_id));
+  return staticRows.filter(row=>{const nameWords=foldAccents([row.first_name,row.last_name,row.common_name,row.display_name].filter(Boolean).join(" ")).split(/[\s\-']+/).filter(Boolean);return words.every(w=>nameWords.some(n=>n.startsWith(w)))}).sort((a,b)=>b.overall-a.overall||a.display_name.localeCompare(b.display_name)).slice(0,10).map(({ea_player_id,slug,display_name,overall,position_short_label,club_name,nationality_name})=>({ea_player_id,slug,display_name,overall,position_short_label,club_name,nationality_name}))}catch(error){if(!isFc27ArtifactError(error))throw error;console.warn(`[FC27 DATA] static artifact unavailable: autocomplete (${error.artifact})`)}
 
   const tsQuery = words.map((w) => `${w}:*`).join(" & ");
   const params = new URLSearchParams({
@@ -61,7 +68,7 @@ export async function searchPlayerSuggestions(rawQuery: string): Promise<PlayerS
     limit: "40",
   });
 
-  const response = await fetch(`${supabaseUrl}/rest/v1/fc27_players?${params}`, {
+  const response = await boundedFc27SupabaseFetch("autocomplete",`${supabaseUrl}/rest/v1/fc27_players?${params}`, {
     headers: { apikey: anonKey, Authorization: `Bearer ${anonKey}` },
     next: { revalidate: 60 },
   });

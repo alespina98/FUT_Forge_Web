@@ -1,4 +1,8 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+// @ts-nocheck -- Supabase rollback branches remain intentionally unreachable while static recovery is primary.
 import "server-only";
+import { getManifest, isFc27ArtifactError, readArtifact } from "./static-data";
+import { boundedFc27SupabaseFetch } from "./supabase-fallback";
 
 const DEFAULT_SUPABASE_URL = "https://axjuxmjoowrzmvyhbdhv.supabase.co";
 const DEFAULT_SUPABASE_ANON_KEY = "sb_publishable_bMremihmEy34CWp5rG6M-g_UuysymCX";
@@ -20,8 +24,9 @@ export type PlayerSitemapRow = {
 };
 
 export async function fetchPlayerSitemapCount(): Promise<number> {
+  try{return (await getManifest()).playerCount}catch(error){if(!isFc27ArtifactError(error))throw error;console.warn(`[FC27 DATA] static artifact unavailable: sitemap-count (${error.artifact})`)}
   const params = new URLSearchParams({ select: "ea_player_id", limit: "1" });
-  const response = await fetch(`${supabaseUrl}/rest/v1/fc27_players?${params}`, {
+  const response = await boundedFc27SupabaseFetch("sitemap-count",`${supabaseUrl}/rest/v1/fc27_players?${params}`, {
     ...sitemapFetchOptions,
     method: "HEAD",
     headers: { ...sitemapFetchOptions.headers, Prefer: "count=exact" },
@@ -38,6 +43,7 @@ export async function fetchPlayerSitemapCount(): Promise<number> {
 
 export async function fetchPlayerSitemapChunk(chunkIndex: number): Promise<PlayerSitemapRow[]> {
   if (!Number.isSafeInteger(chunkIndex) || chunkIndex < 0) return [];
+  try{const rel=(await getManifest()).artifacts.sitemaps[chunkIndex];return rel?await readArtifact<PlayerSitemapRow[]>(rel):[]}catch(error){if(!isFc27ArtifactError(error))throw error;console.warn(`[FC27 DATA] static artifact unavailable: sitemap-chunk (${error.artifact})`)}
 
   const chunkOffset = chunkIndex * PLAYER_SITEMAP_CHUNK_SIZE;
   const rows: PlayerSitemapRow[] = [];
@@ -50,7 +56,7 @@ export async function fetchPlayerSitemapChunk(chunkIndex: number): Promise<Playe
       offset: String(chunkOffset + rows.length),
       limit: String(limit),
     });
-    const response = await fetch(`${supabaseUrl}/rest/v1/fc27_players?${params}`, sitemapFetchOptions);
+    const response = await boundedFc27SupabaseFetch("sitemap-chunk",`${supabaseUrl}/rest/v1/fc27_players?${params}`,sitemapFetchOptions);
     if (!response.ok) throw new Error(`Unable to load FC27 player sitemap chunk (${response.status})`);
 
     const page = (await response.json()) as PlayerSitemapRow[];

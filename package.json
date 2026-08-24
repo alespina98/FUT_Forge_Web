@@ -15,6 +15,7 @@
     "leaks:ingest": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --env-file-if-exists=.env.local --experimental-strip-types scripts/ingest-leak.ts",
     "fc27:download": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/fc27/download-ea-ratings.ts",
     "fc27:sync": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --env-file-if-exists=.env.local --experimental-strip-types scripts/fc27/sync-fc27-players.ts"
+    ,"fc27:generate-public-data": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/fc27/generate-public-data.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.4",
