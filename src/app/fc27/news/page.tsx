@@ -1,7 +1,4 @@
 import type { Metadata } from "next";
-import { AmbientEffects } from "@/components/ambient-effects";
-import { Footer } from "@/components/footer";
-import { Navbar } from "@/components/navbar";
 import { Fc27ComingSoon } from "@/components/fc27/coming-soon";
 import { copy, siteCopy } from "@/lib/copy";
 
@@ -18,12 +15,5 @@ export const metadata: Metadata = {
 };
 
 export default function Fc27NewsPage() {
-  return (
-    <main className="min-h-screen overflow-hidden bg-ink text-white">
-      <AmbientEffects />
-      <Navbar />
-      <Fc27ComingSoon variant="news" />
-      <Footer />
-    </main>
-  );
+  return <Fc27ComingSoon variant="news" />;
 }

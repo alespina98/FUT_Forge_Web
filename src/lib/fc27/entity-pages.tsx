@@ -41,5 +41,5 @@ export async function renderDetailPage(kind: EntityKind, slug: string) {
   const entity = await resolveEntity(kind, slug); if (!entity) notFound();
   const { players, total } = await fetchEntityPlayers(kind, entity); const c = detailCopy(kind, entity.name); const path = `/fc27/${kind}/${entity.slug}`; const l = labels[kind];
   const jsonLd = aggregatePageJsonLd({ path, name: c.title, description: c.description, breadcrumbs: [{ name: "EA FC 27", path: "/fc27/players" }, { name: l.directory, path: `/fc27/${kind}` }, { name: entity.name, path }], players });
-  return <><JsonLd data={jsonLd}/><EntityDetailView name={entity.name} total={total} players={players}/></>;
+  return <><JsonLd data={jsonLd}/><EntityDetailView name={entity.name} total={total} players={players} parentHref={`/fc27/${kind}`} parentLabel={l.directory}/></>;
 }

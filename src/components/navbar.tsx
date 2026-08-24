@@ -10,6 +10,7 @@ import { useI18n } from "./i18n-provider";
 import { ChevronDownIcon, DownloadIcon, ExitIcon, ForgeMark, UserIcon } from "./icons";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useAuthUser, getDisplayName } from "@/lib/use-auth-user";
+import { ThemeControl } from "./theme-control";
 
 function NavAccount({ onNavigate }: { onNavigate?: () => void }) {
   const { t } = useI18n();
@@ -217,6 +218,7 @@ export function Navbar() {
           <Fc27NavDropdown t={t} pathname={pathname} />
         </div>
         <div className="nav-actions min-w-0 justify-self-end">
+          <div className="desktop-theme"><ThemeControl locale={locale} /></div>
           <div className="language-switcher desktop-language" role="group" aria-label={t.nav.language}>
             {(["en", "it"] as const).map((item) => (
               <button key={item} type="button" className={locale === item ? "active" : ""} onClick={() => setLocale(item)} aria-pressed={locale === item}>
@@ -255,6 +257,7 @@ export function Navbar() {
             </div>
             {flatLinks.map(([label, href], index) => <a key={href} href={href} onClick={() => setOpen(false)}>{label}<span>0{index + 4}</span></a>)}
             <div className="mt-1 border-t border-white/10 px-3 py-3"><NavAccount onNavigate={() => setOpen(false)} /></div>
+            <ThemeControl mobile locale={locale} />
             <div className="mobile-language" role="group" aria-label={t.nav.language}><span>{t.nav.language}</span>{(["en", "it"] as const).map((item) => <button key={item} type="button" className={locale === item ? "active" : ""} onClick={() => { setLocale(item); setOpen(false); }} aria-pressed={locale === item}>{item.toUpperCase()} · {item === "en" ? "English" : "Italiano"}</button>)}</div>
           </div>
         )}
