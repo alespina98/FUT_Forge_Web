@@ -90,6 +90,7 @@ export function Fc27PlayerDetailView({ player, baseMetaRating, returnTo, entityL
   const returnContext = fc27ReturnContext(returnTo);
   const positionName = returnContext.position ? t.fc27BestPage.positions[returnContext.position as keyof typeof t.fc27BestPage.positions] : undefined;
   const backLabel = returnContext.kind === "hiddenGems" ? (locale === "it" ? `Torna alle ${t.nav.fc27HiddenGems}` : `Back to ${t.nav.fc27HiddenGems}`)
+    : returnContext.kind === "squadBuilder" ? (locale === "it" ? "Torna allo Squad Builder" : "Back to Squad Builder")
     : returnContext.kind === "statFinder" ? (locale === "it" ? `Torna alla ${t.nav.fc27StatFinder}` : `Back to ${t.nav.fc27StatFinder}`)
     : returnContext.kind === "rankings" ? (locale === "it" ? `Torna alle ${t.nav.fc27Rankings}` : `Back to ${t.nav.fc27Rankings}`)
     : returnContext.kind === "similar" ? (locale === "it" ? "Torna ai giocatori simili" : "Back to Similar Players")

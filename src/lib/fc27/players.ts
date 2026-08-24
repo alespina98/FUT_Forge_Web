@@ -48,10 +48,13 @@ export type PlayerListItem = {
   overall: number;
   rank: number;
   position_short_label: string;
+  nationality_id: number;
   nationality_name: string;
   nationality_image_url: string | null;
   club_name: string | null;
+  club_id: number | null;
   club_image_url: string | null;
+  league_name: string | null;
   pace: number | null;
   shooting: number | null;
   passing: number | null;
@@ -97,7 +100,7 @@ export type PlayersResult = {
   pageCount: number;
 };
 
-const LIST_COLUMNS = "ea_player_id,slug,display_name,common_name,overall,rank,position_short_label,nationality_name,nationality_image_url,club_name,club_image_url,pace,shooting,passing,dribbling,defending,physicality,skill_moves_raw,weak_foot,preferred_foot_code,alternate_positions,avatar_url";
+const LIST_COLUMNS = "ea_player_id,slug,display_name,common_name,overall,rank,position_short_label,nationality_id,nationality_name,nationality_image_url,club_id,club_name,club_image_url,league_name,pace,shooting,passing,dribbling,defending,physicality,skill_moves_raw,weak_foot,preferred_foot_code,alternate_positions,avatar_url";
 
 // Accent-fold the query the same way the importer builds search_text (see
 // scripts/fc27/sync-fc27-players.ts's foldAccents) so "Mbappe" matches
@@ -287,4 +290,13 @@ export async function fetchPlayersByIds(eaPlayerIds: number[]): Promise<PlayerDe
   });
   if (!response.ok) throw new Error(`Unable to load comparison players (${response.status})`);
   return (await response.json()) as PlayerDetail[];
+}
+
+export async function fetchSquadPlayersByIds(eaPlayerIds:number[]):Promise<PlayerListItem[]>{
+ const ids=[...new Set(eaPlayerIds.filter(id=>Number.isSafeInteger(id)&&id>0))].slice(0,11);if(!ids.length)return[];
+ try{return (await getPlayersByIdsStatic(ids)).map(toList).sort((a,b)=>b.overall-a.overall)}catch(error){if(!isFc27ArtifactError(error))throw error;console.warn(`[FC27 DATA] static artifact unavailable: squad-restore (${error.artifact})`)}
+ const params=new URLSearchParams({select:LIST_COLUMNS,ea_player_id:`in.(${ids.join(",")})`,order:"overall.desc"});
+ const response=await boundedFc27SupabaseFetch("squad-restore",`${supabaseUrl}/rest/v1/fc27_players?${params}`,{headers:{apikey:anonKey,Authorization:`Bearer ${anonKey}`},next:{revalidate:300}});
+ if(!response.ok)throw new Error(`Unable to load squad players (${response.status})`);
+ return await response.json() as PlayerListItem[];
 }

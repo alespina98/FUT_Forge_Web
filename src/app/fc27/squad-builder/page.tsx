@@ -1,19 +1,19 @@
 import type { Metadata } from "next";
-import { Fc27ComingSoon } from "@/components/fc27/coming-soon";
-import { copy, siteCopy } from "@/lib/copy";
+import "./squad-builder-responsive.css";
+import {JsonLd} from "@/components/json-ld";
+import {Fc27SquadBuilderView} from "@/components/fc27/squad-builder-view";
+import {siteCopy} from "@/lib/copy";
 
-// Minimal placeholder so the new EA FC 27 nav dropdown never 404s - not a
-// real feature yet, so kept out of the sitemap and noindexed until there's
-// actual content (see the sitemap.ts comment for the indexing policy this
-// follows).
+const title="EA FC 27 Squad Builder – Build Your Ultimate Team | FUT Forge";
+const description="Build your EA FC 27 squad with FUT Forge. Choose a formation, search the FC27 player database, calculate chemistry and create your starting XI.";
 export const metadata: Metadata = {
-  title: `${copy.en.fc27ComingSoon.squadBuilder.title} | FUT Forge`,
-  description: copy.en.fc27ComingSoon.squadBuilder.body,
+  title:{absolute:title},description,
   alternates: { canonical: "/fc27/squad-builder" },
-  robots: { index: false, follow: true },
-  openGraph: { type: "website", url: "/fc27/squad-builder", title: `${copy.en.fc27ComingSoon.squadBuilder.title} | FUT Forge`, description: copy.en.fc27ComingSoon.squadBuilder.body, siteName: siteCopy.applicationName, locale: "en_US", alternateLocale: ["it_IT"] },
+  robots: { index: true, follow: true },
+  openGraph: { type:"website",url:"/fc27/squad-builder",title,description,siteName:siteCopy.applicationName,locale:"en_US",alternateLocale:["it_IT"] },twitter:{card:"summary",title,description},
 };
 
 export default function Fc27SquadBuilderPage() {
-  return <Fc27ComingSoon variant="squadBuilder" />;
+  const url=`${siteCopy.url}/fc27/squad-builder`;const jsonLd={"@context":"https://schema.org","@graph":[{"@type":"WebApplication","@id":`${url}#app`,name:title,description,url,applicationCategory:"SportsApplication",operatingSystem:"Web browser",browserRequirements:"Requires JavaScript"},{"@type":"BreadcrumbList","@id":`${url}#breadcrumb`,itemListElement:[{"@type":"ListItem",position:1,name:"Home",item:siteCopy.url},{"@type":"ListItem",position:2,name:"EA FC 27 Players",item:`${siteCopy.url}/fc27/players`},{"@type":"ListItem",position:3,name:"Squad Builder",item:url}]}]};
+  return <><JsonLd data={jsonLd}/><Fc27SquadBuilderView/></>;
 }

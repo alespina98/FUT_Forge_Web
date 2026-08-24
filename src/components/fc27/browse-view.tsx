@@ -14,7 +14,7 @@ const words = {
       ["Leagues", "Discover the best players from each league.", "/fc27/leagues"],
     ],
     more: "More ways to explore",
-    secondary: [["Players Database", "/fc27/players"], ["Browse by Position", "/fc27/positions"], ["Rankings", "/fc27/rankings"], ["Base Meta Rankings", "/fc27/meta-rankings"], ["Advanced Stat Finder", "/fc27/stat-finder"], ["Hidden Gems", "/fc27/hidden-gems"]],
+    secondary: [["Players Database", "/fc27/players"], ["Browse by Position", "/fc27/positions"], ["Rankings", "/fc27/rankings"], ["Base Meta Rankings", "/fc27/meta-rankings"], ["Advanced Stat Finder", "/fc27/stat-finder"], ["Hidden Gems", "/fc27/hidden-gems"], ["Squad Builder", "/fc27/squad-builder"]],
   },
   it: {
     eyebrow: "DATABASE FC 27",
@@ -26,7 +26,7 @@ const words = {
       ["Campionati", "Scopri i migliori giocatori di ogni campionato.", "/fc27/leagues"],
     ],
     more: "Altri modi per esplorare",
-    secondary: [["Database Giocatori", "/fc27/players"], ["Esplora per Posizione", "/fc27/positions"], ["Classifiche", "/fc27/rankings"], ["Classifica Meta Base", "/fc27/meta-rankings"], ["Ricerca Avanzata", "/fc27/stat-finder"], ["Gemme Nascoste", "/fc27/hidden-gems"]],
+    secondary: [["Database Giocatori", "/fc27/players"], ["Esplora per Posizione", "/fc27/positions"], ["Classifiche", "/fc27/rankings"], ["Classifica Meta Base", "/fc27/meta-rankings"], ["Ricerca Avanzata", "/fc27/stat-finder"], ["Gemme Nascoste", "/fc27/hidden-gems"], ["Squad Builder", "/fc27/squad-builder"]],
   },
 } as const;
 

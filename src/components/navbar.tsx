@@ -60,7 +60,7 @@ function NavAccount({ onNavigate }: { onNavigate?: () => void }) {
 // click behavior.
 function isPlayersRoute(pathname: string | null) {
   if (!pathname) return false;
-  return ["/fc27/players", "/fc27/meta-rankings", "/fc27/rankings", "/fc27/positions", "/fc27/best", "/fc27/stat-finder", "/fc27/hidden-gems", "/fc27/nations", "/fc27/clubs", "/fc27/leagues", "/fc27/similar"]
+  return ["/fc27/players", "/fc27/meta-rankings", "/fc27/rankings", "/fc27/positions", "/fc27/best", "/fc27/stat-finder", "/fc27/hidden-gems", "/fc27/nations", "/fc27/clubs", "/fc27/leagues", "/fc27/similar", "/fc27/compare", "/fc27/squad-builder", "/fc27/browse"]
     .some((base) => pathname === base || pathname.startsWith(`${base}/`));
 }
 
@@ -69,6 +69,7 @@ function playersMenuGroups(t: Dictionary) {
     { label: t.nav.navCore, items: [[t.nav.playersDatabase, "/fc27/players"], [t.nav.baseMetaRankings, "/fc27/meta-rankings"], [t.nav.fc27Rankings, "/fc27/rankings"]] },
     { label: t.nav.navDiscovery, items: [[t.nav.bestByPosition, "/fc27/positions"], [t.nav.fc27StatFinder, "/fc27/stat-finder"], [t.nav.fc27HiddenGems, "/fc27/hidden-gems"]] },
     { label: t.nav.navExploreDatabase, items: [[t.nav.nations, "/fc27/nations"], [t.nav.clubs, "/fc27/clubs"], [t.nav.leagues, "/fc27/leagues"]] },
+    { label: t.nav.navTools, items: [[t.nav.fc27Compare, "/fc27/compare"], [t.nav.fc27SquadBuilder, "/fc27/squad-builder"]] },
   ] as const;
 }
 
@@ -101,7 +102,7 @@ function Fc27NavDropdown({ t, pathname }: { t: Dictionary; pathname: string | nu
     clearCloseTimer();
     if (ref.current) {
       const rect = ref.current.getBoundingClientRect();
-      const menuWidth = 620;
+      const menuWidth = 780;
       setMenuPos({ top: rect.bottom + 10, left: Math.max(12, Math.min(rect.right - menuWidth, window.innerWidth - menuWidth - 12)) });
     }
     setOpen(true);

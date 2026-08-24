@@ -1,0 +1,10 @@
+import test from "node:test";import assert from "node:assert/strict";import{calculateSquadChemistry,isPositionCompatible}from"./squad-chemistry.ts";
+const p=(id,{club=id,nation=id,league=`L${id}`,position="ST",alts=[]}={})=>({ea_player_id:id,club_id:club,nationality_id:nation,league_name:league,position_short_label:position,alternate_positions:alts.map(short_label=>({short_label}))});const row=(player,slot="ST")=>({player,slot});
+test("A unrelated players have zero chemistry",()=>assert.equal(calculateSquadChemistry(Array.from({length:11},(_,i)=>row(p(i+1)))).total,0));
+test("B two same-club players earn one each",()=>{const r=calculateSquadChemistry([row(p(1,{club:9})),row(p(2,{club:9}))]);assert.deepEqual(r.players.map(x=>x.chemistry),[1,1]);assert.equal(r.total,2)});
+test("C five same-nation players earn two each",()=>{const r=calculateSquadChemistry(Array.from({length:5},(_,i)=>row(p(i+1,{nation:7}))));assert.ok(r.players.every(x=>x.nationChem===2));assert.equal(r.total,10)});
+test("D three same-league players earn one each",()=>{const r=calculateSquadChemistry(Array.from({length:3},(_,i)=>row(p(i+1,{league:"Premier"}))));assert.ok(r.players.every(x=>x.leagueChem===1));assert.equal(r.total,3)});
+test("E mixed contributions cap at three",()=>{const r=calculateSquadChemistry(Array.from({length:8},(_,i)=>row(p(i+1,{club:2,nation:3,league:"A"}))));assert.ok(r.players.every(x=>x.chemistry===3));assert.equal(r.total,24)});
+test("F complete linked XI reaches 33",()=>assert.equal(calculateSquadChemistry(Array.from({length:11},(_,i)=>row(p(i+1,{club:2,nation:3,league:"A"})))).total,33));
+test("G out-of-position player contributes and receives zero",()=>{const r=calculateSquadChemistry([row(p(1,{club:2,position:"CM"})),row(p(2,{club:2}))]);assert.equal(r.players[0].chemistry,0);assert.equal(r.players[1].clubChem,0)});
+test("H alternate position is valid",()=>{const player=p(1,{position:"CM",alts:["ST"]});assert.equal(isPositionCompatible(player,"ST"),true);assert.equal(calculateSquadChemistry([row(player)]).players[0].inPosition,true)});

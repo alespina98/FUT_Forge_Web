@@ -1,0 +1,22 @@
+.fc27-squad-page {
+  mask-image: none;
+}
+
+.fc27-squad-layout,
+.fc27-squad-pitch {
+  min-width: 0;
+}
+
+.fc27-squad-pitch {
+  width: 100%;
+}
+
+@media (max-width: 520px) {
+  .fc27-squad-slot {
+    width: 60px;
+  }
+
+  .fc27-squad-pitch {
+    min-height: 650px;
+  }
+}
