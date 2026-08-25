@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useSignIn } from "@clerk/nextjs/legacy";
+import { useSignIn } from "@clerk/nextjs";
 import { useI18n } from "./i18n-provider";
 
 type Stage = "email" | "code" | "password";
@@ -18,6 +18,10 @@ const recoveryCopy = {
     passwordLead: "Choose a new password for your FUT Forge account.",
     resetButton: "Reset password",
     genericError: "We couldn't complete that request. Check the details and try again.",
+    invalidCode: "That verification code is invalid or has expired. Request a new code and try again.",
+    weakPassword: "That password does not meet the security requirements. Choose a stronger password.",
+    compromisedPassword: "That password has appeared in a data breach. Choose a different password.",
+    rateLimited: "Too many attempts. Wait a moment and try again.",
     mismatch: "The passwords do not match.",
     tooShort: "Use at least 8 characters.",
   },
@@ -30,15 +34,39 @@ const recoveryCopy = {
     passwordLead: "Scegli una nuova password per il tuo account FUT Forge.",
     resetButton: "Reimposta password",
     genericError: "Non è stato possibile completare la richiesta. Controlla i dati e riprova.",
+    invalidCode: "Il codice di verifica non è valido o è scaduto. Richiedi un nuovo codice e riprova.",
+    weakPassword: "La password non soddisfa i requisiti di sicurezza. Scegli una password più sicura.",
+    compromisedPassword: "Questa password è comparsa in una violazione di dati. Scegline un'altra.",
+    rateLimited: "Troppi tentativi. Attendi un momento e riprova.",
     mismatch: "Le password non coincidono.",
     tooShort: "Usa almeno 8 caratteri.",
   },
 } as const;
 
+type RecoveryCopy = (typeof recoveryCopy)[keyof typeof recoveryCopy];
+type ClerkFlowError = { code?: string } | null | undefined;
+
+function recoveryErrorMessage(error: ClerkFlowError, text: RecoveryCopy) {
+  switch (error?.code) {
+    case "form_code_incorrect":
+    case "verification_expired":
+      return text.invalidCode;
+    case "form_password_pwned":
+      return text.compromisedPassword;
+    case "form_password_length_too_short":
+    case "form_password_not_strong_enough":
+      return text.weakPassword;
+    case "too_many_requests":
+      return text.rateLimited;
+    default:
+      return text.genericError;
+  }
+}
+
 export function ClerkPasswordRecovery() {
   const { locale, t } = useI18n();
   const text = recoveryCopy[locale];
-  const { isLoaded, signIn, setActive } = useSignIn();
+  const { signIn, fetchStatus } = useSignIn();
   const router = useRouter();
   const [stage, setStage] = useState<Stage>("email");
   const [email, setEmail] = useState("");
@@ -50,11 +78,20 @@ export function ClerkPasswordRecovery() {
 
   async function requestCode(event: FormEvent) {
     event.preventDefault();
-    if (!isLoaded) return;
+    if (fetchStatus === "fetching") return;
     setSubmitting(true);
     setError(null);
     try {
-      await signIn.create({ strategy: "reset_password_email_code", identifier: email.trim() });
+      const { error: createError } = await signIn.create({ identifier: email.trim() });
+      if (createError) {
+        setError(recoveryErrorMessage(createError, text));
+        return;
+      }
+      const { error: sendCodeError } = await signIn.resetPasswordEmailCode.sendCode();
+      if (sendCodeError) {
+        setError(recoveryErrorMessage(sendCodeError, text));
+        return;
+      }
       setStage("code");
     } catch {
       setError(text.genericError);
@@ -65,12 +102,16 @@ export function ClerkPasswordRecovery() {
 
   async function verifyCode(event: FormEvent) {
     event.preventDefault();
-    if (!isLoaded) return;
+    if (fetchStatus === "fetching") return;
     setSubmitting(true);
     setError(null);
     try {
-      const result = await signIn.attemptFirstFactor({ strategy: "reset_password_email_code", code: code.trim() });
-      if (result.status !== "needs_new_password") throw new Error("Unexpected recovery state");
+      const { error: verifyError } = await signIn.resetPasswordEmailCode.verifyCode({ code: code.trim() });
+      if (verifyError) {
+        setError(recoveryErrorMessage(verifyError, text));
+        return;
+      }
+      if (signIn.status !== "needs_new_password") throw new Error("Unexpected recovery state");
       setStage("password");
     } catch {
       setError(text.genericError);
@@ -81,7 +122,7 @@ export function ClerkPasswordRecovery() {
 
   async function resetPassword(event: FormEvent) {
     event.preventDefault();
-    if (!isLoaded) return;
+    if (fetchStatus === "fetching") return;
     if (password.length < 8) {
       setError(text.tooShort);
       return;
@@ -93,10 +134,20 @@ export function ClerkPasswordRecovery() {
     setSubmitting(true);
     setError(null);
     try {
-      const result = await signIn.resetPassword({ password });
-      if (result.status !== "complete" || !result.createdSessionId) throw new Error("Unexpected recovery state");
-      await setActive({ session: result.createdSessionId });
-      router.replace("/app/account");
+      const { error: passwordError } = await signIn.resetPasswordEmailCode.submitPassword({
+        password,
+        signOutOfOtherSessions: true,
+      });
+      if (passwordError) {
+        setError(recoveryErrorMessage(passwordError, text));
+        setSubmitting(false);
+        return;
+      }
+      if (signIn.status !== "complete") throw new Error("Unexpected recovery state");
+      const { error: finalizeError } = await signIn.finalize({
+        navigate: ({ decorateUrl }) => router.replace(decorateUrl("/app/account")),
+      });
+      if (finalizeError) throw new Error("Unable to activate recovered session");
     } catch {
       setError(text.genericError);
       setSubmitting(false);
@@ -119,7 +170,7 @@ export function ClerkPasswordRecovery() {
         <form onSubmit={requestCode} className={formClass}>
           <label className={labelClass} htmlFor="clerk-recovery-email">{t.forgotPassword.emailLabel}</label>
           <input id="clerk-recovery-email" type="email" autoComplete="email" required value={email} onChange={(event) => setEmail(event.target.value)} className={inputClass} />
-          <button type="submit" className="button-primary" disabled={!isLoaded || submitting || !email.trim()}>{submitting ? t.forgotPassword.submittingButton : t.forgotPassword.submitButton}</button>
+          <button type="submit" className="button-primary" disabled={fetchStatus === "fetching" || submitting || !email.trim()}>{submitting ? t.forgotPassword.submittingButton : t.forgotPassword.submitButton}</button>
         </form>
       )}
 

@@ -9,7 +9,7 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test:leaks": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test --experimental-strip-types src/lib/leaks/*.test.mjs src/lib/leaks/ingestion/*.test.mjs",
-    "test:auth": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test --experimental-strip-types src/lib/auth-recovery.test.mjs src/components/auth-recovery-ui.test.mjs",
+    "test:auth": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test --experimental-strip-types src/lib/auth-recovery.test.mjs src/components/auth-recovery-ui.test.mjs src/components/clerk-password-recovery.test.mjs",
     "test:admin": "node --test src/lib/admin-username.test.mjs",
     "test:register": "node --test src/lib/register-username.test.mjs src/lib/auth/controlled-signup.test.mjs",
     "test:turso-auth": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test --experimental-strip-types src/lib/auth/turso-identity-repository.test.mjs",
