@@ -6,17 +6,19 @@ import { useRouter } from "next/navigation";
 import { useSignIn } from "@clerk/nextjs";
 import { useI18n } from "./i18n-provider";
 
-type Stage = "email" | "code" | "password";
+type Stage = "email" | "code" | "password" | "complete";
 
 const recoveryCopy = {
   en: {
     codeLabel: "Verification code",
     codeLead: "Enter the code Clerk sent to your email address.",
     codeButton: "Verify code",
+    passwordTitle: "Create your new password",
     newPassword: "New password",
     confirmPassword: "Confirm password",
-    passwordLead: "Choose a new password for your FUT Forge account.",
+    passwordLead: "Your email has been verified. Choose a password for your FUT Forge account.",
     resetButton: "Reset password",
+    completingLead: "Password created. Finishing your secure sign-in…",
     genericError: "We couldn't complete that request. Check the details and try again.",
     invalidCode: "That verification code is invalid or has expired. Request a new code and try again.",
     weakPassword: "That password does not meet the security requirements. Choose a stronger password.",
@@ -29,10 +31,12 @@ const recoveryCopy = {
     codeLabel: "Codice di verifica",
     codeLead: "Inserisci il codice inviato da Clerk al tuo indirizzo email.",
     codeButton: "Verifica codice",
+    passwordTitle: "Crea la tua nuova password",
     newPassword: "Nuova password",
     confirmPassword: "Conferma password",
-    passwordLead: "Scegli una nuova password per il tuo account FUT Forge.",
+    passwordLead: "La tua email è stata verificata. Scegli una password per il tuo account FUT Forge.",
     resetButton: "Reimposta password",
+    completingLead: "Password creata. Completamento dell'accesso sicuro…",
     genericError: "Non è stato possibile completare la richiesta. Controlla i dati e riprova.",
     invalidCode: "Il codice di verifica non è valido o è scaduto. Richiedi un nuovo codice e riprova.",
     weakPassword: "La password non soddisfa i requisiti di sicurezza. Scegli una password più sicura.",
@@ -148,6 +152,7 @@ export function ClerkPasswordRecovery() {
         navigate: ({ decorateUrl }) => router.replace(decorateUrl("/app/account")),
       });
       if (finalizeError) throw new Error("Unable to activate recovered session");
+      setStage("complete");
     } catch {
       setError(text.genericError);
       setSubmitting(false);
@@ -161,9 +166,11 @@ export function ClerkPasswordRecovery() {
   return (
     <div className="mx-auto max-w-md">
       <p className="section-label">{t.auth.eyebrow}</p>
-      <h1 className="mt-5 text-4xl font-semibold tracking-[-.04em]">{t.forgotPassword.title}</h1>
+      <h1 className="mt-5 text-4xl font-semibold tracking-[-.04em]">
+        {stage === "password" || stage === "complete" ? text.passwordTitle : t.forgotPassword.title}
+      </h1>
       <p className="mt-4 text-sm leading-6 text-white/50">
-        {stage === "email" ? t.forgotPassword.lead : stage === "code" ? text.codeLead : text.passwordLead}
+        {stage === "email" ? t.forgotPassword.lead : stage === "code" ? text.codeLead : stage === "password" ? text.passwordLead : text.completingLead}
       </p>
 
       {stage === "email" && (
@@ -177,7 +184,17 @@ export function ClerkPasswordRecovery() {
       {stage === "code" && (
         <form onSubmit={verifyCode} className={formClass}>
           <label className={labelClass} htmlFor="clerk-recovery-code">{text.codeLabel}</label>
-          <input id="clerk-recovery-code" inputMode="numeric" autoComplete="one-time-code" required value={code} onChange={(event) => setCode(event.target.value)} className={inputClass} />
+          <input
+            id="clerk-recovery-code"
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            pattern="[0-9]*"
+            maxLength={6}
+            required
+            value={code}
+            onChange={(event) => setCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
+            className={`${inputClass} text-center font-mono text-lg tracking-[.35em] tabular-nums`}
+          />
           <button type="submit" className="button-primary" disabled={submitting || !code.trim()}>{text.codeButton}</button>
         </form>
       )}
@@ -191,6 +208,8 @@ export function ClerkPasswordRecovery() {
           <button type="submit" className="button-primary" disabled={submitting || !password || !confirmPassword}>{text.resetButton}</button>
         </form>
       )}
+
+      {stage === "complete" && <p className="mt-8 text-sm text-white/50" role="status">{text.completingLead}</p>}
 
       {error && <div className="mt-4 rounded-xl border border-red-500/25 bg-red-500/[.06] p-4 text-sm text-red-300" role="alert">{error}</div>}
       <p className="mt-6 text-xs leading-5 text-white/30"><Link href="/login" className="font-semibold text-lime hover:text-lime/80">{t.forgotPassword.backToLogin}</Link></p>
