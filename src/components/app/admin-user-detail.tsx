@@ -20,7 +20,7 @@ type UserDetail = {
 type PageStatus = "loading" | "denied" | "loaded";
 type SaveState = "idle" | "saving" | "saved" | "error";
 
-export function AdminUserDetail({ userId }: { userId: string }) {
+export function AdminUserDetail({ userId,clerkMode=false }: { userId: string;clerkMode?:boolean }) {
   const { t, locale } = useI18n();
   const a = t.admin;
   const { status: authStatus } = useAuthUser();
@@ -38,6 +38,7 @@ export function AdminUserDetail({ userId }: { userId: string }) {
   const [featureSave, setFeatureSave] = useState<Partial<Record<FeatureId, SaveState>>>({});
 
   const load = useCallback(async () => {
+    if(clerkMode){const response=await fetch(`/api/admin/users/${encodeURIComponent(userId)}`,{cache:"no-store"});if(!response.ok){setStatus("denied");return}const payload=await response.json() as {user:UserDetail;overrides:{feature_id:FeatureId;enabled:boolean}[]};setDetail(payload.user);setUsernameDraft(payload.user.username||"");const map:Partial<Record<FeatureId,boolean>>={};for(const row of payload.overrides)map[row.feature_id]=row.enabled;setOverrides(map);setStatus("loaded");return}
     const supabase = createSupabaseBrowserClient();
     const { data: detailRows, error: detailError } = await supabase.rpc("admin_get_user_detail", { p_target_id: userId });
     if (detailError || !detailRows || detailRows.length === 0) {
@@ -53,26 +54,28 @@ export function AdminUserDetail({ userId }: { userId: string }) {
     for (const row of overrideRows || []) map[row.feature_id as FeatureId] = row.enabled as boolean;
     setOverrides(map);
     setStatus("loaded");
-  }, [userId]);
+  }, [userId,clerkMode]);
 
   useEffect(() => {
-    if (authStatus === "loading") return;
-    if (authStatus === "signedOut") {
-      setStatus("denied");
+    if (!clerkMode&&authStatus === "loading") return;
+    if (!clerkMode&&authStatus === "signedOut") {
+      queueMicrotask(()=>setStatus("denied"));
       return;
     }
-    load();
-  }, [authStatus, load]);
+    queueMicrotask(()=>void load());
+  }, [authStatus, load,clerkMode]);
+
+  async function clerkMutation(body:Record<string,unknown>){return fetch(`/api/admin/users/${encodeURIComponent(userId)}`,{method:"PATCH",headers:{"content-type":"application/json"},body:JSON.stringify(body)})}
 
   async function applyRoleChange(newRole: "USER" | "ADMIN") {
     if (!detail) return;
     setRoleError(null);
     setRoleSave("saving");
-    const supabase = createSupabaseBrowserClient();
-    const { error } = await supabase.rpc("admin_set_user_role", { p_target_id: detail.id, p_new_role: newRole });
-    if (error) {
+    let failed=false;let lastAdmin=false;
+    if(clerkMode){const response=await clerkMutation({action:"role",value:newRole});failed=!response.ok;lastAdmin=response.status===409}else{const supabase=createSupabaseBrowserClient();const {error}=await supabase.rpc("admin_set_user_role",{p_target_id:detail.id,p_new_role:newRole});failed=!!error;lastAdmin=!!error?.message.includes("last remaining admin")}
+    if (failed) {
       setRoleSave("error");
-      setRoleError(error.message.includes("last remaining admin") ? a.lastAdminError : a.changeError);
+      setRoleError(lastAdmin ? a.lastAdminError : a.changeError);
       return;
     }
     setDetail({ ...detail, role: newRole });
@@ -93,9 +96,8 @@ export function AdminUserDetail({ userId }: { userId: string }) {
   async function handleTierSelect(newTier: "FREE" | "PREMIUM") {
     if (!detail || newTier === detail.tier) return;
     setTierSave("saving");
-    const supabase = createSupabaseBrowserClient();
-    const { error } = await supabase.rpc("admin_set_user_tier", { p_target_id: detail.id, p_new_tier: newTier });
-    if (error) {
+    let failed=false;if(clerkMode){failed=!(await clerkMutation({action:"tier",value:newTier})).ok}else{const supabase=createSupabaseBrowserClient();failed=!!(await supabase.rpc("admin_set_user_tier",{p_target_id:detail.id,p_new_tier:newTier})).error}
+    if (failed) {
       setTierSave("error");
       return;
     }
@@ -113,11 +115,10 @@ export function AdminUserDetail({ userId }: { userId: string }) {
       return;
     }
     setUsernameSave("saving");
-    const supabase = createSupabaseBrowserClient();
-    const { error } = await supabase.rpc("admin_set_user_username", { p_target_id: detail.id, p_new_username: username });
-    if (error) {
+    let failed=false;let duplicate=false;if(clerkMode){const response=await clerkMutation({action:"username",value:username});failed=!response.ok;duplicate=response.status===409}else{const supabase=createSupabaseBrowserClient();const {error}=await supabase.rpc("admin_set_user_username",{ p_target_id: detail.id, p_new_username: username });failed=!!error;duplicate=Boolean(error&&error.code === "23505")}
+    if (failed) {
       setUsernameSave("error");
-      setUsernameError(error.code === "23505" ? a.usernameDuplicateError : a.changeError);
+      setUsernameError(duplicate ? a.usernameDuplicateError : a.changeError);
       return;
     }
     setDetail({ ...detail, username });
@@ -128,9 +129,8 @@ export function AdminUserDetail({ userId }: { userId: string }) {
   async function handleFeatureState(feature: FeatureId, state: OverrideState) {
     if (!detail) return;
     setFeatureSave((prev) => ({ ...prev, [feature]: "saving" }));
-    const supabase = createSupabaseBrowserClient();
-    const { error } = await supabase.rpc("admin_set_entitlement_override", { p_target_id: detail.id, p_feature_id: feature, p_state: state });
-    if (error) {
+    let failed=false;if(clerkMode){failed=!(await clerkMutation({action:"entitlement",featureId:feature,value:state})).ok}else{const supabase=createSupabaseBrowserClient();failed=!!(await supabase.rpc("admin_set_entitlement_override",{p_target_id:detail.id,p_feature_id:feature,p_state:state})).error}
+    if (failed) {
       setFeatureSave((prev) => ({ ...prev, [feature]: "error" }));
       return;
     }

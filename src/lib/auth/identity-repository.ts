@@ -3,6 +3,9 @@ export type UserTier = "FREE" | "PREMIUM";
 export type MigrationState = "PENDING" | "PASSWORD_RECOVERY_REQUIRED" | "ACTIVE" | "FAILED";
 export type LoginRouting = { recoveryRequired: boolean; email?: string };
 export type IdentityProfile = { id:string; email:string; username:string; role:UserRole; tier:UserTier; created_at:string; updated_at:string; legacy_supabase_user_id:string|null };
+export type AdminUser = IdentityProfile & { migration_state:MigrationState; total_count?:number };
+export type AdminAuditEntry = { id:string; actor_application_user_id:string; target_application_user_id:string; action:string; old_value:string|null; new_value:string|null; created_at:string };
+export type EntitlementOverride = { feature_id:string; enabled:boolean; updated_at:string };
 export type CreateApplicationUserInput = { clerkUserId:string; email:string; username:string; applicationUserId?:string; role?:UserRole; tier?:UserTier; createdAt?:string; legacySupabaseUserId?:string };
 export interface IdentityRepository {
   getUserByClerkId(clerkUserId:string):Promise<IdentityProfile|null>;
@@ -15,4 +18,12 @@ export interface IdentityRepository {
   getRole(clerkUserId:string):Promise<UserRole|null>;
   getTier(clerkUserId:string):Promise<UserTier|null>;
   updateProfile(clerkUserId:string,input:{username:string}):Promise<void>;
+  listAdminUsers(input:{actorApplicationUserId:string;search?:string;role?:UserRole;tier?:UserTier;limit:number;offset:number}):Promise<{users:AdminUser[];total:number}>;
+  getAdminUser(actorApplicationUserId:string,targetApplicationUserId:string):Promise<AdminUser|null>;
+  getAdminOverrides(actorApplicationUserId:string,targetApplicationUserId:string):Promise<EntitlementOverride[]>;
+  getAdminAudit(actorApplicationUserId:string,targetApplicationUserId:string):Promise<AdminAuditEntry[]>;
+  adminSetRole(actorApplicationUserId:string,targetApplicationUserId:string,role:UserRole):Promise<void>;
+  adminSetTier(actorApplicationUserId:string,targetApplicationUserId:string,tier:UserTier):Promise<void>;
+  adminSetUsername(actorApplicationUserId:string,targetApplicationUserId:string,username:string):Promise<void>;
+  adminSetEntitlement(actorApplicationUserId:string,targetApplicationUserId:string,featureId:string,state:"DEFAULT"|"ENABLED"|"DISABLED"):Promise<void>;
 }

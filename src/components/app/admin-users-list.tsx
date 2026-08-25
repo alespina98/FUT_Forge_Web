@@ -15,13 +15,14 @@ type AdminUserRow = {
   tier: "FREE" | "PREMIUM";
   created_at: string;
   total_count: number;
+  migration_state?: string;
 };
 
 type ListStatus = "loading" | "denied" | "loaded" | "error";
 
 const PAGE_SIZE = 25;
 
-export function AdminUsersList() {
+export function AdminUsersList({clerkMode=false,actorApplicationUserId}:{clerkMode?:boolean;actorApplicationUserId?:string}) {
   const { t, locale } = useI18n();
   const a = t.admin;
   const { status: authStatus, user } = useAuthUser();
@@ -36,7 +37,8 @@ export function AdminUsersList() {
 
   const load = useCallback(
     async (nextOffset: number, replace: boolean) => {
-      const supabase = createSupabaseBrowserClient();
+      let list:AdminUserRow[];
+      if(clerkMode){const params=new URLSearchParams({search:search.trim(),role:roleFilter,tier:tierFilter,limit:String(PAGE_SIZE),offset:String(nextOffset)});const response=await fetch(`/api/admin/users?${params}`,{cache:"no-store"});if(!response.ok){setStatus("denied");return}const payload=await response.json() as {users:AdminUserRow[];total:number};list=payload.users;setTotalCount(payload.total)}else{const supabase = createSupabaseBrowserClient();
       const { data, error } = await supabase.rpc("admin_list_users", {
         p_search: search.trim() || null,
         p_role: roleFilter || null,
@@ -48,25 +50,23 @@ export function AdminUsersList() {
         setStatus("denied");
         return;
       }
-      const list = (data || []) as AdminUserRow[];
+      list = (data || []) as AdminUserRow[];setTotalCount(list[0]?.total_count ?? 0);}
       setRows((prev) => (replace ? list : [...prev, ...list]));
-      setTotalCount(list[0]?.total_count ?? 0);
       setOffset(nextOffset + list.length);
       setStatus("loaded");
     },
-    [search, roleFilter, tierFilter],
+    [search, roleFilter, tierFilter,clerkMode],
   );
 
   useEffect(() => {
-    if (authStatus === "loading") return;
-    if (authStatus === "signedOut") {
-      setStatus("denied");
+    if (!clerkMode&&authStatus === "loading") return;
+    if (!clerkMode&&authStatus === "signedOut") {
+      queueMicrotask(()=>setStatus("denied"));
       return;
     }
-    setStatus("loading");
-    load(0, true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authStatus, search, roleFilter, tierFilter]);
+    queueMicrotask(()=>setStatus("loading"));
+    queueMicrotask(()=>void load(0, true));
+  }, [authStatus, search, roleFilter, tierFilter,clerkMode,load]);
 
   if (status === "loading") return null;
 
@@ -140,7 +140,7 @@ export function AdminUsersList() {
                 <td className="px-4 py-3">
                   <Link href={`/app/admin/users/${row.id}`} className="font-semibold text-white hover:text-lime">
                     {row.username || "—"}
-                    {row.id === user?.id && <span className="ml-2 text-xs text-white/30">•</span>}
+                    {row.id === (clerkMode?actorApplicationUserId:user?.id) && <span className="ml-2 text-xs text-white/30">•</span>}
                   </Link>
                 </td>
                 <td className="px-4 py-3 text-white/70">{row.email}</td>
@@ -151,7 +151,7 @@ export function AdminUsersList() {
                 <td className="px-4 py-3">
                   <span className="flex items-center gap-2 text-white/60">
                     <span className="h-1.5 w-1.5 rounded-full bg-lime" />
-                    {a.statusActive}
+                    {row.migration_state&&row.migration_state!=="ACTIVE"?row.migration_state:a.statusActive}
                   </span>
                 </td>
                 <td className="px-4 py-3 text-white/40">{new Date(row.created_at).toLocaleDateString(locale === "it" ? "it-IT" : "en-US")}</td>
