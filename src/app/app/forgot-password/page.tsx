@@ -9,8 +9,12 @@ export const metadata: Metadata = {
   title: copy.en.forgotPassword.title,
 };
 
-export default function AppForgotPasswordPage() {
-  if (isClerkAuth()) return <ClerkPasswordRecovery />;
+export default async function AppForgotPasswordPage({ searchParams }: PageProps<"/app/forgot-password">) {
+  if (isClerkAuth()) {
+    const params = await searchParams;
+    const identifier = typeof params.identifier === "string" && params.identifier.length <= 254 ? params.identifier : "";
+    return <ClerkPasswordRecovery initialIdentifier={identifier} upgraded={params.upgraded === "1"} />;
+  }
   return (
     <Suspense fallback={null}>
       <ForgotPasswordForm />

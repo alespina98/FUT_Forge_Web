@@ -37,10 +37,20 @@ test("activates the recovered session and returns to the account page", () => {
   const resetPassword = functionBody("resetPassword");
   const submit = resetPassword.indexOf("submitPassword");
   const finalize = resetPassword.indexOf("signIn.finalize");
+  const activateMapping = resetPassword.indexOf("/api/auth/clerk/complete-password-migration");
+  const redirect = resetPassword.indexOf('router.replace("/app/account")');
   assert.ok(submit !== -1 && finalize > submit, "password must be created before session finalization");
   assert.match(resetPassword, /signIn\.status !== "complete"/);
-  assert.match(resetPassword, /decorateUrl\("\/app\/account"\)/);
+  assert.ok(activateMapping > finalize, "mapping activation must follow Clerk finalization");
+  assert.ok(redirect > activateMapping, "account redirect must follow mapping activation");
   assert.ok(resetPassword.indexOf('setStage("complete")') > finalize, "completion state must follow finalization");
+});
+
+test("a failed mapping activation signs out and never redirects", () => {
+  const resetPassword = functionBody("resetPassword");
+  const failedCompletion = resetPassword.slice(resetPassword.indexOf("if (!completion.ok)"), resetPassword.indexOf('setStage("complete")'));
+  assert.match(failedCompletion, /await signOut\(\)/);
+  assert.doesNotMatch(failedCompletion, /router\.replace/);
 });
 
 test("recovery has an explicit email to OTP to password to complete state machine", () => {

@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { createClient, type Client, type Row } from "@libsql/client";
-import type { CreateApplicationUserInput, IdentityProfile, IdentityRepository, UserRole, UserTier } from "./identity-repository";
+import type { CreateApplicationUserInput, IdentityProfile, IdentityRepository, MigrationState, UserRole, UserTier } from "./identity-repository";
 const QUERY_TIMEOUT_MS=10_000;
 export const normalizeUsername=(value:string)=>value.trim();
 export const normalizeEmail=(value:string)=>value.trim().toLowerCase();
@@ -17,7 +17,9 @@ export class TursoIdentityRepository implements IdentityRepository {
     {sql:"INSERT INTO app_users(id,email,email_normalized,username,username_normalized,role,tier,created_at,updated_at,legacy_supabase_user_id) VALUES(?,?,?,?,?,?,?,?,?,?)",args:[id,email,email,username,username.toLowerCase(),input.role??"USER",input.tier??"FREE",now,now,input.legacySupabaseUserId??null]},
     {sql:"INSERT INTO auth_identity_mapping(clerk_user_id,application_user_id,migration_state,created_at,migrated_at) VALUES(?,?,?,?,?)",args:[input.clerkUserId,id,"ACTIVE",now,now]},
   ],"write"));return id}
-  async mapClerkIdentity(clerkUserId:string,applicationUserId:string,migrationState:"PENDING"|"ACTIVE"|"FAILED"="ACTIVE"){const now=new Date().toISOString();await bounded(this.client.execute({sql:"INSERT INTO auth_identity_mapping(clerk_user_id,application_user_id,migration_state,created_at,migrated_at) VALUES(?,?,?,?,?)",args:[clerkUserId,applicationUserId,migrationState,now,migrationState==="ACTIVE"?now:null]}))}
+  async mapClerkIdentity(clerkUserId:string,applicationUserId:string,migrationState:MigrationState="ACTIVE"){const now=new Date().toISOString();await bounded(this.client.execute({sql:"INSERT INTO auth_identity_mapping(clerk_user_id,application_user_id,migration_state,created_at,migrated_at) VALUES(?,?,?,?,?)",args:[clerkUserId,applicationUserId,migrationState,now,migrationState==="ACTIVE"?now:null]}))}
+  async getLoginRouting(identifier:string){const normalized=identifier.trim().toLowerCase();if(!normalized)return{recoveryRequired:false};const r=await bounded(this.client.execute({sql:`SELECT u.email,m.migration_state FROM app_users u JOIN auth_identity_mapping m ON m.application_user_id=u.id WHERE u.email_normalized=? OR u.username_normalized=? LIMIT 1`,args:[normalized,normalized]}));const row=r.rows[0];return row&&String(row.migration_state)==="PASSWORD_RECOVERY_REQUIRED"?{recoveryRequired:true,email:String(row.email)}:{recoveryRequired:false}}
+  async completePasswordMigration(clerkUserId:string){const now=new Date().toISOString();const result=await bounded(this.client.execute({sql:"UPDATE auth_identity_mapping SET migration_state='ACTIVE',migrated_at=? WHERE clerk_user_id=? AND migration_state IN ('PASSWORD_RECOVERY_REQUIRED','ACTIVE')",args:[now,clerkUserId]}));if(result.rowsAffected!==1)throw new Error("Recovery mapping not found")}
   async getRole(clerkUserId:string){return(await this.getUserByClerkId(clerkUserId))?.role??null}
   async getTier(clerkUserId:string){return(await this.getUserByClerkId(clerkUserId))?.tier??null}
   async updateProfile(clerkUserId:string,input:{username:string}){if(!validUsername(input.username))throw new Error("Invalid username");const user=await this.getUserByClerkId(clerkUserId);if(!user)throw new Error("Profile not found");const username=normalizeUsername(input.username);await bounded(this.client.execute({sql:"UPDATE app_users SET username=?,username_normalized=?,updated_at=? WHERE id=?",args:[username,username.toLowerCase(),new Date().toISOString(),user.id]}))}

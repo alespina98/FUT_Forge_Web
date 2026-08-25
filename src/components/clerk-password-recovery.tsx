@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useSignIn } from "@clerk/nextjs";
+import { useClerk, useSignIn } from "@clerk/nextjs";
 import { useI18n } from "./i18n-provider";
 
 type Stage = "email" | "code" | "password" | "complete";
@@ -13,6 +13,7 @@ const recoveryCopy = {
     codeLabel: "Verification code",
     codeLead: "Enter the code Clerk sent to your email address.",
     codeButton: "Verify code",
+    upgradedLead: "Your FUT Forge account has been upgraded. Verify your email to create a new password.",
     passwordTitle: "Create your new password",
     newPassword: "New password",
     confirmPassword: "Confirm password",
@@ -31,6 +32,7 @@ const recoveryCopy = {
     codeLabel: "Codice di verifica",
     codeLead: "Inserisci il codice inviato da Clerk al tuo indirizzo email.",
     codeButton: "Verifica codice",
+    upgradedLead: "Il tuo account FUT Forge è stato aggiornato. Verifica la tua email per creare una nuova password.",
     passwordTitle: "Crea la tua nuova password",
     newPassword: "Nuova password",
     confirmPassword: "Conferma password",
@@ -67,13 +69,14 @@ function recoveryErrorMessage(error: ClerkFlowError, text: RecoveryCopy) {
   }
 }
 
-export function ClerkPasswordRecovery() {
+export function ClerkPasswordRecovery({ initialIdentifier = "", upgraded = false }: { initialIdentifier?: string; upgraded?: boolean }) {
   const { locale, t } = useI18n();
   const text = recoveryCopy[locale];
   const { signIn, fetchStatus } = useSignIn();
+  const { signOut } = useClerk();
   const router = useRouter();
   const [stage, setStage] = useState<Stage>("email");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(initialIdentifier);
   const [code, setCode] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -148,11 +151,15 @@ export function ClerkPasswordRecovery() {
         return;
       }
       if (signIn.status !== "complete") throw new Error("Unexpected recovery state");
-      const { error: finalizeError } = await signIn.finalize({
-        navigate: ({ decorateUrl }) => router.replace(decorateUrl("/app/account")),
-      });
+      const { error: finalizeError } = await signIn.finalize();
       if (finalizeError) throw new Error("Unable to activate recovered session");
+      const completion = await fetch("/api/auth/clerk/complete-password-migration", { method: "POST" });
+      if (!completion.ok) {
+        await signOut();
+        throw new Error("Unable to complete password migration state");
+      }
       setStage("complete");
+      router.replace("/app/account");
     } catch {
       setError(text.genericError);
       setSubmitting(false);
@@ -170,7 +177,7 @@ export function ClerkPasswordRecovery() {
         {stage === "password" || stage === "complete" ? text.passwordTitle : t.forgotPassword.title}
       </h1>
       <p className="mt-4 text-sm leading-6 text-white/50">
-        {stage === "email" ? t.forgotPassword.lead : stage === "code" ? text.codeLead : stage === "password" ? text.passwordLead : text.completingLead}
+        {stage === "email" ? upgraded ? text.upgradedLead : t.forgotPassword.lead : stage === "code" ? text.codeLead : stage === "password" ? text.passwordLead : text.completingLead}
       </p>
 
       {stage === "email" && (

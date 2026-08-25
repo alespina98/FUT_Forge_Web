@@ -8,3 +8,5 @@ export async function createProfileForClerkUser(input:{clerkUserId:string;email:
 export async function getUserRole(clerkUserId:string){return getIdentityRepository().getRole(clerkUserId)}
 export async function getUserTier(clerkUserId:string){return getIdentityRepository().getTier(clerkUserId)}
 export async function updateProfile(clerkUserId:string,input:{username:string}){return getIdentityRepository().updateProfile(clerkUserId,input)}
+export async function getLoginRouting(identifier:string){return getIdentityRepository().getLoginRouting(identifier)}
+export async function completePasswordMigration(clerkUserId:string){return getIdentityRepository().completePasswordMigration(clerkUserId)}

@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { createClient } from "@libsql/client";
 
-type LegacyProfile={application_user_id:string;email:string;username:string;role?:"USER"|"ADMIN";tier?:"FREE"|"PREMIUM";created_at:string;clerk_user_id?:string};
+type LegacyProfile={application_user_id:string;email:string;username:string;role?:"USER"|"ADMIN";tier?:"FREE"|"PREMIUM";created_at:string;clerk_user_id?:string;password_digest?:string|null};
 const inputPath=process.argv[2];
 if(!inputPath)throw new Error("Usage: import-legacy-profiles-to-turso.ts <protected-export.json>");
 const rows=JSON.parse(await readFile(inputPath,"utf8")) as LegacyProfile[];
@@ -21,9 +21,9 @@ if(issues.length){console.error(JSON.stringify({status:"RECONCILIATION_REQUIRED"
   const url=process.env.TURSO_DATABASE_URL,authToken=process.env.TURSO_AUTH_TOKEN;
   if(!url)throw new Error("TURSO_DATABASE_URL is required");if(!url.startsWith("file:")&&!authToken)throw new Error("TURSO_AUTH_TOKEN is required");
   const client=createClient({url,authToken});
-  for(const row of rows){const email=row.email.trim().toLowerCase(),username=row.username.trim();await client.batch([
+  for(const row of rows){const email=row.email.trim().toLowerCase(),username=row.username.trim(),hasBcrypt=typeof row.password_digest==="string"&&/^\$2[aby]\$\d\d\$/.test(row.password_digest);await client.batch([
     {sql:"INSERT INTO app_users(id,email,email_normalized,username,username_normalized,role,tier,created_at,updated_at,legacy_supabase_user_id) VALUES(?,?,?,?,?,?,?,?,?,?)",args:[row.application_user_id,email,email,username,username.toLowerCase(),row.role??"USER",row.tier??"FREE",row.created_at,row.created_at,row.application_user_id]},
-    ...(row.clerk_user_id?[{sql:"INSERT INTO auth_identity_mapping(clerk_user_id,application_user_id,migration_state,created_at,migrated_at) VALUES(?,?,?,?,?)",args:[row.clerk_user_id,row.application_user_id,"ACTIVE",new Date().toISOString(),new Date().toISOString()]}]:[]),
+    ...(row.clerk_user_id?[{sql:"INSERT INTO auth_identity_mapping(clerk_user_id,application_user_id,migration_state,created_at,migrated_at) VALUES(?,?,?,?,?)",args:[row.clerk_user_id,row.application_user_id,hasBcrypt?"ACTIVE":"PASSWORD_RECOVERY_REQUIRED",new Date().toISOString(),hasBcrypt?new Date().toISOString():null]}]:[]),
   ],"write")}
   client.close();console.log(JSON.stringify({status:"IMPORTED",rowCount:rows.length}));
 }
