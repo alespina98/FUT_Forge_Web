@@ -40,7 +40,7 @@ export function AdminSelect({
   const triggerRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLUListElement>(null);
 
-  useEffect(() => setMounted(true), []);
+  useEffect(() => { queueMicrotask(() => setMounted(true)); }, []);
 
   useLayoutEffect(() => {
     if (!open || !triggerRef.current) return;
@@ -86,7 +86,7 @@ export function AdminSelect({
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="listbox"
         aria-expanded={open}
-        className={`flex w-full items-center justify-between gap-2 rounded-lg border bg-[#12161a] px-3 text-left text-white transition-colors disabled:opacity-50 ${sizeClass} ${open ? "border-lime/50" : "border-white/10"}`}
+        className={`admin-select-trigger flex w-full items-center justify-between gap-2 rounded-lg border px-3 text-left transition-colors disabled:opacity-50 ${sizeClass} ${open ? "border-lime/50" : "border-white/10"}`}
       >
         <span className="truncate">{current?.label ?? value}</span>
         <svg viewBox="0 0 20 20" fill="none" className={`size-3.5 shrink-0 text-white/40 transition-transform ${open ? "rotate-180" : ""}`} aria-hidden>
@@ -101,7 +101,7 @@ export function AdminSelect({
             ref={menuRef}
             role="listbox"
             style={{ position: "fixed", left: rect.left, top: rect.top, minWidth: rect.width }}
-            className="z-[999] max-h-60 w-max overflow-auto rounded-lg border border-white/10 bg-[#0d1116] py-1 shadow-[0_20px_50px_rgba(0,0,0,.55)]"
+            className="admin-select-menu z-[999] max-h-60 w-max overflow-auto rounded-lg border py-1 shadow-[0_20px_50px_rgba(0,0,0,.55)]"
           >
             {options.map((option) => (
               <li key={option.value}>
@@ -113,8 +113,8 @@ export function AdminSelect({
                     onChange(option.value);
                     setOpen(false);
                   }}
-                  className={`block w-full whitespace-nowrap px-3 py-2 text-left text-xs transition-colors ${
-                    option.value === value ? "bg-lime/10 text-lime" : "text-white/80 hover:bg-white/[.07] hover:text-white"
+                  className={`admin-select-option block w-full whitespace-nowrap px-3 py-2 text-left text-xs transition-colors ${
+                    option.value === value ? "admin-select-option-active" : ""
                   }`}
                 >
                   {option.label}

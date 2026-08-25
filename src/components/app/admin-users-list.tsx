@@ -81,7 +81,7 @@ export function AdminUsersList({clerkMode=false,actorApplicationUserId}:{clerkMo
   }
 
   return (
-    <div>
+    <div className="admin-panel">
       <p className="section-label">{a.title}</p>
       <h1 className="mt-5 text-3xl font-semibold tracking-[-.04em]">{a.usersTitle}</h1>
 
@@ -91,7 +91,7 @@ export function AdminUsersList({clerkMode=false,actorApplicationUserId}:{clerkMo
           placeholder={a.searchPlaceholder}
           value={search}
           onChange={(event) => setSearch(event.target.value)}
-          className="min-h-11 min-w-0 flex-1 rounded-xl border border-white/10 bg-white/[.03] px-4 text-sm text-white placeholder:text-white/30 focus:border-lime/40 focus:outline-none"
+          className="admin-search min-h-11 min-w-0 flex-1 rounded-xl border px-4 text-sm focus:outline-none"
         />
         <AdminSelect
           value={roleFilter}
@@ -115,10 +115,10 @@ export function AdminUsersList({clerkMode=false,actorApplicationUserId}:{clerkMo
         />
       </div>
 
-      <div className="glass mt-6 overflow-x-auto rounded-2xl border border-white/10">
+      <div className="glass admin-table-wrap mt-6 overflow-x-auto rounded-2xl border">
         <table className="w-full min-w-[640px] text-left text-sm">
           <thead>
-            <tr className="border-b border-white/10 text-xs uppercase tracking-[.08em] text-white/40">
+            <tr className="admin-table-head border-b text-xs uppercase tracking-[.08em]">
               <th className="px-4 py-3 font-semibold">{a.columnUsername}</th>
               <th className="px-4 py-3 font-semibold">{a.columnEmail}</th>
               <th className="px-4 py-3 font-semibold">{a.columnRole}</th>
@@ -136,16 +136,16 @@ export function AdminUsersList({clerkMode=false,actorApplicationUserId}:{clerkMo
               </tr>
             )}
             {rows.map((row) => (
-              <tr key={row.id} className="border-b border-white/5 last:border-0 hover:bg-white/[.03]">
+              <tr key={row.id} className="admin-table-row border-b last:border-0">
                 <td className="px-4 py-3">
-                  <Link href={`/app/admin/users/${row.id}`} className="font-semibold text-white hover:text-lime">
+                  <Link href={`/app/admin/users/${row.id}`} className="admin-user-link font-semibold">
                     {row.username || "—"}
                     {row.id === (clerkMode?actorApplicationUserId:user?.id) && <span className="ml-2 text-xs text-white/30">•</span>}
                   </Link>
                 </td>
                 <td className="px-4 py-3 text-white/70">{row.email}</td>
                 <td className="px-4 py-3">
-                  <span className={row.role === "ADMIN" ? "font-semibold text-lime" : "text-white/60"}>{row.role}</span>
+                  <span className={row.role === "ADMIN" ? "admin-accent-value font-semibold" : "text-white/60"}>{row.role}</span>
                 </td>
                 <td className="px-4 py-3 text-white/60">{row.tier}</td>
                 <td className="px-4 py-3">

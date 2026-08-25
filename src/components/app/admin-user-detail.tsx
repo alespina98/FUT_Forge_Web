@@ -156,8 +156,8 @@ export function AdminUserDetail({ userId,clerkMode=false }: { userId: string;cle
   }
 
   return (
-    <div className="mx-auto max-w-2xl">
-      <Link href="/app/admin" className="block text-xs font-semibold text-white/40 hover:text-lime">
+    <div className="admin-panel mx-auto max-w-2xl">
+      <Link href="/app/admin" className="admin-user-link block text-xs font-semibold">
         ← {a.backToUsers}
       </Link>
       <h1 className="mt-4 text-3xl font-semibold tracking-[-.04em]">{detail.username || detail.email}</h1>
@@ -166,7 +166,7 @@ export function AdminUserDetail({ userId,clerkMode=false }: { userId: string;cle
         <div>
           <label htmlFor="admin-username" className="text-xs font-semibold uppercase tracking-[.1em] text-white/40">{a.fieldUsername}</label>
           <div className="mt-1.5 flex gap-2">
-            <input id="admin-username" type="text" minLength={3} maxLength={32} value={usernameDraft} onChange={(event) => { setUsernameDraft(event.target.value); setUsernameSave("idle"); }} placeholder={a.usernameMissingPlaceholder} className="min-h-10 min-w-0 flex-1 rounded-xl border border-white/10 bg-white/[.03] px-3 text-sm text-white focus:border-lime/40 focus:outline-none" />
+            <input id="admin-username" type="text" minLength={3} maxLength={32} value={usernameDraft} onChange={(event) => { setUsernameDraft(event.target.value); setUsernameSave("idle"); }} placeholder={a.usernameMissingPlaceholder} className="admin-search min-h-10 min-w-0 flex-1 rounded-xl border px-3 text-sm focus:outline-none" />
             <button type="button" onClick={handleUsernameSave} disabled={usernameSave === "saving" || usernameDraft.trim() === (detail.username || "")} className="button-secondary !min-h-10 !px-4 text-xs">{usernameSave === "saving" ? a.savingChange : a.saveUsername}</button>
           </div>
           {usernameSave === "saved" && <p className="mt-1 text-xs text-lime">{a.changeSaved}</p>}

@@ -9,21 +9,24 @@ import type { Dictionary } from "@/lib/copy";
 import { useI18n } from "./i18n-provider";
 import { ChevronDownIcon, DownloadIcon, ExitIcon, ForgeMark, UserIcon } from "./icons";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
-import { useAuthUser, getDisplayName } from "@/lib/use-auth-user";
+import { useAuthUser, useOwnProfile, getDisplayName } from "@/lib/use-auth-user";
 import { ThemeControl } from "./theme-control";
 import { useClerk, useUser } from "@clerk/nextjs";
 import { useAuthMode } from "./app-auth-context";
 
 function ClerkNavAccount({ onNavigate }: { onNavigate?: () => void }) {
   const {t}=useI18n();const router=useRouter();const {isLoaded,isSignedIn,user}=useUser();const {signOut}=useClerk();
+  const [role,setRole]=useState<"USER"|"ADMIN"|null>(null);
+  useEffect(()=>{if(!isLoaded||!isSignedIn)return;const controller=new AbortController();fetch("/api/auth/profile",{cache:"no-store",signal:controller.signal}).then(response=>response.ok?response.json():null).then((profile:{role?:unknown}|null)=>{if(!controller.signal.aborted)setRole(profile?.role==="ADMIN"?"ADMIN":"USER")}).catch(()=>{if(!controller.signal.aborted)setRole(null)});return()=>controller.abort()},[isLoaded,isSignedIn]);
   if(!isLoaded)return null;if(!isSignedIn)return <div className="flex min-w-0 shrink-0 items-center gap-2 text-sm"><Link href="/login" onClick={onNavigate} className="whitespace-nowrap font-semibold text-white/70 hover:text-white">{t.nav.login}</Link></div>;
   const name=user.username||user.fullName||user.primaryEmailAddress?.emailAddress.split("@")[0]||"Account";
-  return <div className="flex min-w-0 shrink-0 items-center gap-1.5 text-sm"><Link href="/app/account" onClick={onNavigate} className="flex min-w-0 max-w-[128px] items-center gap-1.5 rounded-full border border-white/10 bg-white/[.03] px-3 py-1.5 text-xs font-semibold text-white/80"><UserIcon className="size-3.5 shrink-0 text-lime"/><span className="truncate">{name}</span></Link><button type="button" onClick={async()=>{await signOut();onNavigate?.();router.push("/")}} className="shrink-0 rounded-full p-2 text-white/50 hover:text-white" aria-label={t.auth.logoutButton}><ExitIcon className="size-4"/></button></div>
+  return <div className="flex min-w-0 shrink-0 items-center gap-1.5 text-sm">{role==="ADMIN"&&<Link href="/app/admin" onClick={onNavigate} className="admin-nav-link">Admin</Link>}<Link href="/app/account" onClick={onNavigate} className="flex min-w-0 max-w-[128px] items-center gap-1.5 rounded-full border border-white/10 bg-white/[.03] px-3 py-1.5 text-xs font-semibold text-white/80"><UserIcon className="size-3.5 shrink-0 text-lime"/><span className="truncate">{name}</span></Link><button type="button" onClick={async()=>{await signOut();onNavigate?.();router.push("/")}} className="shrink-0 rounded-full p-2 text-white/50 hover:text-white" aria-label={t.auth.logoutButton}><ExitIcon className="size-4"/></button></div>
 }
 function SupabaseNavAccount({ onNavigate }: { onNavigate?: () => void }) {
   const { t } = useI18n();
   const router = useRouter();
   const { status, user } = useAuthUser();
+  const profile = useOwnProfile(status === "signedIn" ? user?.id : null);
 
   if (status === "loading") return null;
 
@@ -47,6 +50,7 @@ function SupabaseNavAccount({ onNavigate }: { onNavigate?: () => void }) {
 
   return (
     <div className="flex min-w-0 shrink-0 items-center gap-1.5 text-sm">
+      {profile?.role === "ADMIN" && <Link href="/app/admin" onClick={onNavigate} className="admin-nav-link">Admin</Link>}
       <Link
         href="/app/account"
         onClick={onNavigate}
