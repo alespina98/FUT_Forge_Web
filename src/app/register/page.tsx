@@ -5,6 +5,8 @@ import { Footer } from "@/components/footer";
 import { Navbar } from "@/components/navbar";
 import { copy, siteCopy } from "@/lib/copy";
 import { RegisterForm } from "@/components/register-form";
+import { ControlledClerkSignup } from "@/components/controlled-clerk-signup";
+import { isClerkAuth } from "@/lib/auth/provider";
 
 export const metadata: Metadata = {
   title: copy.en.register.title,
@@ -14,14 +16,16 @@ export const metadata: Metadata = {
   twitter: { card: "summary", title: copy.en.register.title, description: copy.en.register.lead },
 };
 
-export default function RegisterPage() {
+export default async function RegisterPage({ searchParams }: PageProps<"/register">) {
+  const next = (await searchParams).next;
+  const redirectUrl = typeof next === "string" && next.startsWith("/") && !next.startsWith("//") && next !== "/app/club" ? next : "/app/account";
   return (
     <main className="min-h-screen overflow-hidden bg-ink text-white">
       <AmbientEffects />
       <Navbar />
       <div className="mx-auto max-w-7xl px-4 pb-24 pt-32 sm:px-6 sm:pt-40">
         <Suspense fallback={null}>
-          <RegisterForm />
+          {isClerkAuth() ? <ControlledClerkSignup redirectUrl={redirectUrl} /> : <RegisterForm />}
         </Suspense>
       </div>
       <Footer />

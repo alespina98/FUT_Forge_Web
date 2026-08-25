@@ -11,8 +11,16 @@ import { ChevronDownIcon, DownloadIcon, ExitIcon, ForgeMark, UserIcon } from "./
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useAuthUser, getDisplayName } from "@/lib/use-auth-user";
 import { ThemeControl } from "./theme-control";
+import { useClerk, useUser } from "@clerk/nextjs";
+import { useAuthMode } from "./app-auth-context";
 
-function NavAccount({ onNavigate }: { onNavigate?: () => void }) {
+function ClerkNavAccount({ onNavigate }: { onNavigate?: () => void }) {
+  const {t}=useI18n();const router=useRouter();const {isLoaded,isSignedIn,user}=useUser();const {signOut}=useClerk();
+  if(!isLoaded)return null;if(!isSignedIn)return <div className="flex min-w-0 shrink-0 items-center gap-2 text-sm"><Link href="/login" onClick={onNavigate} className="whitespace-nowrap font-semibold text-white/70 hover:text-white">{t.nav.login}</Link></div>;
+  const name=user.username||user.fullName||user.primaryEmailAddress?.emailAddress.split("@")[0]||"Account";
+  return <div className="flex min-w-0 shrink-0 items-center gap-1.5 text-sm"><Link href="/app/account" onClick={onNavigate} className="flex min-w-0 max-w-[128px] items-center gap-1.5 rounded-full border border-white/10 bg-white/[.03] px-3 py-1.5 text-xs font-semibold text-white/80"><UserIcon className="size-3.5 shrink-0 text-lime"/><span className="truncate">{name}</span></Link><button type="button" onClick={async()=>{await signOut();onNavigate?.();router.push("/")}} className="shrink-0 rounded-full p-2 text-white/50 hover:text-white" aria-label={t.auth.logoutButton}><ExitIcon className="size-4"/></button></div>
+}
+function SupabaseNavAccount({ onNavigate }: { onNavigate?: () => void }) {
   const { t } = useI18n();
   const router = useRouter();
   const { status, user } = useAuthUser();
@@ -54,6 +62,7 @@ function NavAccount({ onNavigate }: { onNavigate?: () => void }) {
     </div>
   );
 }
+function NavAccount(props:{onNavigate?:()=>void}){return useAuthMode()==="clerk"?<ClerkNavAccount {...props}/>:<SupabaseNavAccount {...props}/>}
 
 // Player discovery uses a click-controlled portal so the menu escapes the
 // horizontally scrollable desktop nav while retaining keyboard and outside-

@@ -1,0 +1,5 @@
+import { auth } from "@clerk/nextjs/server";
+import { NextResponse } from "next/server";
+import { getProfileForClerkUser,updateProfile } from "@/lib/auth/user-gateway";
+export async function GET(){const {userId}=await auth();if(!userId)return NextResponse.json({error:"unauthorized"},{status:401});try{const profile=await getProfileForClerkUser(userId);return profile?NextResponse.json(profile):NextResponse.json({error:"profile_not_ready"},{status:409})}catch{return NextResponse.json({error:"identity_database_unavailable"},{status:503})}}
+export async function PATCH(request:Request){const {userId}=await auth();if(!userId)return NextResponse.json({error:"unauthorized"},{status:401});const body=await request.json().catch(()=>null) as {username?:unknown}|null;if(typeof body?.username!=="string")return NextResponse.json({error:"invalid_username"},{status:400});try{await updateProfile(userId,{username:body.username});return NextResponse.json({ok:true})}catch{return NextResponse.json({error:"username_unavailable"},{status:409})}}

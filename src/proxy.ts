@@ -5,10 +5,18 @@
 // session on /app/club and its API route.
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import type { NextFetchEvent } from "next/server";
 import { createServerClient } from "@supabase/ssr";
+import { clerkMiddleware } from "@clerk/nextjs/server";
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from "@/lib/supabase/env";
+import { getAuthProvider } from "@/lib/auth/provider";
 
-export async function proxy(request: NextRequest) {
+const clerkProxy = clerkMiddleware();
+
+export async function proxy(request: NextRequest, event: NextFetchEvent) {
+  // Clerk middleware only makes signed session state available. It does not
+  // call auth.protect(); protected routes authorize at their server boundary.
+  if (getAuthProvider() === "clerk") return clerkProxy(request, event);
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(SUPABASE_URL, SUPABASE_ANON_KEY, {

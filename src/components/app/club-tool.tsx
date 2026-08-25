@@ -174,7 +174,7 @@ export function ClubTool() {
           setStatus("loaded");
           return;
         }
-        setErrorMessage(isBackendError(body) ? body.error.message : c.genericError);
+        setErrorMessage(isBackendError(body) && (body.error.code === "legacy_backend_adapter_required" || body.error.code === "private_db_unavailable") ? c.migrationUnavailable : isBackendError(body) ? body.error.message : c.genericError);
         setStatus("error");
       } catch {
         if (!cancelled) {

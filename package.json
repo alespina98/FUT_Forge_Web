@@ -11,13 +11,19 @@
     "test:leaks": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test --experimental-strip-types src/lib/leaks/*.test.mjs src/lib/leaks/ingestion/*.test.mjs",
     "test:auth": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test --experimental-strip-types src/lib/auth-recovery.test.mjs src/components/auth-recovery-ui.test.mjs",
     "test:admin": "node --test src/lib/admin-username.test.mjs",
-    "test:register": "node --test src/lib/register-username.test.mjs",
+    "test:register": "node --test src/lib/register-username.test.mjs src/lib/auth/controlled-signup.test.mjs",
+    "test:turso-auth": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test --experimental-strip-types src/lib/auth/turso-identity-repository.test.mjs",
+    "auth:turso:setup": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --env-file-if-exists=.env.local --experimental-strip-types scripts/auth/setup-turso-identity.ts",
+    "auth:turso:import": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --env-file-if-exists=.env.local --experimental-strip-types scripts/auth/import-legacy-profiles-to-turso.ts",
     "leaks:ingest": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --env-file-if-exists=.env.local --experimental-strip-types scripts/ingest-leak.ts",
     "fc27:download": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/fc27/download-ea-ratings.ts",
-    "fc27:sync": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --env-file-if-exists=.env.local --experimental-strip-types scripts/fc27/sync-fc27-players.ts"
-    ,"fc27:generate-public-data": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/fc27/generate-public-data.ts"
+    "fc27:sync": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --env-file-if-exists=.env.local --experimental-strip-types scripts/fc27/sync-fc27-players.ts",
+    "fc27:generate-public-data": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/fc27/generate-public-data.ts"
   },
   "dependencies": {
+    "@clerk/localizations": "^4.15.6",
+    "@clerk/nextjs": "^7.8.0",
+    "@libsql/client": "^0.17.4",
     "@supabase/ssr": "^0.12.4",
     "@supabase/supabase-js": "^2.112.2",
     "@vercel/analytics": "^2.0.1",
