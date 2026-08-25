@@ -49,12 +49,12 @@ export type Fc27BasePlayerCardProps = {
   preferredFootCode?: number | null;
   skillMoves?: number | null;
   weakFoot?: number | null;
+  baseMeta?: number | null;
   size?: "grid" | "detail";
   className?: string;
 };
 
-const STAT_VALUES = { pace: 0, shooting: 0, passing: 0, dribbling: 0, defending: 0, physicality: 0 };
-type StatKeyName = keyof typeof STAT_VALUES;
+type StatKeyName = (typeof STAT_ORDER)[number];
 
 // Single reusable FC27 base-card presentation, rendered on top of one of
 // the 3 user-approved Bronze/Silver/Gold frame images (public/fc27/cards -
@@ -67,7 +67,7 @@ export function Fc27BasePlayerCard({
   eaPlayerId, overall, position, playerName, commonName, avatarUrl,
   nationalityImageUrl, nationalityName = "", clubImageUrl, clubName,
   pace, shooting, passing, dribbling, defending, physicality,
-  isGoalkeeper, alternatePosition, preferredFootCode, skillMoves, weakFoot,
+  isGoalkeeper, alternatePosition, preferredFootCode, skillMoves, weakFoot, baseMeta,
   size = "grid", className = "",
 }: Fc27BasePlayerCardProps) {
   const tier = cardTierForOverall(overall);
@@ -132,6 +132,7 @@ export function Fc27BasePlayerCard({
             {skillWeak ? <span className="fc27-base-card-meta-badge">{skillWeak}</span> : null}
           </div>
         ) : null}
+        {baseMeta != null ? <span className="fc27-base-card-meta-number">{baseMeta.toFixed(1)}</span> : null}
       </div>
     </div>
   );
