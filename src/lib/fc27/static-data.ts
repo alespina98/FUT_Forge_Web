@@ -9,9 +9,22 @@ const root=process.env.FC27_STATIC_DATA_ROOT||path.join(process.cwd(),"public","
 const jsonCache=new Map<string,Promise<any>>();
 export class Fc27ArtifactError extends Error{constructor(public readonly artifact:string,cause:unknown){super(`FC27 static artifact unavailable: ${artifact}`,{cause});this.name="Fc27ArtifactError"}}
 export function isFc27ArtifactError(error:unknown):error is Fc27ArtifactError{return error instanceof Fc27ArtifactError}
-async function json<T>(file:string):Promise<T>{let value=jsonCache.get(file);if(!value){value=readFile(file,"utf8").then(text=>{try{return JSON.parse(text)}catch(error){throw new Fc27ArtifactError(file,error)}}).catch(error=>{throw error instanceof Fc27ArtifactError?error:new Fc27ArtifactError(file,error)});jsonCache.set(file,value)}return value as Promise<T>}
-export const getManifest=()=>json<Manifest>(path.join(root,"manifest.json"));
-const versionPath=async(rel:string)=>path.join(/* turbopackIgnore: true */ root,(await getManifest()).datasetVersion,...rel.split("/"));
+async function assetText(rel:string){
+ const file=path.join(/* turbopackIgnore: true */ root,...rel.split("/"));
+ try{return await readFile(file,"utf8")}catch(fileError){
+  try{
+   const {getCloudflareContext}=await import("@opennextjs/cloudflare");
+   const assets=(getCloudflareContext().env as unknown as {ASSETS?:{fetch(input:Request):Promise<Response>}}).ASSETS;
+   if(!assets)throw fileError;
+   const response=await assets.fetch(new Request(`https://futforge-assets.invalid/fc27-data/${rel}`));
+   if(!response.ok)throw new Error(`Static asset returned ${response.status}`);
+   return await response.text();
+  }catch{throw fileError}
+ }
+}
+async function json<T>(rel:string):Promise<T>{let value=jsonCache.get(rel);if(!value){value=assetText(rel).then(text=>{try{return JSON.parse(text)}catch(error){throw new Fc27ArtifactError(rel,error)}}).catch(error=>{throw error instanceof Fc27ArtifactError?error:new Fc27ArtifactError(rel,error)});jsonCache.set(rel,value)}return value as Promise<T>}
+export const getManifest=()=>json<Manifest>("manifest.json");
+const versionPath=async(rel:string)=>`${(await getManifest()).datasetVersion}/${rel}`;
 export async function readArtifact<T>(rel:string){return json<T>(await versionPath(rel))}
 export async function getPlayerIndex(){return readArtifact<Record<string,number>>("players/index.json")}
 export async function getPlayerByIdStatic(id:number):Promise<PlayerDetail|null>{const index=await getPlayerIndex(),shard=index[String(id)];if(shard===undefined)return null;const rows=await readArtifact<PlayerDetail[]>(`players/shard-${String(shard).padStart(3,"0")}.json`);return rows.find(p=>p.ea_player_id===id)??null}

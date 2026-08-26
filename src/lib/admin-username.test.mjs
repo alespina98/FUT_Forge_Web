@@ -42,8 +42,8 @@ test("Admin navigation is hidden by default and shown only for authoritative ADM
   assert.match(navbar, /useState<"USER"\|"ADMIN"\|null>\(null\)/);
   assert.match(navbar, /fetch\("\/api\/auth\/profile",\{cache:"no-store"/);
   assert.match(navbar, /profile\?\.role==="ADMIN"\?"ADMIN":"USER"/);
-  assert.match(navbar, /role==="ADMIN"&&<Link href="\/app\/admin"/);
-  assert.match(navbar, /profile\?\.role === "ADMIN" && <Link href="\/app\/admin"/);
+  assert.match(navbar, /role==="ADMIN"&&<Link prefetch=\{false\} href="\/app\/admin"/);
+  assert.match(navbar, /profile\?\.role === "ADMIN" && <Link prefetch=\{false\} href="\/app\/admin"/);
   assert.match(navbar, /catch\(\(\)=>\{if\(!controller\.signal\.aborted\)setRole\(null\)\}\)/);
 });
 

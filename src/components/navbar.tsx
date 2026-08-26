@@ -18,9 +18,9 @@ function ClerkNavAccount({ onNavigate }: { onNavigate?: () => void }) {
   const {t}=useI18n();const router=useRouter();const {isLoaded,isSignedIn,user}=useUser();const {signOut}=useClerk();
   const [role,setRole]=useState<"USER"|"ADMIN"|null>(null);
   useEffect(()=>{if(!isLoaded||!isSignedIn)return;const controller=new AbortController();fetch("/api/auth/profile",{cache:"no-store",signal:controller.signal}).then(response=>response.ok?response.json():null).then((profile:{role?:unknown}|null)=>{if(!controller.signal.aborted)setRole(profile?.role==="ADMIN"?"ADMIN":"USER")}).catch(()=>{if(!controller.signal.aborted)setRole(null)});return()=>controller.abort()},[isLoaded,isSignedIn]);
-  if(!isLoaded)return null;if(!isSignedIn)return <div className="flex min-w-0 shrink-0 items-center gap-2 text-sm"><Link href="/login" onClick={onNavigate} className="whitespace-nowrap font-semibold text-white/70 hover:text-white">{t.nav.login}</Link></div>;
+  if(!isLoaded)return null;if(!isSignedIn)return <div className="flex min-w-0 shrink-0 items-center gap-2 text-sm"><Link prefetch={false} href="/login" onClick={onNavigate} className="whitespace-nowrap font-semibold text-white/70 hover:text-white">{t.nav.login}</Link></div>;
   const name=user.username||user.fullName||user.primaryEmailAddress?.emailAddress.split("@")[0]||"Account";
-  return <div className="flex min-w-0 shrink-0 items-center gap-1.5 text-sm">{role==="ADMIN"&&<Link href="/app/admin" onClick={onNavigate} className="admin-nav-link">Admin</Link>}<Link href="/app/account" onClick={onNavigate} className="flex min-w-0 max-w-[128px] items-center gap-1.5 rounded-full border border-white/10 bg-white/[.03] px-3 py-1.5 text-xs font-semibold text-white/80"><UserIcon className="size-3.5 shrink-0 text-lime"/><span className="truncate">{name}</span></Link><button type="button" onClick={async()=>{await signOut();onNavigate?.();router.push("/")}} className="shrink-0 rounded-full p-2 text-white/50 hover:text-white" aria-label={t.auth.logoutButton}><ExitIcon className="size-4"/></button></div>
+  return <div className="flex min-w-0 shrink-0 items-center gap-1.5 text-sm">{role==="ADMIN"&&<Link prefetch={false} href="/app/admin" onClick={onNavigate} className="admin-nav-link">Admin</Link>}<Link prefetch={false} href="/app/account" onClick={onNavigate} className="flex min-w-0 max-w-[128px] items-center gap-1.5 rounded-full border border-white/10 bg-white/[.03] px-3 py-1.5 text-xs font-semibold text-white/80"><UserIcon className="size-3.5 shrink-0 text-lime"/><span className="truncate">{name}</span></Link><button type="button" onClick={async()=>{await signOut();onNavigate?.();router.push("/")}} className="shrink-0 rounded-full p-2 text-white/50 hover:text-white" aria-label={t.auth.logoutButton}><ExitIcon className="size-4"/></button></div>
 }
 function SupabaseNavAccount({ onNavigate }: { onNavigate?: () => void }) {
   const { t } = useI18n();
@@ -33,7 +33,7 @@ function SupabaseNavAccount({ onNavigate }: { onNavigate?: () => void }) {
   if (status === "signedOut") {
     return (
       <div className="flex min-w-0 shrink-0 items-center gap-2 text-sm">
-        <Link href="/login" onClick={onNavigate} className="whitespace-nowrap font-semibold text-white/70 hover:text-white">
+        <Link prefetch={false} href="/login" onClick={onNavigate} className="whitespace-nowrap font-semibold text-white/70 hover:text-white">
           {t.nav.login}
         </Link>
       </div>
@@ -50,8 +50,8 @@ function SupabaseNavAccount({ onNavigate }: { onNavigate?: () => void }) {
 
   return (
     <div className="flex min-w-0 shrink-0 items-center gap-1.5 text-sm">
-      {profile?.role === "ADMIN" && <Link href="/app/admin" onClick={onNavigate} className="admin-nav-link">Admin</Link>}
-      <Link
+      {profile?.role === "ADMIN" && <Link prefetch={false} href="/app/admin" onClick={onNavigate} className="admin-nav-link">Admin</Link>}
+      <Link prefetch={false}
         href="/app/account"
         onClick={onNavigate}
         className="flex min-w-0 max-w-[128px] items-center gap-1.5 rounded-full border border-white/10 bg-white/[.03] px-3 py-1.5 text-xs font-semibold text-white/80 hover:border-lime/30 hover:text-white"
@@ -168,7 +168,7 @@ function Fc27NavDropdown({ t, pathname }: { t: Dictionary; pathname: string | nu
       onMouseEnter={clearCloseTimer}
       onMouseLeave={scheduleClose}
     >
-      {groups.map((group) => <section key={group.label} className="players-mega-group"><h2>{group.label}</h2>{group.items.map(([label,href]) => <Link key={href} href={href} role="menuitem" onClick={() => setOpen(false)} className={itemActive(href) ? "nav-dropdown-item-active" : ""} aria-current={itemActive(href) ? "page" : undefined}><b>{label}</b></Link>)}</section>)}
+      {groups.map((group) => <section key={group.label} className="players-mega-group"><h2>{group.label}</h2>{group.items.map(([label,href]) => <Link prefetch={false} key={href} href={href} role="menuitem" onClick={() => setOpen(false)} className={itemActive(href) ? "nav-dropdown-item-active" : ""} aria-current={itemActive(href) ? "page" : undefined}><b>{label}</b></Link>)}</section>)}
     </div>
   );
 
@@ -218,17 +218,17 @@ export function Navbar() {
   return (
     <header className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-6 sm:pt-4">
       <nav className="glass nav-shell mx-auto grid max-w-7xl grid-cols-[auto_minmax(0,1fr)_auto] items-center rounded-2xl px-4 py-3 sm:px-5" aria-label={t.nav.aria}>
-        <Link href="/" className="brand-lockup min-w-0 shrink-0" aria-label={t.nav.home}><ForgeMark /><span>{PRODUCT.wordmark[0]}<span>{PRODUCT.wordmark[1]}</span></span><i>{t.nav.desktop}</i></Link>
+        <Link prefetch={false} href="/" className="brand-lockup min-w-0 shrink-0" aria-label={t.nav.home}><ForgeMark /><span>{PRODUCT.wordmark[0]}<span>{PRODUCT.wordmark[1]}</span></span><i>{t.nav.desktop}</i></Link>
         <div className="nav-center hidden min-w-0 items-center justify-center gap-1 text-sm text-white/60 md:flex">
           <div className="nav-dropdown">
             <button type="button">{t.nav.features}<ChevronDownIcon className="nav-dropdown-chevron size-3.5" /></button>
             <div className="glass nav-dropdown-menu">
               {featuresMenu.map(([label, href, description]) => (
-                <Link key={href} href={href}><b>{label}</b><span>{description}</span></Link>
+                <Link prefetch={false} key={href} href={href}><b>{label}</b><span>{description}</span></Link>
               ))}
             </div>
           </div>
-          {flatLinks.map(([label, href]) => <Link key={href} href={href}>{label}</Link>)}
+          {flatLinks.map(([label, href]) => <Link prefetch={false} key={href} href={href}>{label}</Link>)}
           <Fc27NavDropdown t={t} pathname={pathname} />
         </div>
         <div className="nav-actions min-w-0 justify-self-end">
