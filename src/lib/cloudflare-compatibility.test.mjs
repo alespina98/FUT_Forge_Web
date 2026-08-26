@@ -24,3 +24,11 @@ test("global navigation does not prefetch the complete route graph", async () =>
   assert.match(navbar, /prefetch=\{false\}/);
   assert.doesNotMatch(navbar, /<Link (?!prefetch=\{false\})/);
 });
+
+test("Wrangler preserves dashboard-managed runtime variables and secrets", async () => {
+  const wrangler = await read("wrangler.jsonc");
+  const config = JSON.parse(wrangler);
+  assert.equal(config.keep_vars, true);
+  assert.equal(config.vars, undefined);
+  assert.doesNotMatch(wrangler, /TURSO_DATABASE_URL|TURSO_AUTH_TOKEN/);
+});
