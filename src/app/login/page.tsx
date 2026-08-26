@@ -6,7 +6,7 @@ import { Navbar } from "@/components/navbar";
 import { copy, siteCopy } from "@/lib/copy";
 import { LoginForm } from "@/components/login-form";
 import { ControlledClerkLogin } from "@/components/controlled-clerk-login";
-import { isClerkAuth } from "@/lib/auth/provider";
+import { isPublicClerkAuth } from "@/lib/auth/provider";
 
 export const metadata: Metadata = {
   title: copy.en.auth.title,
@@ -25,7 +25,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
       <Navbar />
       <div className="mx-auto max-w-7xl px-4 pb-24 pt-32 sm:px-6 sm:pt-40">
         <Suspense fallback={null}>
-          {isClerkAuth() ? <ControlledClerkLogin redirectUrl={redirectUrl} /> : <LoginForm />}
+          {isPublicClerkAuth() ? <ControlledClerkLogin redirectUrl={redirectUrl} /> : <LoginForm />}
         </Suspense>
       </div>
       <Footer />

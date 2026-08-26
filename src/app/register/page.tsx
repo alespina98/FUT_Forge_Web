@@ -6,7 +6,7 @@ import { Navbar } from "@/components/navbar";
 import { copy, siteCopy } from "@/lib/copy";
 import { RegisterForm } from "@/components/register-form";
 import { ControlledClerkSignup } from "@/components/controlled-clerk-signup";
-import { isClerkAuth } from "@/lib/auth/provider";
+import { isPublicClerkAuth } from "@/lib/auth/provider";
 
 export const metadata: Metadata = {
   title: copy.en.register.title,
@@ -25,7 +25,7 @@ export default async function RegisterPage({ searchParams }: PageProps<"/registe
       <Navbar />
       <div className="mx-auto max-w-7xl px-4 pb-24 pt-32 sm:px-6 sm:pt-40">
         <Suspense fallback={null}>
-          {isClerkAuth() ? <ControlledClerkSignup redirectUrl={redirectUrl} /> : <RegisterForm />}
+          {isPublicClerkAuth() ? <ControlledClerkSignup redirectUrl={redirectUrl} /> : <RegisterForm />}
         </Suspense>
       </div>
       <Footer />
