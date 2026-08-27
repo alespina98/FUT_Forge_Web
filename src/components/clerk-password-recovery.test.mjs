@@ -40,7 +40,7 @@ test("activates the recovered session and returns to the account page", () => {
   const activateMapping = resetPassword.indexOf("/api/auth/clerk/complete-password-migration");
   const redirect = resetPassword.indexOf("navigateToDecoratedUrl(finalizedDestination");
   assert.ok(submit !== -1 && finalize > submit, "password must be created before session finalization");
-  assert.match(resetPassword, /signIn\.status !== "complete"/);
+  assert.doesNotMatch(resetPassword, /signIn\.status !== "complete"/);
   assert.ok(activateMapping > finalize, "mapping activation must follow Clerk finalization");
   assert.ok(redirect > activateMapping, "account redirect must follow mapping activation");
   assert.ok(resetPassword.indexOf('setStage("complete")') > finalize, "completion state must follow finalization");
@@ -89,7 +89,17 @@ test("does not log Clerk recovery data or expose raw Clerk error messages", () =
 
 test("reports password update and finalize failures through safe structured diagnostics", () => {
   const resetPassword = functionBody("resetPassword");
-  assert.match(resetPassword, /operation: "reset\.submit_password"/);
-  assert.match(resetPassword, /operation: "reset\.finalize"/);
+  assert.match(resetPassword, /operation: "reset_password"/);
+  assert.match(resetPassword, /statusBefore/);
+  assert.match(resetPassword, /finalizeAttempted: true/);
   assert.doesNotMatch(resetPassword, /code\.trim\(\).*reportClerkFlowDiagnostic/s);
+});
+
+test("successful password submission delegates authoritative completion to finalize without stale hook gating", () => {
+  const resetPassword = functionBody("resetPassword");
+  const submit = resetPassword.indexOf("submitPassword");
+  const errorBranch = resetPassword.indexOf("if (passwordError)");
+  const finalize = resetPassword.indexOf("signIn.finalize");
+  assert.ok(submit < errorBranch && errorBranch < finalize);
+  assert.doesNotMatch(resetPassword.slice(errorBranch, finalize), /if\s*\(signIn\.status/);
 });

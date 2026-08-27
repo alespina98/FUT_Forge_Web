@@ -59,9 +59,12 @@ function recoveryErrorMessage(error: ClerkFlowError, text: RecoveryCopy) {
     case "verification_expired":
       return text.invalidCode;
     case "form_password_pwned":
+    case "form_password_compromised":
       return text.compromisedPassword;
     case "form_password_length_too_short":
     case "form_password_not_strong_enough":
+    case "form_password_matches_identifier":
+    case "form_password_size_in_bytes_exceeded":
       return text.weakPassword;
     case "too_many_requests":
       return text.rateLimited;
@@ -148,22 +151,24 @@ export function ClerkPasswordRecovery({ initialIdentifier = "", upgraded = false
     setError(null);
     const correlationId = createClerkFlowCorrelationId();
     try {
+      const statusBefore = signIn.status;
       const { error: passwordError } = await signIn.resetPasswordEmailCode.submitPassword({
         password,
         signOutOfOtherSessions: true,
       });
-      reportClerkFlowDiagnostic({ operation: "reset.submit_password", correlationId, error: passwordError, signInStatus: signIn.status });
       if (passwordError) {
+        reportClerkFlowDiagnostic({ operation: "reset_password", correlationId, error: passwordError, statusBefore, signInStatus: signIn.status });
         setError(recoveryErrorMessage(passwordError, text));
         setSubmitting(false);
         return;
       }
-      if (signIn.status !== "complete") throw new Error("Unexpected recovery state");
       let finalizedDestination = "/app/account";
+      let currentTask: string | null = null;
       const { error: finalizeError } = await signIn.finalize({ navigate: ({ decorateUrl, session }) => {
+        currentTask = session.currentTask?.key ?? null;
         finalizedDestination = decorateUrl(session.currentTask ? clerk.buildTasksUrl() : "/app/account");
       } });
-      reportClerkFlowDiagnostic({ operation: "reset.finalize", correlationId, error: finalizeError, signInStatus: signIn.status, finalizeAttempted: true, finalizeFailed: Boolean(finalizeError) });
+      reportClerkFlowDiagnostic({ operation: "reset_password", correlationId, error: finalizeError, statusBefore, signInStatus: signIn.status, sessionTask: currentTask, finalizeAttempted: true, finalizeFailed: Boolean(finalizeError) });
       if (finalizeError) throw new Error("Unable to activate recovered session");
       const completion = await fetch("/api/auth/clerk/complete-password-migration", { method: "POST" });
       if (!completion.ok) {
