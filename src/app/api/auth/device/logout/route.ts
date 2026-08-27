@@ -1,0 +1,3 @@
+import {NextResponse} from "next/server";
+import {deviceBridgeEnabled,enforceDeviceRate,requesterFingerprint,revokeDeviceSession} from "@/lib/auth/device-auth-service";
+export async function POST(request:Request){if(!deviceBridgeEnabled())return NextResponse.json({error:"not_found"},{status:404});const body=await request.json().catch(()=>null) as{refresh_token?:unknown}|null;if(typeof body?.refresh_token!=="string")return NextResponse.json({error:"invalid_request"},{status:400});try{await enforceDeviceRate("logout",await requesterFingerprint(request))}catch{return NextResponse.json({error:"rate_limited"},{status:429})}await revokeDeviceSession(body.refresh_token).catch(()=>false);return NextResponse.json({ok:true},{headers:{"cache-control":"no-store"}})}

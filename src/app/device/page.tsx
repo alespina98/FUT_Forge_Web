@@ -1,0 +1,8 @@
+import Link from "next/link";
+import {auth} from "@clerk/nextjs/server";
+import {AmbientEffects} from "@/components/ambient-effects";
+import {Footer} from "@/components/footer";
+import {Navbar} from "@/components/navbar";
+import {DeviceApproval} from "@/components/device-approval";
+import {deviceBridgeEnabled,isControlledClerkUser,normalizeUserCode} from "@/lib/auth/device-auth-service";
+export default async function DevicePage({searchParams}:{searchParams:Promise<{code?:string|string[]}>}){const params=await searchParams,code=normalizeUserCode(params.code),{userId}=await auth(),controlled=userId?await isControlledClerkUser(userId):false;return <main className="min-h-screen overflow-hidden bg-ink text-white"><AmbientEffects/><Navbar/><div className="mx-auto max-w-xl px-4 pb-24 pt-32 sm:px-6 sm:pt-40"><p className="section-label">Secure device sign-in</p><h1 className="mt-5 text-4xl font-semibold tracking-[-.04em]">Connect a FUT Forge client</h1><p className="mt-4 text-sm text-white/50">Confirm the code shown by your Desktop application. Approval never shares your Clerk password with the client.</p>{!deviceBridgeEnabled()?<p className="mt-8 rounded-xl border border-white/10 p-5 text-white/60">Device sign-in is not enabled yet.</p>:!userId?<Link className="button-primary mt-8 inline-flex" href={`/login?next=${encodeURIComponent(`/device${code?`?code=${code}`:""}`)}`}>Sign in to continue</Link>:!controlled?<p className="mt-8 rounded-xl border border-white/10 p-5 text-white/60">Device sign-in is currently limited to the controlled rollout account.</p>:<DeviceApproval initialCode={code}/>}</div><Footer/></main>}

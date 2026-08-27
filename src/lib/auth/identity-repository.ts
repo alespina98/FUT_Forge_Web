@@ -10,6 +10,7 @@ export type CreateApplicationUserInput = { clerkUserId:string; email:string; use
 export interface IdentityRepository {
   getUserByClerkId(clerkUserId:string):Promise<IdentityProfile|null>;
   getUserByApplicationId(applicationUserId:string):Promise<IdentityProfile|null>;
+  getUserByLegacySupabaseId(legacySupabaseUserId:string):Promise<IdentityProfile|null>;
   isUsernameAvailable(username:string):Promise<boolean>;
   createApplicationUser(input:CreateApplicationUserInput):Promise<string>;
   mapClerkIdentity(clerkUserId:string,applicationUserId:string,migrationState?:MigrationState):Promise<void>;
