@@ -82,7 +82,10 @@ export function AdminUsersList({clerkMode=false,actorApplicationUserId}:{clerkMo
 
   return (
     <div className="admin-panel">
-      <p className="section-label">{a.title}</p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="section-label">{a.title}</p>
+        {clerkMode && <Link href="/app/admin/analytics" className="text-xs font-semibold text-lime hover:text-lime/80">Analytics →</Link>}
+      </div>
       <h1 className="mt-5 text-3xl font-semibold tracking-[-.04em]">{a.usersTitle}</h1>
 
       <div className="mt-6 flex flex-wrap gap-3">

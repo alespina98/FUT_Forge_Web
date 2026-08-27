@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { I18nProvider } from "@/components/i18n-provider";
 import { AuthRootProvider } from "@/components/auth-root-provider";
+import { AnalyticsPageView } from "@/components/analytics-page-view";
 import { PRODUCT, siteCopy } from "@/lib/copy";
 import "./globals.css";
 
@@ -82,6 +83,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
         />
         <I18nProvider><AuthRootProvider>{children}</AuthRootProvider></I18nProvider>
+        <AnalyticsPageView />
         <Analytics />
       </body>
     </html>

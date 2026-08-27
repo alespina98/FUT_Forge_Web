@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useI18n } from "../i18n-provider";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useAuthUser, useOwnProfile, getDisplayName } from "@/lib/use-auth-user";
+import { track } from "@/lib/analytics/client";
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
 
@@ -61,6 +62,7 @@ export function AccountPanel() {
   async function handleLogout() {
     const supabase = createSupabaseBrowserClient();
     await supabase.auth.signOut();
+    track("logout", { provider: "supabase" });
     router.refresh();
     router.push("/");
   }

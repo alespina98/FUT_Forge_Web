@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { SearchIcon } from "@/components/icons";
 import { playerUrlSlug } from "@/lib/fc27/player-slug";
 import type { PlayerSuggestion } from "@/lib/fc27/player-search";
+import { track } from "@/lib/analytics/client";
 
 const MIN_QUERY_LENGTH = 3;
 const DEBOUNCE_MS = 220;
@@ -59,8 +60,8 @@ export function Fc27PlayerSearchAutocomplete({ initialQuery, onCommitSearch, onS
     abortRef.current = controller;
     setLoading(true);
     fetch(`/api/fc27/players/search?q=${encodeURIComponent(query)}`, { signal: controller.signal })
-      .then((res) => res.json())
-      .then((data: { results: PlayerSuggestion[] }) => {
+      .then((res) => res.json() as Promise<{ results: PlayerSuggestion[] }>)
+      .then((data) => {
         setSuggestions(data.results);
         setLoading(false);
       })
@@ -90,6 +91,7 @@ export function Fc27PlayerSearchAutocomplete({ initialQuery, onCommitSearch, onS
 
   function goToPlayer(s: PlayerSuggestion) {
     setOpen(false);
+    track("player_search", { method: "autocomplete" });
     if (onSelect) {
       setValue(s.display_name);
       onSelect(s);
@@ -113,6 +115,7 @@ export function Fc27PlayerSearchAutocomplete({ initialQuery, onCommitSearch, onS
         goToPlayer(suggestions[highlighted]);
       } else {
         setOpen(false);
+        track("player_search", { method: "full_search" });
         onCommitSearch?.(value);
       }
     } else if (e.key === "Escape") {

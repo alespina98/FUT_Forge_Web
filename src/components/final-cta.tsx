@@ -1,6 +1,7 @@
 "use client";
 
 import { useI18n } from "./i18n-provider";
+import { track } from "@/lib/analytics/client";
 
 export function FinalCta() {
   const { t } = useI18n();
@@ -12,8 +13,8 @@ export function FinalCta() {
         <h2>{h.finalTitle}</h2>
         <p className="dl-final-body">{h.finalBody}</p>
         <div className="dl-final-actions">
-          <a href="/download" className="download-primary">{h.primaryCta}</a>
-          <a href="/register" className="download-primary download-secondary">{h.finalSecondary}</a>
+          <a href="/download" className="download-primary" onClick={() => track("cta_click", { cta: "download", location: "final_cta" })}>{h.primaryCta}</a>
+          <a href="/register" className="download-primary download-secondary" onClick={() => track("cta_click", { cta: "register", location: "final_cta" })}>{h.finalSecondary}</a>
         </div>
       </div>
     </section>

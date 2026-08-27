@@ -365,7 +365,6 @@ export const copy = {
           { name: "Price", description: "Search a player or card and see its current market price.", status: "available", href: "/app/price" },
           { name: "EVO", description: "Search a player or card and find its best evolution path.", status: "available", href: "/app/evo" },
           { name: "Grade", description: "Enter a card's stats and see its FUT Forge Grade.", status: "available", href: "/app/grade" },
-          { name: "My Club", description: "See your real Ultimate Team club, synced from FUT Forge Desktop.", status: "available", href: "/app/club" },
         ],
       },
       price: {
@@ -599,7 +598,6 @@ export const copy = {
         { name: "Price", description: "Search a player or card and see its current market price.", href: "/app/price" },
         { name: "EVO", description: "Search a player or card and find its best evolution path.", href: "/app/evo" },
         { name: "Grade", description: "Enter a card's stats and see its FUT Forge Grade.", href: "/app/grade" },
-        { name: "My Club", description: "See your real Ultimate Team club, synced from FUT Forge Desktop.", href: "/app/club" },
       ],
     },
     evoLabPage: {
@@ -642,7 +640,7 @@ export const copy = {
         ["Is FUT Forge free to use?", "Yes. Every FUT Forge feature is free during this phase — there is no premium tier active yet."],
         ["Which platforms are supported?", "FUT Forge Desktop runs on Windows and macOS, the official Android app is distributed as a signed APK, and the Web App and Browser Mode work directly in your browser — no installation required."],
         ["How do updates work?", "FUT Forge Desktop and the Android app both check official FUT Forge releases automatically and include an auto-updater, so you always get the latest version."],
-        ["Do I need a FUT Forge account?", "A free account is required to sign in to the Web App and Browser Mode, and to sync features like My Club. Some Desktop features work without one."],
+        ["Do I need a FUT Forge account?", "A free account is required to sign in to the Web App and Browser Mode. Some Desktop features work without one."],
         ["How does EVO Lab work?", "Search a player or card, and EVO Lab finds every evolution path it's currently eligible for, then compares the final result — including its META Rating — so you can plan before spending an evolution."],
         ["How does the SBC Solver work?", "SBC Solver reads a Squad Building Challenge's requirements and helps you assemble a valid solution from your club, cutting out the manual cross-referencing."],
         ["How is FUT Forge different from browser-injection tools?", "FUT Forge is a dedicated Desktop application, official Android app, Web App, and account-gated Browser Mode bookmarklet — not an unofficial script injected into EA's Web App without your control. It doesn't read or store your EA password or session, and it makes no ban-proof or safety guarantees beyond that."],
@@ -1176,7 +1174,6 @@ export const copy = {
           { name: "Price", description: "Cerca un giocatore o una carta e scopri il suo prezzo di mercato attuale.", status: "available", href: "/app/price" },
           { name: "EVO", description: "Cerca un giocatore o una carta e trova il suo miglior percorso di evoluzione.", status: "available", href: "/app/evo" },
           { name: "Grade", description: "Inserisci le statistiche di una carta e scopri il suo FUT Forge Grade.", status: "available", href: "/app/grade" },
-          { name: "Il mio club", description: "Vedi il tuo vero club Ultimate Team, sincronizzato da FUT Forge Desktop.", status: "available", href: "/app/club" },
         ],
       },
       price: {
@@ -1410,7 +1407,6 @@ export const copy = {
         { name: "Price", description: "Cerca un giocatore o una carta e scopri il suo prezzo di mercato attuale.", href: "/app/price" },
         { name: "EVO", description: "Cerca un giocatore o una carta e trova il suo miglior percorso di evoluzione.", href: "/app/evo" },
         { name: "Grade", description: "Inserisci le statistiche di una carta e scopri il suo FUT Forge Grade.", href: "/app/grade" },
-        { name: "Il mio club", description: "Vedi il tuo vero club Ultimate Team, sincronizzato da FUT Forge Desktop.", href: "/app/club" },
       ],
     },
     evoLabPage: {
@@ -1453,7 +1449,7 @@ export const copy = {
         ["FUT Forge è gratuito?", "Sì. In questa fase tutte le funzionalità di FUT Forge sono gratuite: nessun piano premium è ancora attivo."],
         ["Quali piattaforme sono supportate?", "FUT Forge Desktop funziona su Windows e macOS. L'app Android ufficiale è distribuita come APK firmato. Web App e Browser Mode funzionano invece direttamente nel browser, senza installazione."],
         ["Come funzionano gli aggiornamenti?", "FUT Forge Desktop e l'app Android controllano da soli le nuove release e si aggiornano in automatico: hai sempre l'ultima versione senza fare nulla."],
-        ["Serve un account FUT Forge?", "Un account gratuito serve per accedere alla Web App e a Browser Mode, e per sincronizzare funzionalità come Il mio club. Alcune funzioni di Desktop funzionano anche senza account."],
+        ["Serve un account FUT Forge?", "Un account gratuito serve per accedere alla Web App e a Browser Mode. Alcune funzioni di Desktop funzionano anche senza account."],
         ["Come funziona EVO Lab?", "Cerca un giocatore o una carta: EVO Lab trova tutti i percorsi di evoluzione disponibili in quel momento e confronta i risultati finali, META Rating incluso. Così pianifichi in anticipo, prima di spendere anche una sola evoluzione."],
         ["Come funziona l'SBC Solver?", "SBC Solver legge i requisiti di una Squad Building Challenge e ti aiuta a costruire una soluzione valida usando il tuo club, senza dover controllare le regole a mano."],
         ["In cosa FUT Forge è diverso dagli strumenti di injection nel browser?", "FUT Forge è un'app Desktop dedicata, un'app Android ufficiale, una Web App e un bookmarklet Browser Mode legato al tuo account: non uno script non ufficiale iniettato nella Web App di EA a tua insaputa. Non legge né salva la tua password o la sessione EA, ma oltre a questo non offre nessuna garanzia di sicurezza dell'account."],

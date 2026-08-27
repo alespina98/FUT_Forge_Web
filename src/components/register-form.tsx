@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useI18n } from "./i18n-provider";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { track } from "@/lib/analytics/client";
 
 type Status = "idle" | "submitting" | "error" | "checkEmail";
 
@@ -14,7 +15,7 @@ export function RegisterForm() {
   const r = t.register;
   const router = useRouter();
   const searchParams = useSearchParams();
-  const next = searchParams.get("next") || "/app/club";
+  const next = searchParams.get("next") || "/app/account";
 
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -91,6 +92,7 @@ export function RegisterForm() {
       return;
     }
 
+    track("signup_success", { provider: "supabase" });
     // Supabase's actual response tells us which mode this project is
     // configured for - don't assume either behavior.
     if (data.session) {
@@ -215,7 +217,7 @@ export function RegisterForm() {
 
       <p className="mt-3 text-xs leading-5 text-white/30">
         {r.haveAccount}{" "}
-        <Link href={`/login${next !== "/app/club" ? `?next=${encodeURIComponent(next)}` : ""}`} className="font-semibold text-lime hover:text-lime/80">
+        <Link href={`/login${next !== "/app/account" ? `?next=${encodeURIComponent(next)}` : ""}`} className="font-semibold text-lime hover:text-lime/80">
           {r.haveAccountLinkLabel}
         </Link>
       </p>

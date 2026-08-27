@@ -13,11 +13,12 @@ import { ThemeControl } from "./theme-control";
 import { useClerk } from "@clerk/nextjs";
 import { useAuthMode } from "./app-auth-context";
 import { useWebsiteAuth } from "./website-auth-context";
+import { track } from "@/lib/analytics/client";
 
 function ClerkNavAccount({ onNavigate }: { onNavigate?: () => void }) {
   const {t}=useI18n();const router=useRouter();const auth=useWebsiteAuth();const {signOut}=useClerk();
   if(auth.status==="loading")return null;if(!auth.authenticated)return <div className="flex min-w-0 shrink-0 items-center gap-2 text-sm"><Link prefetch={false} href="/login" onClick={onNavigate} className="whitespace-nowrap font-semibold text-white/70 hover:text-white">{t.nav.login}</Link></div>;
-  return <div className="flex min-w-0 shrink-0 items-center gap-1.5 text-sm">{auth.role==="ADMIN"&&<Link prefetch={false} href="/app/admin" onClick={onNavigate} className="admin-nav-link">Admin</Link>}<Link prefetch={false} href="/app/account" onClick={onNavigate} className="flex min-w-0 max-w-[128px] items-center gap-1.5 rounded-full border border-white/10 bg-white/[.03] px-3 py-1.5 text-xs font-semibold text-white/80"><UserIcon className="size-3.5 shrink-0 text-lime"/><span className="truncate">{auth.username}</span></Link><button type="button" onClick={async()=>{await signOut();onNavigate?.();router.push("/")}} className="shrink-0 rounded-full p-2 text-white/50 hover:text-white" aria-label={t.auth.logoutButton}><ExitIcon className="size-4"/></button></div>
+  return <div className="flex min-w-0 shrink-0 items-center gap-1.5 text-sm">{auth.role==="ADMIN"&&<Link prefetch={false} href="/app/admin" onClick={onNavigate} className="admin-nav-link">Admin</Link>}<Link prefetch={false} href="/app/account" onClick={onNavigate} className="flex min-w-0 max-w-[128px] items-center gap-1.5 rounded-full border border-white/10 bg-white/[.03] px-3 py-1.5 text-xs font-semibold text-white/80"><UserIcon className="size-3.5 shrink-0 text-lime"/><span className="truncate">{auth.username}</span></Link><button type="button" onClick={async()=>{await signOut();track("logout",{provider:"clerk"});onNavigate?.();router.push("/")}} className="shrink-0 rounded-full p-2 text-white/50 hover:text-white" aria-label={t.auth.logoutButton}><ExitIcon className="size-4"/></button></div>
 }
 function SupabaseNavAccount({ onNavigate }: { onNavigate?: () => void }) {
   const { t } = useI18n();
@@ -39,6 +40,7 @@ function SupabaseNavAccount({ onNavigate }: { onNavigate?: () => void }) {
   async function handleLogout() {
     const supabase = createSupabaseBrowserClient();
     await supabase.auth.signOut();
+    track("logout", { provider: "supabase" });
     onNavigate?.();
     router.refresh();
     router.push("/");
@@ -241,7 +243,7 @@ export function Navbar() {
               globals.css) - showing this earlier is what left it fighting
               nav-center + nav-download for space in the 768-1023px band. */}
           <div className="desktop-account"><NavAccount /></div>
-          <a href="/download" className="button-primary nav-download !min-h-11 !px-3 text-sm"><DownloadIcon className="size-4" /><span className="nav-cta-full">{t.nav.cta}</span><span className="nav-cta-short">{t.nav.download}</span></a>
+          <a href="/download" className="button-primary nav-download !min-h-11 !px-3 text-sm" onClick={() => track("cta_click", { cta: "download", location: "navbar" })}><DownloadIcon className="size-4" /><span className="nav-cta-full">{t.nav.cta}</span><span className="nav-cta-short">{t.nav.download}</span></a>
           <button className={`menu-button ${open ? "open" : ""}`} onClick={() => setOpen(!open)} aria-expanded={open} aria-controls="mobile-navigation" aria-label={open ? t.nav.close : t.nav.open}><span /><span /></button>
         </div>
         {open && (

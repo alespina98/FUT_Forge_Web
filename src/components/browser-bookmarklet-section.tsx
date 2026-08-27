@@ -4,6 +4,7 @@ import Link from "next/link";
 import { makeBookmarklet, setBookmarkletDragData } from "@/lib/bookmarklet";
 import { useI18n } from "./i18n-provider";
 import { useWebsiteAuth } from "./website-auth-context";
+import { track } from "@/lib/analytics/client";
 import "./browser-bookmarklet.css";
 
 function LockedInstallCard({ it }: { it: boolean }) {
@@ -46,8 +47,8 @@ export function BrowserBookmarkletSection() {
     });
     return () => window.cancelAnimationFrame(frame);
   }, [channel]);
-  const drag = (event: DragEvent<HTMLAnchorElement>) => setBookmarkletDragData(window.location.origin, event.dataTransfer, channel);
-  const copy = async () => { await navigator.clipboard.writeText(href); setCopied(true); window.setTimeout(() => setCopied(false), 1800); };
+  const drag = (event: DragEvent<HTMLAnchorElement>) => { setBookmarkletDragData(window.location.origin, event.dataTransfer, channel); track("bookmarklet_install", { channel, method: "drag" }); };
+  const copy = async () => { await navigator.clipboard.writeText(href); setCopied(true); track("bookmarklet_install", { channel, method: "copy_url" }); window.setTimeout(() => setCopied(false), 1800); };
   const steps = it
     ? ["Mostra la barra dei preferiti", "Trascina FUT Forge nella barra", "Apri e accedi alla EA FC Web App", "Clicca FUT Forge"]
     : ["Show the bookmarks bar", "Drag FUT Forge to the bar", "Open and sign in to the EA FC Web App", "Click FUT Forge"];

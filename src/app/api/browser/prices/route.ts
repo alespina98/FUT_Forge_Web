@@ -10,7 +10,7 @@ export async function POST(request: Request) {
   try {
     consumeRateLimit(clientKey(request));
     if (Number(request.headers.get("content-length") || 0) > 64 * 1024) throw new BrowserPricingError(413, "payload_too_large", "Request body is too large.");
-    const ids = validateResourceIds((await request.json())?.resourceIds);
+    const ids = validateResourceIds(((await request.json()) as { resourceIds?: unknown } | null)?.resourceIds);
     return new Response(selectPrices(ids, await loadPriceData()), { status: 200, headers: { ...cors, "Content-Type": "application/json; charset=utf-8" } });
   } catch (error) {
     const known = error instanceof BrowserPricingError;

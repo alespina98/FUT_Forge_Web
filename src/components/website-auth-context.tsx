@@ -26,7 +26,7 @@ export function ClerkWebsiteAuthProvider({ children }: { children: React.ReactNo
     if (!isLoaded || !isSignedIn || !clerkUserId) return;
     const controller = new AbortController();
     fetch("/api/auth/profile", { cache: "no-store", signal: controller.signal })
-      .then(response => response.ok ? response.json() : null)
+      .then(response => response.ok ? response.json() as Promise<{ id: string; username: string; role: "USER" | "ADMIN"; tier: "FREE" | "PREMIUM" }> : null)
       .then(value => { if (!controller.signal.aborted) setProfileResult({ ownerId: clerkUserId, profile: value }); })
       .catch(() => { if (!controller.signal.aborted) setProfileResult({ ownerId: clerkUserId, profile: null }); });
     return () => controller.abort();

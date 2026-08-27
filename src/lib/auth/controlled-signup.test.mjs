@@ -28,11 +28,10 @@ test("controlled user.created webhooks cannot race the explicit finalizer", () =
   assert.match(webhook, /finalize_signup/);
 });
 
-test("Clerk signup and login never default or return to unavailable Club", () => {
+test("Clerk signup and login never default or return to the removed Club route", () => {
   for (const page of [loginPage, registerPage]) {
-    assert.match(page, /next !== "\/app\/club"/);
     assert.match(page, /: "\/app\/account"/);
-    assert.doesNotMatch(page, /: "\/app\/club"/);
+    assert.doesNotMatch(page, /\/app\/club/);
   }
 });
 

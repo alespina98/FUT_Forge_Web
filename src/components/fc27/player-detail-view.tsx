@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { Arrow } from "@/components/icons";
 import { Fc27BasePlayerCard } from "./fc27-base-player-card";
 import type { PlayerDetail } from "@/lib/fc27/players";
 import type { Dictionary } from "@/lib/copy";
 import { fc27ReturnContext } from "@/lib/fc27/return-navigation";
+import { track } from "@/lib/analytics/client";
 
 type DetailCopy = Dictionary["fc27PlayerDetailPage"];
 type StatKey = keyof DetailCopy["stats"];
@@ -87,6 +89,8 @@ export function Fc27PlayerDetailView({ player, baseMetaRating, returnTo, entityL
   const { t, locale } = useI18n();
   const p: DetailCopy = t.fc27PlayerDetailPage;
   const isGK = player.position_short_label === "GK";
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- fire once per rendered player, not on every copy/locale change
+  useEffect(() => { track("player_view", { ea_player_id: player.ea_player_id, position: player.position_short_label }); }, [player.ea_player_id]);
   const returnContext = fc27ReturnContext(returnTo);
   const positionName = returnContext.position ? t.fc27BestPage.positions[returnContext.position as keyof typeof t.fc27BestPage.positions] : undefined;
   const backLabel = returnContext.kind === "hiddenGems" ? (locale === "it" ? `Torna alle ${t.nav.fc27HiddenGems}` : `Back to ${t.nav.fc27HiddenGems}`)

@@ -12,8 +12,8 @@ export function ForgotPasswordForm() {
   const { t } = useI18n();
   const f = t.forgotPassword;
   const searchParams = useSearchParams();
-  const next = searchParams.get("next") || "/app/club";
-  const loginHref = `/login${next !== "/app/club" ? `?next=${encodeURIComponent(next)}` : ""}`;
+  const next = searchParams.get("next") || "/app/account";
+  const loginHref = `/login${next !== "/app/account" ? `?next=${encodeURIComponent(next)}` : ""}`;
 
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<Status>("idle");

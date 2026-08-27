@@ -7,6 +7,7 @@ import { useClerk, useSignIn, useUser } from "@clerk/nextjs";
 import { useI18n } from "./i18n-provider";
 import { createClerkFlowCorrelationId, navigateToDecoratedUrl, reportClerkFlowDiagnostic } from "@/lib/auth/clerk-flow-diagnostics";
 import { getClerkAuthMessages, getClerkErrorMessage } from "@/lib/auth/clerk-error-messages";
+import { track } from "@/lib/analytics/client";
 
 const copy = {
   en: { title: "Welcome back", lead: "Sign in to your FUT Forge account.", identifier: "Email or username", password: "Password", submit: "Sign in", submitting: "Signing in…", forgot: "Forgot password?", register: "Create an account", error: "We couldn't sign you in. Check your details and try again." },
@@ -36,7 +37,8 @@ export function ControlledClerkLogin({ redirectUrl }: { redirectUrl: string }) {
       navigateToDecoratedUrl(decorateUrl(destination), url => router.replace(url));
     } });
     reportClerkFlowDiagnostic({ operation: "finalize", correlationId, error: finalizeError, signInStatus: signIn.status, finalizeAttempted: true, finalizeFailed: Boolean(finalizeError) });
-    if (finalizeError) setError(getClerkErrorMessage(finalizeError, locale, "login"));
+    if (finalizeError) { setError(getClerkErrorMessage(finalizeError, locale, "login")); track("login_failed", { reason: "finalize_error" }); }
+    else track("login_success", { provider: "clerk" });
   }
 
   async function submit(event: FormEvent) {
@@ -51,6 +53,7 @@ export function ControlledClerkLogin({ redirectUrl }: { redirectUrl: string }) {
       const routingResponse = await fetch("/api/auth/clerk/login-routing", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ identifier: normalizedIdentifier }) });
       if (!routingResponse.ok) {
         setError(authErrors.fallback);
+        track("login_failed", { reason: "routing_unavailable" });
         return;
       }
       const routing = await routingResponse.json() as { recoveryRequired?: boolean; email?: string };
@@ -64,21 +67,23 @@ export function ControlledClerkLogin({ redirectUrl }: { redirectUrl: string }) {
       reportClerkFlowDiagnostic({ operation: "password", correlationId, error: signInError, signInStatus: signIn.status });
       if (signInError) {
         setError(getClerkErrorMessage(signInError, locale, "login"));
+        track("login_failed", { reason: "invalid_credentials" });
         return;
       }
       if (signIn.status === "needs_client_trust" || signIn.status === "needs_second_factor") {
         const { error: trustError } = await signIn.mfa.sendEmailCode();
         reportClerkFlowDiagnostic({ operation: "client_trust.send_email_code", correlationId, error: trustError, signInStatus: signIn.status });
-        if (trustError) setError(getClerkErrorMessage(trustError, locale, "verification"));
+        if (trustError) { setError(getClerkErrorMessage(trustError, locale, "verification")); track("login_failed", { reason: "client_trust_send_failed" }); }
         else { setPassword(""); setNeedsClientTrust(true); }
         return;
       }
-      if (signIn.status !== "complete") { setError(authErrors.fallback); return; }
+      if (signIn.status !== "complete") { setError(authErrors.fallback); track("login_failed", { reason: "incomplete" }); return; }
       await finalizeSignIn(correlationId);
     } catch (caught) {
       const unexpected = caught instanceof Error ? { code: "unexpected_exception", message: caught.message } : { code: "unexpected_exception" };
       reportClerkFlowDiagnostic({ operation: "login", correlationId, error: unexpected, signInStatus: signIn.status });
       setError(authErrors.fallback);
+      track("login_failed", { reason: "unexpected_exception" });
     } finally {
       setSubmitting(false);
     }
@@ -92,12 +97,13 @@ export function ControlledClerkLogin({ redirectUrl }: { redirectUrl: string }) {
     try {
       const { error: trustError } = await signIn.mfa.verifyEmailCode({ code: clientTrustCode.trim() });
       reportClerkFlowDiagnostic({ operation: "client_trust.verify_email_code", correlationId, error: trustError, signInStatus: signIn.status });
-      if (trustError || signIn.status !== "complete") { setError(getClerkErrorMessage(trustError, locale, "verification")); return; }
+      if (trustError || signIn.status !== "complete") { setError(getClerkErrorMessage(trustError, locale, "verification")); track("login_failed", { reason: "client_trust_verify_failed" }); return; }
       await finalizeSignIn(correlationId);
     } catch (caught) {
       const unexpected = caught instanceof Error ? { code: "unexpected_exception", message: caught.message } : { code: "unexpected_exception" };
       reportClerkFlowDiagnostic({ operation: "client_trust", correlationId, error: unexpected, signInStatus: signIn.status });
       setError(authErrors.fallback);
+      track("login_failed", { reason: "unexpected_exception" });
     } finally { setSubmitting(false); }
   }
 

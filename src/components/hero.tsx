@@ -2,6 +2,7 @@
 
 import { Arrow, DownloadIcon, ForgeMark, HeartIcon, LockIcon, SparkIcon } from "./icons";
 import { useI18n } from "./i18n-provider";
+import { track } from "@/lib/analytics/client";
 
 const particleCount = 5;
 const PAYPAL_URL = "https://www.paypal.com/ncp/payment/Y4L7JX8ZL8GUN";
@@ -22,8 +23,8 @@ export function Hero() {
           </h1>
           <p className="home-hero-body">{h.body}</p>
           <div className="home-hero-actions">
-            <a href="/download" className="button-primary"><DownloadIcon className="size-4.5" />{h.primaryCta}</a>
-            <a href="/app" className="button-secondary">{h.secondaryCta}</a>
+            <a href="/download" className="button-primary" onClick={() => track("cta_click", { cta: "download", location: "hero" })}><DownloadIcon className="size-4.5" />{h.primaryCta}</a>
+            <a href="/app" className="button-secondary" onClick={() => track("cta_click", { cta: "open_app", location: "hero" })}>{h.secondaryCta}</a>
           </div>
           <p className="home-hero-platforms">{h.platformNote}</p>
 
@@ -34,7 +35,7 @@ export function Hero() {
               <p className="home-support-body">{h.support.body}</p>
               <p className="home-support-note"><LockIcon className="size-3" />{h.support.note}</p>
             </div>
-            <a href={PAYPAL_URL} target="_blank" rel="noopener noreferrer" className="home-support-cta">
+            <a href={PAYPAL_URL} target="_blank" rel="noopener noreferrer" className="home-support-cta" onClick={() => track("cta_click", { cta: "support", location: "hero" })}>
               {h.support.cta}<Arrow className="size-3.5" />
             </a>
           </div>

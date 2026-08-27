@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useI18n } from "./i18n-provider";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { track } from "@/lib/analytics/client";
 
 type Status = "idle" | "submitting" | "error";
 
@@ -13,7 +14,7 @@ export function LoginForm() {
   const a = t.auth;
   const router = useRouter();
   const searchParams = useSearchParams();
-  const next = searchParams.get("next") || "/app/club";
+  const next = searchParams.get("next") || "/app/account";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -32,8 +33,10 @@ export function LoginForm() {
     if (signInError) {
       setStatus("error");
       setError(signInError.status === 400 ? a.invalidCredentials : a.genericError);
+      track("login_failed", { reason: signInError.status === 400 ? "invalid_credentials" : "error" });
       return;
     }
+    track("login_success", { provider: "supabase" });
     // Server Components read the session from cookies (@supabase/ssr writes
     // them on sign-in) - refresh so they pick it up before navigating.
     router.refresh();
@@ -67,7 +70,7 @@ export function LoginForm() {
               {a.passwordLabel}
             </label>
             <Link
-              href={`/app/forgot-password${next !== "/app/club" ? `?next=${encodeURIComponent(next)}` : ""}`}
+              href={`/app/forgot-password${next !== "/app/account" ? `?next=${encodeURIComponent(next)}` : ""}`}
               className="text-xs font-semibold text-white/40 hover:text-lime"
             >
               {a.forgotPasswordLink}
@@ -108,7 +111,7 @@ export function LoginForm() {
 
       <p className="mt-6 text-xs leading-5 text-white/30">
         {a.noAccount}{" "}
-        <Link href={`/register${next !== "/app/club" ? `?next=${encodeURIComponent(next)}` : ""}`} className="font-semibold text-lime hover:text-lime/80">
+        <Link href={`/register${next !== "/app/account" ? `?next=${encodeURIComponent(next)}` : ""}`} className="font-semibold text-lime hover:text-lime/80">
           {a.noAccountLinkLabel}
         </Link>
       </p>

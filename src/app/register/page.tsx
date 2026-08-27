@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 
 export default async function RegisterPage({ searchParams }: PageProps<"/register">) {
   const next = (await searchParams).next;
-  const redirectUrl = typeof next === "string" && next.startsWith("/") && !next.startsWith("//") && next !== "/app/club" ? next : "/app/account";
+  const redirectUrl = typeof next === "string" && next.startsWith("/") && !next.startsWith("//") ? next : "/app/account";
   return (
     <main className="min-h-screen overflow-hidden bg-ink text-white">
       <AmbientEffects />

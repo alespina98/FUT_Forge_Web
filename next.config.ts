@@ -1,8 +1,10 @@
 ﻿import type { NextConfig } from "next";
+import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
 
 import { validateProductionAuthProviderConfiguration } from "./src/lib/auth/provider";
 
 validateProductionAuthProviderConfiguration();
+initOpenNextCloudflareForDev();
 
 const nextConfig: NextConfig = {
   async headers() {

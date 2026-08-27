@@ -1,9 +1,12 @@
 "use client";
+import { useEffect } from "react";
 import { useI18n } from "@/components/i18n-provider";
+import { track } from "@/lib/analytics/client";
 
-export default function ErrorState({ reset }: { error: Error; reset: () => void }) {
+export default function ErrorState({ error, reset }: { error: Error; reset: () => void }) {
   const { t } = useI18n();
   const p = t.fc27PlayerDetailPage;
+  useEffect(() => { track("feature_error", { feature: "player_detail", message: error.message.slice(0, 200) }); }, [error]);
   return (
     <div className="mx-auto max-w-xl px-4 pb-24 pt-40 text-center sm:pt-48">
       <div className="rounded-[28px] border border-white/10 bg-white/[.025] px-7 py-20">

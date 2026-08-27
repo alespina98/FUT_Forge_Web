@@ -20,7 +20,7 @@ export const metadata: Metadata = {
 
 export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   const next = (await searchParams).next;
-  const redirectUrl = typeof next === "string" && next.startsWith("/") && !next.startsWith("//") && next !== "/app/club" ? next : "/app/account";
+  const redirectUrl = typeof next === "string" && next.startsWith("/") && !next.startsWith("//") ? next : "/app/account";
   if (isPublicClerkAuth() && (await auth()).userId) redirect(redirectUrl);
   return (
     <main className="min-h-screen overflow-hidden bg-ink text-white">

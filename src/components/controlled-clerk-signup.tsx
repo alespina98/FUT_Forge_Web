@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSignUp } from "@clerk/nextjs/legacy";
 import { useI18n } from "./i18n-provider";
 import { getClerkAuthMessages, getClerkErrorMessage } from "@/lib/auth/clerk-error-messages";
+import { track } from "@/lib/analytics/client";
 
 type Stage = "details" | "verification" | "failed";
 
@@ -65,6 +66,7 @@ export function ControlledClerkSignup({ redirectUrl }: { redirectUrl: string }) 
       const finalized = await fetch("/api/auth/clerk/finalize-signup", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ clerkUserId: result.createdUserId, intent }) });
       if (!finalized.ok) { setStage("failed"); setError(finalized.status === 409 ? c.usernameTaken : c.genericError); return; }
       await setActive({ session: result.createdSessionId });
+      track("signup_success", { provider: "clerk" });
       window.location.assign(redirectUrl);
     } catch (caught) {
       setError(getClerkErrorMessage(caught, locale, "verification"));
