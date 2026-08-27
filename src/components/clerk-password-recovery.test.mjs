@@ -38,7 +38,7 @@ test("activates the recovered session and returns to the account page", () => {
   const submit = resetPassword.indexOf("submitPassword");
   const finalize = resetPassword.indexOf("signIn.finalize");
   const activateMapping = resetPassword.indexOf("/api/auth/clerk/complete-password-migration");
-  const redirect = resetPassword.indexOf('router.replace("/app/account")');
+  const redirect = resetPassword.indexOf("navigateToDecoratedUrl(finalizedDestination");
   assert.ok(submit !== -1 && finalize > submit, "password must be created before session finalization");
   assert.match(resetPassword, /signIn\.status !== "complete"/);
   assert.ok(activateMapping > finalize, "mapping activation must follow Clerk finalization");
@@ -49,7 +49,7 @@ test("activates the recovered session and returns to the account page", () => {
 test("a failed mapping activation signs out and never redirects", () => {
   const resetPassword = functionBody("resetPassword");
   const failedCompletion = resetPassword.slice(resetPassword.indexOf("if (!completion.ok)"), resetPassword.indexOf('setStage("complete")'));
-  assert.match(failedCompletion, /await signOut\(\)/);
+  assert.match(failedCompletion, /await clerk\.signOut\(\)/);
   assert.doesNotMatch(failedCompletion, /router\.replace/);
 });
 
@@ -85,4 +85,11 @@ test("does not log Clerk recovery data or expose raw Clerk error messages", () =
   assert.doesNotMatch(source, /console\.(log|warn|error|debug)\(/);
   assert.doesNotMatch(source, /longMessage/);
   assert.doesNotMatch(source, /error\?\.message/);
+});
+
+test("reports password update and finalize failures through safe structured diagnostics", () => {
+  const resetPassword = functionBody("resetPassword");
+  assert.match(resetPassword, /operation: "reset\.submit_password"/);
+  assert.match(resetPassword, /operation: "reset\.finalize"/);
+  assert.doesNotMatch(resetPassword, /code\.trim\(\).*reportClerkFlowDiagnostic/s);
 });

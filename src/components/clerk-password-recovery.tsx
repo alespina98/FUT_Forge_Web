@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useClerk, useSignIn } from "@clerk/nextjs";
 import { useI18n } from "./i18n-provider";
+import { createClerkFlowCorrelationId, navigateToDecoratedUrl, reportClerkFlowDiagnostic } from "@/lib/auth/clerk-flow-diagnostics";
 
 type Stage = "email" | "code" | "password" | "complete";
 
@@ -73,7 +74,7 @@ export function ClerkPasswordRecovery({ initialIdentifier = "", upgraded = false
   const { locale, t } = useI18n();
   const text = recoveryCopy[locale];
   const { signIn, fetchStatus } = useSignIn();
-  const { signOut } = useClerk();
+  const clerk = useClerk();
   const router = useRouter();
   const [stage, setStage] = useState<Stage>("email");
   const [email, setEmail] = useState(initialIdentifier);
@@ -88,13 +89,16 @@ export function ClerkPasswordRecovery({ initialIdentifier = "", upgraded = false
     if (fetchStatus === "fetching") return;
     setSubmitting(true);
     setError(null);
+    const correlationId = createClerkFlowCorrelationId();
     try {
       const { error: createError } = await signIn.create({ identifier: email.trim() });
+      reportClerkFlowDiagnostic({ operation: "reset.create", correlationId, error: createError, signInStatus: signIn.status });
       if (createError) {
         setError(recoveryErrorMessage(createError, text));
         return;
       }
       const { error: sendCodeError } = await signIn.resetPasswordEmailCode.sendCode();
+      reportClerkFlowDiagnostic({ operation: "reset.send_code", correlationId, error: sendCodeError, signInStatus: signIn.status });
       if (sendCodeError) {
         setError(recoveryErrorMessage(sendCodeError, text));
         return;
@@ -112,8 +116,10 @@ export function ClerkPasswordRecovery({ initialIdentifier = "", upgraded = false
     if (fetchStatus === "fetching") return;
     setSubmitting(true);
     setError(null);
+    const correlationId = createClerkFlowCorrelationId();
     try {
       const { error: verifyError } = await signIn.resetPasswordEmailCode.verifyCode({ code: code.trim() });
+      reportClerkFlowDiagnostic({ operation: "reset.verify_code", correlationId, error: verifyError, signInStatus: signIn.status });
       if (verifyError) {
         setError(recoveryErrorMessage(verifyError, text));
         return;
@@ -140,27 +146,35 @@ export function ClerkPasswordRecovery({ initialIdentifier = "", upgraded = false
     }
     setSubmitting(true);
     setError(null);
+    const correlationId = createClerkFlowCorrelationId();
     try {
       const { error: passwordError } = await signIn.resetPasswordEmailCode.submitPassword({
         password,
         signOutOfOtherSessions: true,
       });
+      reportClerkFlowDiagnostic({ operation: "reset.submit_password", correlationId, error: passwordError, signInStatus: signIn.status });
       if (passwordError) {
         setError(recoveryErrorMessage(passwordError, text));
         setSubmitting(false);
         return;
       }
       if (signIn.status !== "complete") throw new Error("Unexpected recovery state");
-      const { error: finalizeError } = await signIn.finalize();
+      let finalizedDestination = "/app/account";
+      const { error: finalizeError } = await signIn.finalize({ navigate: ({ decorateUrl, session }) => {
+        finalizedDestination = decorateUrl(session.currentTask ? clerk.buildTasksUrl() : "/app/account");
+      } });
+      reportClerkFlowDiagnostic({ operation: "reset.finalize", correlationId, error: finalizeError, signInStatus: signIn.status, finalizeAttempted: true, finalizeFailed: Boolean(finalizeError) });
       if (finalizeError) throw new Error("Unable to activate recovered session");
       const completion = await fetch("/api/auth/clerk/complete-password-migration", { method: "POST" });
       if (!completion.ok) {
-        await signOut();
+        await clerk.signOut();
         throw new Error("Unable to complete password migration state");
       }
       setStage("complete");
-      router.replace("/app/account");
-    } catch {
+      navigateToDecoratedUrl(finalizedDestination, url => router.replace(url));
+    } catch (caught) {
+      const unexpected = caught instanceof Error ? { code: "unexpected_exception", message: caught.message } : { code: "unexpected_exception" };
+      reportClerkFlowDiagnostic({ operation: "reset.complete", correlationId, error: unexpected, signInStatus: signIn.status });
       setError(text.genericError);
       setSubmitting(false);
     }

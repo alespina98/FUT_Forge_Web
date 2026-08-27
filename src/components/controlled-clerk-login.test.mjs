@@ -108,7 +108,8 @@ test("recovery-required login discards the password and never attempts Clerk aut
 });
 
 test("ACTIVE and unknown users continue through generic Clerk password auth", () => {
-  assert.match(component, /signIn\.password\(\{ identifier: normalizedIdentifier, password \}\)/);
+  assert.match(component, /const clerkIdentifier = routing\.email \?\? normalizedIdentifier/);
+  assert.match(component, /signIn\.password\(\{ identifier: clerkIdentifier, password \}\)/);
   assert.match(component, /signIn\.finalize/);
   assert.doesNotMatch(component, /Supabase|supabase|localStorage|console\./);
 });
@@ -129,8 +130,20 @@ test("recovery finalizes Clerk before activating mapping and redirecting", () =>
   const submit = recovery.indexOf("submitPassword");
   const finalize = recovery.indexOf("signIn.finalize");
   const activate = recovery.indexOf("/api/auth/clerk/complete-password-migration");
-  const redirect = recovery.indexOf('router.replace("/app/account")');
+  const redirect = recovery.indexOf("navigateToDecoratedUrl(finalizedDestination");
   assert.ok(submit < finalize && finalize < activate && activate < redirect);
+});
+
+test("fresh-browser client trust is completed with Clerk MFA email code", () => {
+  assert.match(component, /signIn\.status === "needs_client_trust"/);
+  assert.match(component, /signIn\.mfa\.sendEmailCode\(\)/);
+  assert.match(component, /signIn\.mfa\.verifyEmailCode\(\{ code: clientTrustCode\.trim\(\) \}\)/);
+});
+
+test("finalize uses decorated absolute-safe navigation and routes pending session tasks", () => {
+  assert.match(component, /clerk\.buildTasksUrl\(\)/);
+  assert.match(component, /navigateToDecoratedUrl\(decorateUrl\(destination\)/);
+  assert.match(component, /finalizeFailed: Boolean\(finalizeError\)/);
 });
 
 test("bulk import state depends on a valid bcrypt digest without persisting it", () => {

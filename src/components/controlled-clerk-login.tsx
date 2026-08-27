@@ -3,8 +3,9 @@
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useSignIn } from "@clerk/nextjs";
+import { useClerk, useSignIn } from "@clerk/nextjs";
 import { useI18n } from "./i18n-provider";
+import { createClerkFlowCorrelationId, navigateToDecoratedUrl, reportClerkFlowDiagnostic } from "@/lib/auth/clerk-flow-diagnostics";
 
 const copy = {
   en: { title: "Welcome back", lead: "Sign in to your FUT Forge account.", identifier: "Email or username", password: "Password", submit: "Sign in", submitting: "Signing in…", forgot: "Forgot password?", register: "Create an account", error: "We couldn't sign you in. Check your details and try again." },
@@ -15,11 +16,23 @@ export function ControlledClerkLogin({ redirectUrl }: { redirectUrl: string }) {
   const { locale, t } = useI18n();
   const text = copy[locale];
   const { signIn, fetchStatus } = useSignIn();
+  const clerk = useClerk();
   const router = useRouter();
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
+  const [clientTrustCode, setClientTrustCode] = useState("");
+  const [needsClientTrust, setNeedsClientTrust] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  async function finalizeSignIn(correlationId: string) {
+    const { error: finalizeError } = await signIn.finalize({ navigate: ({ decorateUrl, session }) => {
+      const destination = session.currentTask ? clerk.buildTasksUrl() : redirectUrl;
+      navigateToDecoratedUrl(decorateUrl(destination), url => router.replace(url));
+    } });
+    reportClerkFlowDiagnostic({ operation: "finalize", correlationId, error: finalizeError, signInStatus: signIn.status, finalizeAttempted: true, finalizeFailed: Boolean(finalizeError) });
+    if (finalizeError) setError(text.error);
+  }
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -27,6 +40,7 @@ export function ControlledClerkLogin({ redirectUrl }: { redirectUrl: string }) {
     setSubmitting(true);
     setError(null);
     const normalizedIdentifier = identifier.trim();
+    const correlationId = createClerkFlowCorrelationId();
     try {
       const routingResponse = await fetch("/api/auth/clerk/login-routing", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ identifier: normalizedIdentifier }) });
       if (!routingResponse.ok) {
@@ -39,20 +53,48 @@ export function ControlledClerkLogin({ redirectUrl }: { redirectUrl: string }) {
         router.replace(`/app/forgot-password?identifier=${encodeURIComponent(routing.email)}&upgraded=1`);
         return;
       }
-      const { error: signInError } = await signIn.password({ identifier: normalizedIdentifier, password });
-      if (signInError || signIn.status !== "complete") {
+      const clerkIdentifier = routing.email ?? normalizedIdentifier;
+      const { error: signInError } = await signIn.password({ identifier: clerkIdentifier, password });
+      reportClerkFlowDiagnostic({ operation: "password", correlationId, error: signInError, signInStatus: signIn.status });
+      if (signInError) {
         setError(text.error);
         return;
       }
-      const { error: finalizeError } = await signIn.finalize({ navigate: ({ decorateUrl }) => router.replace(decorateUrl(redirectUrl)) });
-      if (finalizeError) setError(text.error);
-    } catch {
+      if (signIn.status === "needs_client_trust" || signIn.status === "needs_second_factor") {
+        const { error: trustError } = await signIn.mfa.sendEmailCode();
+        reportClerkFlowDiagnostic({ operation: "client_trust.send_email_code", correlationId, error: trustError, signInStatus: signIn.status });
+        if (trustError) setError(text.error);
+        else { setPassword(""); setNeedsClientTrust(true); }
+        return;
+      }
+      if (signIn.status !== "complete") { setError(text.error); return; }
+      await finalizeSignIn(correlationId);
+    } catch (caught) {
+      const unexpected = caught instanceof Error ? { code: "unexpected_exception", message: caught.message } : { code: "unexpected_exception" };
+      reportClerkFlowDiagnostic({ operation: "login", correlationId, error: unexpected, signInStatus: signIn.status });
       setError(text.error);
     } finally {
       setSubmitting(false);
     }
   }
 
+  async function verifyClientTrust(event: FormEvent) {
+    event.preventDefault();
+    setSubmitting(true);
+    setError(null);
+    const correlationId = createClerkFlowCorrelationId();
+    try {
+      const { error: trustError } = await signIn.mfa.verifyEmailCode({ code: clientTrustCode.trim() });
+      reportClerkFlowDiagnostic({ operation: "client_trust.verify_email_code", correlationId, error: trustError, signInStatus: signIn.status });
+      if (trustError || signIn.status !== "complete") { setError(text.error); return; }
+      await finalizeSignIn(correlationId);
+    } catch (caught) {
+      const unexpected = caught instanceof Error ? { code: "unexpected_exception", message: caught.message } : { code: "unexpected_exception" };
+      reportClerkFlowDiagnostic({ operation: "client_trust", correlationId, error: unexpected, signInStatus: signIn.status });
+      setError(text.error);
+    } finally { setSubmitting(false); }
+  }
+
   const inputClass = "min-h-12 w-full rounded-xl border border-white/10 bg-white/[.03] px-4 text-sm text-white placeholder:text-white/30 focus:border-lime/40 focus:outline-none";
-  return <div className="mx-auto max-w-md"><p className="section-label">{t.auth.eyebrow}</p><h1 className="mt-5 text-4xl font-semibold tracking-[-.04em]">{text.title}</h1><p className="mt-4 text-sm text-white/50">{text.lead}</p><form onSubmit={submit} className="glass mt-8 flex flex-col gap-4 rounded-2xl p-6 sm:p-8"><label className="text-xs font-semibold uppercase tracking-[.1em] text-white/50" htmlFor="clerk-login-identifier">{text.identifier}</label><input id="clerk-login-identifier" required autoComplete="username" value={identifier} onChange={event=>setIdentifier(event.target.value)} className={inputClass}/><label className="text-xs font-semibold uppercase tracking-[.1em] text-white/50" htmlFor="clerk-login-password">{text.password}</label><input id="clerk-login-password" type="password" required autoComplete="current-password" value={password} onChange={event=>setPassword(event.target.value)} className={inputClass}/><Link href="/app/forgot-password" className="text-xs font-semibold text-lime hover:text-lime/80">{text.forgot}</Link><button type="submit" className="button-primary" disabled={submitting||fetchStatus==="fetching"||!identifier.trim()||!password}>{submitting?text.submitting:text.submit}</button></form>{error&&<div className="mt-4 rounded-xl border border-red-500/25 bg-red-500/[.06] p-4 text-sm text-red-300" role="alert">{error}</div>}<p className="mt-6 text-xs text-white/30"><Link href="/register" className="font-semibold text-lime hover:text-lime/80">{text.register}</Link></p></div>;
+  return <div className="mx-auto max-w-md"><p className="section-label">{t.auth.eyebrow}</p><h1 className="mt-5 text-4xl font-semibold tracking-[-.04em]">{text.title}</h1><p className="mt-4 text-sm text-white/50">{needsClientTrust ? "Enter the verification code Clerk sent to your email." : text.lead}</p>{needsClientTrust?<form onSubmit={verifyClientTrust} className="glass mt-8 flex flex-col gap-4 rounded-2xl p-6 sm:p-8"><label className="text-xs font-semibold uppercase tracking-[.1em] text-white/50" htmlFor="clerk-client-trust-code">Verification code</label><input id="clerk-client-trust-code" inputMode="numeric" autoComplete="one-time-code" required value={clientTrustCode} onChange={event=>setClientTrustCode(event.target.value.replace(/\D/g, "").slice(0, 6))} className={inputClass}/><button type="submit" className="button-primary" disabled={submitting||clientTrustCode.length!==6}>{submitting?text.submitting:"Verify and sign in"}</button></form>:<form onSubmit={submit} className="glass mt-8 flex flex-col gap-4 rounded-2xl p-6 sm:p-8"><label className="text-xs font-semibold uppercase tracking-[.1em] text-white/50" htmlFor="clerk-login-identifier">{text.identifier}</label><input id="clerk-login-identifier" required autoComplete="username" value={identifier} onChange={event=>setIdentifier(event.target.value)} className={inputClass}/><label className="text-xs font-semibold uppercase tracking-[.1em] text-white/50" htmlFor="clerk-login-password">{text.password}</label><input id="clerk-login-password" type="password" required autoComplete="current-password" value={password} onChange={event=>setPassword(event.target.value)} className={inputClass}/><Link href="/app/forgot-password" className="text-xs font-semibold text-lime hover:text-lime/80">{text.forgot}</Link><button type="submit" className="button-primary" disabled={submitting||fetchStatus==="fetching"||!identifier.trim()||!password}>{submitting?text.submitting:text.submit}</button></form>}{error&&<div className="mt-4 rounded-xl border border-red-500/25 bg-red-500/[.06] p-4 text-sm text-red-300" role="alert">{error}</div>}<p className="mt-6 text-xs text-white/30"><Link href="/register" className="font-semibold text-lime hover:text-lime/80">{text.register}</Link></p></div>;
 }
