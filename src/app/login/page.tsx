@@ -7,6 +7,8 @@ import { copy, siteCopy } from "@/lib/copy";
 import { LoginForm } from "@/components/login-form";
 import { ControlledClerkLogin } from "@/components/controlled-clerk-login";
 import { isPublicClerkAuth } from "@/lib/auth/provider";
+import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
   title: copy.en.auth.title,
@@ -19,6 +21,7 @@ export const metadata: Metadata = {
 export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   const next = (await searchParams).next;
   const redirectUrl = typeof next === "string" && next.startsWith("/") && !next.startsWith("//") && next !== "/app/club" ? next : "/app/account";
+  if (isPublicClerkAuth() && (await auth()).userId) redirect(redirectUrl);
   return (
     <main className="min-h-screen overflow-hidden bg-ink text-white">
       <AmbientEffects />

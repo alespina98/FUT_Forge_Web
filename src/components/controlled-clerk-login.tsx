@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useClerk, useSignIn } from "@clerk/nextjs";
+import { useClerk, useSignIn, useUser } from "@clerk/nextjs";
 import { useI18n } from "./i18n-provider";
 import { createClerkFlowCorrelationId, navigateToDecoratedUrl, reportClerkFlowDiagnostic } from "@/lib/auth/clerk-flow-diagnostics";
 import { getClerkAuthMessages, getClerkErrorMessage } from "@/lib/auth/clerk-error-messages";
@@ -19,6 +19,7 @@ export function ControlledClerkLogin({ redirectUrl }: { redirectUrl: string }) {
   const authErrors = getClerkAuthMessages(locale);
   const { signIn, fetchStatus } = useSignIn();
   const clerk = useClerk();
+  const { isLoaded, isSignedIn } = useUser();
   const router = useRouter();
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
@@ -26,6 +27,8 @@ export function ControlledClerkLogin({ redirectUrl }: { redirectUrl: string }) {
   const [needsClientTrust, setNeedsClientTrust] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => { if (isLoaded && isSignedIn) router.replace(redirectUrl); }, [isLoaded, isSignedIn, redirectUrl, router]);
 
   async function finalizeSignIn(correlationId: string) {
     const { error: finalizeError } = await signIn.finalize({ navigate: ({ decorateUrl, session }) => {
@@ -38,6 +41,7 @@ export function ControlledClerkLogin({ redirectUrl }: { redirectUrl: string }) {
 
   async function submit(event: FormEvent) {
     event.preventDefault();
+    if (isSignedIn) { router.replace(redirectUrl); return; }
     if (fetchStatus === "fetching") return;
     setSubmitting(true);
     setError(null);
@@ -98,5 +102,6 @@ export function ControlledClerkLogin({ redirectUrl }: { redirectUrl: string }) {
   }
 
   const inputClass = "min-h-12 w-full rounded-xl border border-white/10 bg-white/[.03] px-4 text-sm text-white placeholder:text-white/30 focus:border-lime/40 focus:outline-none";
+  if (!isLoaded || isSignedIn) return null;
   return <div className="mx-auto max-w-md"><p className="section-label">{t.auth.eyebrow}</p><h1 className="mt-5 text-4xl font-semibold tracking-[-.04em]">{text.title}</h1><p className="mt-4 text-sm text-white/50">{needsClientTrust ? "Enter the verification code Clerk sent to your email." : text.lead}</p>{needsClientTrust?<form onSubmit={verifyClientTrust} className="glass mt-8 flex flex-col gap-4 rounded-2xl p-6 sm:p-8"><label className="text-xs font-semibold uppercase tracking-[.1em] text-white/50" htmlFor="clerk-client-trust-code">Verification code</label><input id="clerk-client-trust-code" inputMode="numeric" autoComplete="one-time-code" required value={clientTrustCode} onChange={event=>setClientTrustCode(event.target.value.replace(/\D/g, "").slice(0, 6))} className={inputClass}/><button type="submit" className="button-primary" disabled={submitting||clientTrustCode.length!==6}>{submitting?text.submitting:"Verify and sign in"}</button></form>:<form onSubmit={submit} className="glass mt-8 flex flex-col gap-4 rounded-2xl p-6 sm:p-8"><label className="text-xs font-semibold uppercase tracking-[.1em] text-white/50" htmlFor="clerk-login-identifier">{text.identifier}</label><input id="clerk-login-identifier" required autoComplete="username" value={identifier} onChange={event=>setIdentifier(event.target.value)} className={inputClass}/><label className="text-xs font-semibold uppercase tracking-[.1em] text-white/50" htmlFor="clerk-login-password">{text.password}</label><input id="clerk-login-password" type="password" required autoComplete="current-password" value={password} onChange={event=>setPassword(event.target.value)} className={inputClass}/><Link href="/app/forgot-password" className="text-xs font-semibold text-lime hover:text-lime/80">{text.forgot}</Link><button type="submit" className="button-primary" disabled={submitting||fetchStatus==="fetching"||!identifier.trim()||!password}>{submitting?text.submitting:text.submit}</button></form>}{error&&<div className="mt-4 rounded-xl border border-red-500/25 bg-red-500/[.06] p-4 text-sm text-red-300" role="alert">{error}</div>}<p className="mt-6 text-xs text-white/30"><Link href="/register" className="font-semibold text-lime hover:text-lime/80">{text.register}</Link></p></div>;
 }

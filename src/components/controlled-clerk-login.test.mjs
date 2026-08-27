@@ -18,6 +18,9 @@ const loginPage = readFileSync(new URL("../app/login/page.tsx", import.meta.url)
 const registerPage = readFileSync(new URL("../app/register/page.tsx", import.meta.url), "utf8");
 const authRoot = readFileSync(new URL("./auth-root-provider.tsx", import.meta.url), "utf8");
 const supabaseLogin = readFileSync(new URL("./login-form.tsx", import.meta.url), "utf8");
+const websiteAuth = readFileSync(new URL("./website-auth-context.tsx", import.meta.url), "utf8");
+const bookmarkletSection = readFileSync(new URL("./browser-bookmarklet-section.tsx", import.meta.url), "utf8");
+const navbar = readFileSync(new URL("./navbar.tsx", import.meta.url), "utf8");
 
 test("public auth UI uses the explicit provider while server authority remains AUTH_PROVIDER", () => {
   assert.match(provider, /process\.env\.AUTH_PROVIDER/);
@@ -74,6 +77,35 @@ test("Clerk UI never imports or calls the Supabase password path", () => {
   assert.doesNotMatch(component, /supabase|signInWithPassword/i);
   assert.match(component, /signIn\.password\(/);
   assert.match(supabaseLogin, /supabase\.auth\.signInWithPassword\(/);
+});
+
+test("Clerk website session is the shared navbar and bookmarklet download authority", () => {
+  assert.match(websiteAuth, /useUser\(\)/);
+  assert.match(websiteAuth, /fetch\("\/api\/auth\/profile"/);
+  assert.match(websiteAuth, /authenticated: true/);
+  assert.match(navbar, /useWebsiteAuth\(\)/);
+  assert.match(bookmarkletSection, /useWebsiteAuth\(\)/);
+  assert.doesNotMatch(bookmarkletSection, /useAuthUser|supabase|localStorage|sessionStorage/);
+});
+
+test("authenticated Clerk users are redirected before the login form renders", () => {
+  assert.match(loginPage, /\(await auth\(\)\)\.userId/);
+  assert.match(loginPage, /redirect\(redirectUrl\)/);
+  assert.ok(loginPage.indexOf("redirect(redirectUrl)") < loginPage.indexOf("<ControlledClerkLogin"));
+});
+
+test("client login guard blocks a second Clerk password attempt", () => {
+  assert.match(component, /useUser\(\)/);
+  assert.match(component, /if \(isSignedIn\) \{ router\.replace\(redirectUrl\); return; \}/);
+  assert.match(component, /if \(!isLoaded \|\| isSignedIn\) return null/);
+  assert.ok(component.indexOf("if (isSignedIn)") < component.indexOf("signIn.password"));
+});
+
+test("legacy Supabase state cannot override Clerk mode", () => {
+  assert.match(authRoot, /ClerkWebsiteAuthProvider/);
+  assert.match(authRoot, /SupabaseWebsiteAuthProvider/);
+  assert.match(websiteAuth, /!isSignedIn \|\| !user \? signedOut/);
+  assert.doesNotMatch(websiteAuth.slice(websiteAuth.indexOf("ClerkWebsiteAuthProvider"), websiteAuth.indexOf("SupabaseWebsiteAuthProvider")), /localStorage|supabase/);
 });
 
 test("public Clerk mode and Supabase rollback mode remain independently selectable", () => {
