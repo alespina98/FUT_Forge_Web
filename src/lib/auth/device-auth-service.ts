@@ -17,7 +17,7 @@ export async function isControlledClerkUser(clerkUserId:string){try{await contro
 export function parseClientType(value:unknown):FutForgeClientType|null{return typeof value==="string"&&allowed.has(value as FutForgeClientType)?value as FutForgeClientType:null}
 export function normalizeUserCode(value:unknown){return typeof value==="string"?value.trim().toUpperCase().replace(/[^A-Z0-9]/g,"").replace(/^(.{4})(.{4})$/,"$1-$2"):""}
 export async function requesterFingerprint(request:Request){const forwarded=request.headers.get("cf-connecting-ip")||request.headers.get("x-forwarded-for")?.split(",")[0]?.trim()||"unknown";return sha256(`${forwarded}:${process.env.FUT_FORGE_TOKEN_SECRET??""}`)}
-export async function enforceDeviceRate(kind:"token"|"refresh"|"logout",requesterHash:string){const limits={token:150,refresh:30,logout:30};if(!await getDeviceAuthStore().rateLimit(`${kind}:${requesterHash}`,limits[kind],600))throw new Error("RATE_LIMITED")}
+export async function enforceDeviceRate(kind:"token"|"refresh"|"logout"|"desktop_login",requesterHash:string){const limits={token:150,refresh:30,logout:30,desktop_login:10};if(!await getDeviceAuthStore().rateLimit(`${kind}:${requesterHash}`,limits[kind],600))throw new Error("RATE_LIMITED")}
 export async function startDeviceAuthorization(input:{clientType:FutForgeClientType;clientVersion:string|null;requesterHash:string},origin:string){
   const store=getDeviceAuthStore();if(!await store.rateLimit(`start:${input.requesterHash}`,10,600))throw new Error("RATE_LIMITED");const codes=await newDeviceCodes();const created=await store.create({...codes,clientType:input.clientType,clientVersion:input.clientVersion,requesterHash:input.requesterHash});await store.event("START",input.clientType);const verificationUri=`${origin}/device`;return{device_code:codes.deviceCode,user_code:codes.userCode,verification_uri:verificationUri,verification_uri_complete:`${verificationUri}?code=${encodeURIComponent(codes.userCode)}`,expires_in:Math.round((created.expiresAt.getTime()-Date.now())/1000),interval:created.pollInterval};
 }
@@ -27,6 +27,12 @@ export async function decideDeviceAuthorization(input:{userCode:string;clerkUser
 }
 async function issue(applicationUserId:string,clientType:FutForgeClientType){const store=getDeviceAuthStore(),refreshToken=randomToken(32),familyId=crypto.randomUUID();await store.createRefresh({tokenHash:await sha256(refreshToken),familyId,applicationUserId,clientType,scope:scopes.join(" ")});return{access_token:await signFutForgeAccessToken({applicationUserId,clientType,scope:scopes}),token_type:"Bearer",expires_in:futForgeTokenMetadata.accessTokenLifetimeSeconds,refresh_token:refreshToken,scope:scopes.join(" ")}}
 export async function exchangeAndroidClerkSession(clerkUserId:string){const profile=await getIdentityRepository().getUserByClerkId(clerkUserId);if(!profile)throw new Error("ACTIVE_MAPPING_REQUIRED");return{tokens:await issue(profile.id,"android"),profile:{id:profile.id,email:profile.email,username:profile.username,role:profile.role,tier:profile.tier}}}
+/**
+ * Issues FUT Forge desktop tokens for a Clerk user id already verified by the caller
+ * (see /api/auth/desktop/login, which verifies the password against Clerk's Backend
+ * API before calling this - no frontend session, no browser).
+ */
+export async function exchangeDesktopClerkUser(clerkUserId:string){const profile=await getIdentityRepository().getUserByClerkId(clerkUserId);if(!profile)throw new Error("ACTIVE_MAPPING_REQUIRED");return{tokens:await issue(profile.id,"desktop"),profile:{id:profile.id,email:profile.email,username:profile.username,role:profile.role,tier:profile.tier}}}
 export function browserBridgeEnabled(){return (process.env.FUT_FORGE_TOKEN_SECRET?.length??0)>=32}
 export async function approveBrowserAuthorization(userCode:string,clerkUserId:string){
   const profile=await getIdentityRepository().getUserByClerkId(clerkUserId);if(!profile)throw new Error("ACTIVE_MAPPING_REQUIRED");
@@ -45,6 +51,8 @@ async function refreshSession(refreshToken:string,expectedClientType?:FutForgeCl
 export async function refreshDeviceSession(refreshToken:string){return refreshSession(refreshToken)}
 export async function refreshBrowserSession(refreshToken:string){return refreshSession(refreshToken,"browser")}
 export async function refreshAndroidSession(refreshToken:string){return refreshSession(refreshToken,"android")}
+export async function refreshDesktopSession(refreshToken:string){return refreshSession(refreshToken,"desktop")}
 export async function revokeDeviceSession(refreshToken:string){const result=await getDeviceAuthStore().revokeFamily(await sha256(refreshToken));await getDeviceAuthStore().event("LOGOUT",null);return result}
 export async function revokeBrowserSession(refreshToken:string){const result=await getDeviceAuthStore().revokeFamily(await sha256(refreshToken),new Date(),"browser");await getDeviceAuthStore().event("LOGOUT","browser");return result}
 export async function revokeAndroidSession(refreshToken:string){const result=await getDeviceAuthStore().revokeFamily(await sha256(refreshToken),new Date(),"android");await getDeviceAuthStore().event("LOGOUT","android");return result}
+export async function revokeDesktopSession(refreshToken:string){const result=await getDeviceAuthStore().revokeFamily(await sha256(refreshToken),new Date(),"desktop");await getDeviceAuthStore().event("LOGOUT","desktop");return result}
