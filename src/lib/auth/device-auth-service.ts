@@ -26,6 +26,7 @@ export async function decideDeviceAuthorization(input:{userCode:string;clerkUser
   const store=getDeviceAuthStore(),code=normalizeUserCode(input.userCode);if(!await store.rateLimit(`approval:${input.clerkUserId}`,20,600))throw new Error("RATE_LIMITED");const profile=await controlledProfile(input.clerkUserId),applicationUserId=input.action==="APPROVE"?profile.id:null;const result=await store.decide(code,input.clerkUserId,applicationUserId,input.action);if(!result)throw new Error("NOT_PENDING");await store.event(input.action==="APPROVE"?"APPROVE":"DENY",result.clientType);return result;
 }
 async function issue(applicationUserId:string,clientType:FutForgeClientType){const store=getDeviceAuthStore(),refreshToken=randomToken(32),familyId=crypto.randomUUID();await store.createRefresh({tokenHash:await sha256(refreshToken),familyId,applicationUserId,clientType,scope:scopes.join(" ")});return{access_token:await signFutForgeAccessToken({applicationUserId,clientType,scope:scopes}),token_type:"Bearer",expires_in:futForgeTokenMetadata.accessTokenLifetimeSeconds,refresh_token:refreshToken,scope:scopes.join(" ")}}
+export async function exchangeAndroidClerkSession(clerkUserId:string){const profile=await getIdentityRepository().getUserByClerkId(clerkUserId);if(!profile)throw new Error("ACTIVE_MAPPING_REQUIRED");return{tokens:await issue(profile.id,"android"),profile:{id:profile.id,email:profile.email,username:profile.username,role:profile.role,tier:profile.tier}}}
 export function browserBridgeEnabled(){return (process.env.FUT_FORGE_TOKEN_SECRET?.length??0)>=32}
 export async function approveBrowserAuthorization(userCode:string,clerkUserId:string){
   const profile=await getIdentityRepository().getUserByClerkId(clerkUserId);if(!profile)throw new Error("ACTIVE_MAPPING_REQUIRED");
@@ -43,5 +44,7 @@ async function refreshSession(refreshToken:string,expectedClientType?:FutForgeCl
 }
 export async function refreshDeviceSession(refreshToken:string){return refreshSession(refreshToken)}
 export async function refreshBrowserSession(refreshToken:string){return refreshSession(refreshToken,"browser")}
+export async function refreshAndroidSession(refreshToken:string){return refreshSession(refreshToken,"android")}
 export async function revokeDeviceSession(refreshToken:string){const result=await getDeviceAuthStore().revokeFamily(await sha256(refreshToken));await getDeviceAuthStore().event("LOGOUT",null);return result}
 export async function revokeBrowserSession(refreshToken:string){const result=await getDeviceAuthStore().revokeFamily(await sha256(refreshToken),new Date(),"browser");await getDeviceAuthStore().event("LOGOUT","browser");return result}
+export async function revokeAndroidSession(refreshToken:string){const result=await getDeviceAuthStore().revokeFamily(await sha256(refreshToken),new Date(),"android");await getDeviceAuthStore().event("LOGOUT","android");return result}
