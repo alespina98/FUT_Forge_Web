@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useClerk, useSignIn } from "@clerk/nextjs";
 import { useI18n } from "./i18n-provider";
 import { createClerkFlowCorrelationId, navigateToDecoratedUrl, reportClerkFlowDiagnostic } from "@/lib/auth/clerk-flow-diagnostics";
+import { getClerkAuthMessages, getClerkErrorMessage } from "@/lib/auth/clerk-error-messages";
 
 type Stage = "email" | "code" | "password" | "complete";
 
@@ -21,13 +22,6 @@ const recoveryCopy = {
     passwordLead: "Your email has been verified. Choose a password for your FUT Forge account.",
     resetButton: "Reset password",
     completingLead: "Password created. Finishing your secure sign-in…",
-    genericError: "We couldn't complete that request. Check the details and try again.",
-    invalidCode: "That verification code is invalid or has expired. Request a new code and try again.",
-    weakPassword: "That password does not meet the security requirements. Choose a stronger password.",
-    compromisedPassword: "That password has appeared in a data breach. Choose a different password.",
-    rateLimited: "Too many attempts. Wait a moment and try again.",
-    mismatch: "The passwords do not match.",
-    tooShort: "Use at least 8 characters.",
   },
   it: {
     codeLabel: "Codice di verifica",
@@ -40,42 +34,13 @@ const recoveryCopy = {
     passwordLead: "La tua email è stata verificata. Scegli una password per il tuo account FUT Forge.",
     resetButton: "Reimposta password",
     completingLead: "Password creata. Completamento dell'accesso sicuro…",
-    genericError: "Non è stato possibile completare la richiesta. Controlla i dati e riprova.",
-    invalidCode: "Il codice di verifica non è valido o è scaduto. Richiedi un nuovo codice e riprova.",
-    weakPassword: "La password non soddisfa i requisiti di sicurezza. Scegli una password più sicura.",
-    compromisedPassword: "Questa password è comparsa in una violazione di dati. Scegline un'altra.",
-    rateLimited: "Troppi tentativi. Attendi un momento e riprova.",
-    mismatch: "Le password non coincidono.",
-    tooShort: "Usa almeno 8 caratteri.",
   },
 } as const;
-
-type RecoveryCopy = (typeof recoveryCopy)[keyof typeof recoveryCopy];
-type ClerkFlowError = { code?: string } | null | undefined;
-
-function recoveryErrorMessage(error: ClerkFlowError, text: RecoveryCopy) {
-  switch (error?.code) {
-    case "form_code_incorrect":
-    case "verification_expired":
-      return text.invalidCode;
-    case "form_password_pwned":
-    case "form_password_compromised":
-      return text.compromisedPassword;
-    case "form_password_length_too_short":
-    case "form_password_not_strong_enough":
-    case "form_password_matches_identifier":
-    case "form_password_size_in_bytes_exceeded":
-      return text.weakPassword;
-    case "too_many_requests":
-      return text.rateLimited;
-    default:
-      return text.genericError;
-  }
-}
 
 export function ClerkPasswordRecovery({ initialIdentifier = "", upgraded = false }: { initialIdentifier?: string; upgraded?: boolean }) {
   const { locale, t } = useI18n();
   const text = recoveryCopy[locale];
+  const authErrors = getClerkAuthMessages(locale);
   const { signIn, fetchStatus } = useSignIn();
   const clerk = useClerk();
   const router = useRouter();
@@ -97,18 +62,18 @@ export function ClerkPasswordRecovery({ initialIdentifier = "", upgraded = false
       const { error: createError } = await signIn.create({ identifier: email.trim() });
       reportClerkFlowDiagnostic({ operation: "reset.create", correlationId, error: createError, signInStatus: signIn.status });
       if (createError) {
-        setError(recoveryErrorMessage(createError, text));
+        setError(getClerkErrorMessage(createError, locale, "recovery"));
         return;
       }
       const { error: sendCodeError } = await signIn.resetPasswordEmailCode.sendCode();
       reportClerkFlowDiagnostic({ operation: "reset.send_code", correlationId, error: sendCodeError, signInStatus: signIn.status });
       if (sendCodeError) {
-        setError(recoveryErrorMessage(sendCodeError, text));
+        setError(getClerkErrorMessage(sendCodeError, locale, "recovery"));
         return;
       }
       setStage("code");
     } catch {
-      setError(text.genericError);
+      setError(authErrors.fallback);
     } finally {
       setSubmitting(false);
     }
@@ -124,13 +89,13 @@ export function ClerkPasswordRecovery({ initialIdentifier = "", upgraded = false
       const { error: verifyError } = await signIn.resetPasswordEmailCode.verifyCode({ code: code.trim() });
       reportClerkFlowDiagnostic({ operation: "reset.verify_code", correlationId, error: verifyError, signInStatus: signIn.status });
       if (verifyError) {
-        setError(recoveryErrorMessage(verifyError, text));
+        setError(getClerkErrorMessage(verifyError, locale, "verification"));
         return;
       }
       if (signIn.status !== "needs_new_password") throw new Error("Unexpected recovery state");
       setStage("password");
     } catch {
-      setError(text.genericError);
+      setError(authErrors.fallback);
     } finally {
       setSubmitting(false);
     }
@@ -140,11 +105,11 @@ export function ClerkPasswordRecovery({ initialIdentifier = "", upgraded = false
     event.preventDefault();
     if (fetchStatus === "fetching") return;
     if (password.length < 8) {
-      setError(text.tooShort);
+      setError(authErrors.tooShort);
       return;
     }
     if (password !== confirmPassword) {
-      setError(text.mismatch);
+      setError(authErrors.mismatch);
       return;
     }
     setSubmitting(true);
@@ -158,7 +123,7 @@ export function ClerkPasswordRecovery({ initialIdentifier = "", upgraded = false
       });
       if (passwordError) {
         reportClerkFlowDiagnostic({ operation: "reset_password", correlationId, error: passwordError, statusBefore, signInStatus: signIn.status });
-        setError(recoveryErrorMessage(passwordError, text));
+        setError(getClerkErrorMessage(passwordError, locale, "recovery"));
         setSubmitting(false);
         return;
       }
@@ -180,7 +145,7 @@ export function ClerkPasswordRecovery({ initialIdentifier = "", upgraded = false
     } catch (caught) {
       const unexpected = caught instanceof Error ? { code: "unexpected_exception", message: caught.message } : { code: "unexpected_exception" };
       reportClerkFlowDiagnostic({ operation: "reset.complete", correlationId, error: unexpected, signInStatus: signIn.status });
-      setError(text.genericError);
+      setError(authErrors.fallback);
       setSubmitting(false);
     }
   }

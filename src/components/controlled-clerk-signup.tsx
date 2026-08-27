@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useSignUp } from "@clerk/nextjs/legacy";
 import { useI18n } from "./i18n-provider";
+import { getClerkAuthMessages, getClerkErrorMessage } from "@/lib/auth/clerk-error-messages";
 
 type Stage = "details" | "verification" | "failed";
 
@@ -16,6 +17,7 @@ export function ControlledClerkSignup({ redirectUrl }: { redirectUrl: string }) 
   const { locale, t } = useI18n();
   const c = t.register;
   const x = extra[locale];
+  const authErrors = getClerkAuthMessages(locale);
   const { isLoaded, signUp, setActive } = useSignUp();
   const [stage, setStage] = useState<Stage>("details");
   const [email, setEmail] = useState("");
@@ -32,8 +34,8 @@ export function ControlledClerkSignup({ redirectUrl }: { redirectUrl: string }) 
     setError(null);
     const normalizedUsername = username.trim();
     if (normalizedUsername.length < 3 || normalizedUsername.length > 32 || !/^[\p{L}\p{N}_.-]+$/u.test(normalizedUsername)) { setError(c.usernameTooShort); return; }
-    if (password.length < 8) { setError(x.passwordLength); return; }
-    if (password !== confirmPassword) { setError(c.passwordMismatch); return; }
+    if (password.length < 8) { setError(authErrors.tooShort); return; }
+    if (password !== confirmPassword) { setError(authErrors.mismatch); return; }
     if (!isLoaded) return;
     setSubmitting(true);
     try {
@@ -45,8 +47,8 @@ export function ControlledClerkSignup({ redirectUrl }: { redirectUrl: string }) 
       await signUp.create({ emailAddress: email.trim(), username: normalizedUsername, password, locale, unsafeMetadata: { signupMode: "controlled" } });
       await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
       setStage("verification");
-    } catch {
-      setError(c.genericError);
+    } catch (caught) {
+      setError(getClerkErrorMessage(caught, locale, "signup"));
     } finally {
       setSubmitting(false);
     }
@@ -64,8 +66,8 @@ export function ControlledClerkSignup({ redirectUrl }: { redirectUrl: string }) 
       if (!finalized.ok) { setStage("failed"); setError(finalized.status === 409 ? c.usernameTaken : c.genericError); return; }
       await setActive({ session: result.createdSessionId });
       window.location.assign(redirectUrl);
-    } catch {
-      setError(c.genericError);
+    } catch (caught) {
+      setError(getClerkErrorMessage(caught, locale, "verification"));
     } finally {
       setSubmitting(false);
     }

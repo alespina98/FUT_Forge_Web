@@ -62,7 +62,7 @@ test("recovery has an explicit email to OTP to password to complete state machin
 test("requires matching passwords before calling Clerk", () => {
   const resetPassword = functionBody("resetPassword");
   assert.ok(resetPassword.indexOf("password !== confirmPassword") < resetPassword.indexOf("submitPassword"));
-  assert.match(resetPassword, /setError\(text\.mismatch\)/);
+  assert.match(resetPassword, /setError\(authErrors\.mismatch\)/);
 });
 
 test("shows the dedicated localized password creation step after OTP", () => {

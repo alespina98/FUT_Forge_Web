@@ -6,6 +6,7 @@ import {
   getPublicAuthProvider,
   validateProductionAuthProviderConfiguration,
 } from "../lib/auth/provider.ts";
+import { getClerkErrorMessage } from "../lib/auth/clerk-error-messages.ts";
 
 const component = readFileSync(new URL("./controlled-clerk-login.tsx", import.meta.url), "utf8");
 const routingRoute = readFileSync(new URL("../app/api/auth/clerk/login-routing/route.ts", import.meta.url), "utf8");
@@ -149,4 +150,30 @@ test("finalize uses decorated absolute-safe navigation and routes pending sessio
 test("bulk import state depends on a valid bcrypt digest without persisting it", () => {
   assert.match(importer, /hasBcrypt\?"ACTIVE":"PASSWORD_RECOVERY_REQUIRED"/);
   assert.doesNotMatch(importer, /INSERT[^\n]*password_digest/i);
+});
+
+test("shared Clerk error mapper covers actionable EN password and auth errors", () => {
+  const mapped = (code, context = "recovery") => getClerkErrorMessage({ code }, "en", context);
+  assert.match(mapped("form_password_pwned"), /known data breach/);
+  assert.equal(mapped("form_password_length_too_short"), "Password must contain at least 8 characters.");
+  assert.equal(mapped("form_password_not_strong_enough"), "Please choose a stronger password.");
+  assert.match(mapped("form_password_matches_identifier"), /email or username/);
+  assert.equal(mapped("form_password_size_in_bytes_exceeded"), "This password is too long.");
+  assert.equal(mapped("form_password_incorrect", "login"), "Incorrect password.");
+  assert.equal(mapped("form_password_or_identifier_incorrect", "login"), "Incorrect email/username or password.");
+});
+
+test("shared Clerk error mapper covers recovery, registration, rate limits, and fallback", () => {
+  assert.equal(getClerkErrorMessage({ code: "form_code_incorrect" }, "en", "verification"), "Invalid verification code.");
+  assert.match(getClerkErrorMessage({ code: "verification_expired" }, "en", "verification"), /expired/);
+  assert.match(getClerkErrorMessage({ code: "too_many_requests" }, "en", "recovery"), /Too many attempts/);
+  assert.match(getClerkErrorMessage({ errors: [{ code: "form_identifier_exists__email_address" }] }, "en", "signup"), /already exists/);
+  assert.equal(getClerkErrorMessage({ code: "unknown" }, "en", "recovery"), "We couldn't complete that request. Please try again.");
+});
+
+test("shared Clerk error mapper localizes actionable errors in Italian", () => {
+  assert.match(getClerkErrorMessage({ code: "form_password_pwned" }, "it", "recovery"), /violazione di dati nota/);
+  assert.equal(getClerkErrorMessage({ code: "form_password_incorrect" }, "it", "login"), "Password errata.");
+  assert.equal(getClerkErrorMessage({ code: "form_code_incorrect" }, "it", "verification"), "Codice di verifica non valido.");
+  assert.match(getClerkErrorMessage({ code: "too_many_requests" }, "it", "signup"), /Troppi tentativi/);
 });
