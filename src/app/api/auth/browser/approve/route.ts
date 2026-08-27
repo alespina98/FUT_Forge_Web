@@ -1,0 +1,4 @@
+import {auth} from "@clerk/nextjs/server";
+import {NextResponse} from "next/server";
+import {approveBrowserAuthorization,browserBridgeEnabled,normalizeUserCode} from "@/lib/auth/device-auth-service";
+export async function POST(request:Request){if(!browserBridgeEnabled())return NextResponse.json({error:"not_found"},{status:404});const origin=request.headers.get("origin");if(origin!==new URL(request.url).origin)return NextResponse.json({error:"invalid_origin"},{status:403});const{userId}=await auth();if(!userId)return NextResponse.json({error:"unauthorized"},{status:401});const body=await request.json().catch(()=>null) as{code?:unknown}|null;try{await approveBrowserAuthorization(normalizeUserCode(body?.code),userId);return NextResponse.json({ok:true},{headers:{"cache-control":"no-store"}})}catch(error){return NextResponse.json({error:error instanceof Error?error.message.toLowerCase():"not_pending"},{status:409})}}

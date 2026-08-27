@@ -54,6 +54,41 @@ test("controlled rollout rejects an ACTIVE user outside the canonical UUID allow
   await assert.rejects(()=>service.decideDeviceAuthorization({userCode:challenge.user_code,clerkUserId:"clerk-outsider",action:"APPROVE"}),/OWNER_ONLY/);
 });
 
+test("browser handoff accepts any ACTIVE canonical Clerk mapping and consumes its secret once",async()=>{
+  const challenge=await service.startDeviceAuthorization({clientType:"browser",clientVersion:null,requesterHash:"browser-active"},"https://futforgeofficial.com");
+  const raw=await setup.execute({sql:"SELECT device_code_hash, application_user_id FROM device_authorizations WHERE user_code=?",args:[challenge.user_code]});
+  assert.notEqual(raw.rows[0].device_code_hash,challenge.device_code,"the authorization secret must be stored hashed");
+  await service.approveBrowserAuthorization(challenge.user_code,"clerk-outsider");
+  const issued=await service.pollBrowserAuthorization(challenge.device_code);
+  assert.equal(issued.kind,"tokens");
+  const claims=await tokens.verifyFutForgeAccessToken(issued.tokens.access_token,"identity:read");
+  assert.equal(claims.applicationUserId,OUTSIDER_ID);
+  assert.equal(claims.clientType,"browser");
+  assert.equal((await service.pollBrowserAuthorization(challenge.device_code)).kind,"consumed");
+});
+
+test("browser handoff rejects non-ACTIVE Clerk mappings and non-browser challenges",async()=>{
+  const browser=await service.startDeviceAuthorization({clientType:"browser",clientVersion:null,requesterHash:"browser-recovery"},"https://futforgeofficial.com");
+  await assert.rejects(()=>service.approveBrowserAuthorization(browser.user_code,"clerk-recovery"),/ACTIVE_MAPPING_REQUIRED/);
+  const desktop=await service.startDeviceAuthorization({clientType:"desktop",clientVersion:null,requesterHash:"browser-cross-client"},"https://futforgeofficial.com");
+  await assert.rejects(()=>service.approveBrowserAuthorization(desktop.user_code,"clerk-active"),/NOT_PENDING/);
+});
+
+test("browser refresh rotates, rejects reuse, and logout revokes the active replacement",async()=>{
+  const challenge=await service.startDeviceAuthorization({clientType:"browser",clientVersion:null,requesterHash:"browser-refresh"},"https://futforgeofficial.com");
+  await service.approveBrowserAuthorization(challenge.user_code,"clerk-active");
+  const issued=await service.pollBrowserAuthorization(challenge.device_code),old=issued.tokens.refresh_token;
+  const rotated=await service.refreshBrowserSession(old);
+  assert.equal(rotated.kind,"tokens");
+  assert.equal((await service.refreshBrowserSession(old)).kind,"reuse");
+  assert.notEqual((await service.refreshBrowserSession(rotated.tokens.refresh_token)).kind,"tokens");
+  const logoutChallenge=await service.startDeviceAuthorization({clientType:"browser",clientVersion:null,requesterHash:"browser-logout"},"https://futforgeofficial.com");
+  await service.approveBrowserAuthorization(logoutChallenge.user_code,"clerk-active");
+  const logoutIssued=await service.pollBrowserAuthorization(logoutChallenge.device_code);
+  assert.equal(await service.revokeBrowserSession(logoutIssued.tokens.refresh_token),true);
+  assert.notEqual((await service.refreshBrowserSession(logoutIssued.tokens.refresh_token)).kind,"tokens");
+});
+
 test("poll interval and start rate controls are enforced",async()=>{
   const challenge=await service.startDeviceAuthorization({clientType:"desktop",clientVersion:null,requesterHash:"requester-rate"},"https://example.test");assert.equal((await service.pollDeviceAuthorization(challenge.device_code)).kind,"pending");assert.equal((await service.pollDeviceAuthorization(challenge.device_code)).kind,"slow_down");
   const pending=[];for(let i=0;i<3;i++)pending.push(await service.startDeviceAuthorization({clientType:"android",clientVersion:null,requesterHash:"pending-limit"},"https://example.test"));

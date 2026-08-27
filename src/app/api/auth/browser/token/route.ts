@@ -1,0 +1,6 @@
+import {NextResponse} from "next/server";
+import {browserCors} from "@/lib/auth/browser-cors";
+import {browserBridgeEnabled,pollBrowserAuthorization} from "@/lib/auth/device-auth-service";
+const errors={invalid:"invalid_grant",pending:"authorization_pending",slow_down:"slow_down",denied:"access_denied",expired:"expired_token",consumed:"invalid_grant",approved:"invalid_grant"} as const;
+export function OPTIONS(request:Request){const headers=browserCors(request);return headers?new NextResponse(null,{status:204,headers}):NextResponse.json({error:"invalid_origin"},{status:403})}
+export async function POST(request:Request){const headers=browserCors(request);if(!headers)return NextResponse.json({error:"invalid_origin"},{status:403});if(!browserBridgeEnabled())return NextResponse.json({error:"not_found"},{status:404,headers});const body=await request.json().catch(()=>null) as{authorization_code?:unknown}|null;if(typeof body?.authorization_code!=="string"||body.authorization_code.length<32)return NextResponse.json({error:"invalid_request"},{status:400,headers});const result=await pollBrowserAuthorization(body.authorization_code);return result.kind==="tokens"?NextResponse.json(result.tokens,{headers:{...headers,"cache-control":"no-store"}}):NextResponse.json({error:errors[result.kind]},{status:400,headers:{...headers,"cache-control":"no-store"}})}
