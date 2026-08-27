@@ -1,18 +1,26 @@
 {
   "schema": 1,
-  "latestVersion": "1.0.17",
-  "latestVersionCode": 18,
+  "latestVersion": "1.0.18",
+  "latestVersionCode": 19,
   "minimumVersionCode": 1,
-  "apkUrl": "https://github.com/alespina98/FUT_Forge_Releases/releases/download/android-v1.0.17/FUT-Forge-Android-1.0.17.apk",
-  "sha256": "715569b63cdd5622eb3281c2d34023e073ece364c479fa0373e7d2abb6cf7d96",
-  "size": 2766106,
+  "apkUrl": "https://github.com/alespina98/FUT_Forge_Releases/releases/download/android-v1.0.18/FUT-Forge-Android-1.0.18.apk",
+  "sha256": "c808cce4b959cf338fd9ee9c35cec30887e2c49e45bcf6a85f874d290fdf16eb",
+  "size": 8117381,
   "releaseNotes": {
     "it": [
-      "Aggiunto un nuovo banner partner TheStreet_Tv nella schermata Home."
+      "Login nativo FUT Forge su Android con Clerk: email/username + password.",
+      "Registrazione con verifica OTP via email e recupero/reset password.",
+      "Sessione sicura con ripristino automatico, refresh e logout con revoca.",
+      "Rimosso il vecchio login Supabase dalla WebView Android.",
+      "Corretto il rendering/scroll della schermata FUT Forge nella WebView popup."
     ],
     "en": [
-      "Added a new TheStreet_Tv partner banner on the Home screen."
+      "Native FUT Forge sign-in on Android via Clerk: email/username + password.",
+      "Registration with email OTP verification, plus forgot/reset password.",
+      "Secure session restore, refresh rotation, and logout revocation.",
+      "Removed the legacy Supabase password login from the Android WebView.",
+      "Fixed the FUT Forge screen not rendering/scrolling in the popup WebView."
     ]
   },
-  "publishedAt": "2026-08-21T15:39:22Z"
+  "publishedAt": "2026-08-27T16:10:30Z"
 }
