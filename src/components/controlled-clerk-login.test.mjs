@@ -1,7 +1,11 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
-import { getAuthProvider, getPublicAuthProvider } from "../lib/auth/provider.ts";
+import {
+  getAuthProvider,
+  getPublicAuthProvider,
+  validateProductionAuthProviderConfiguration,
+} from "../lib/auth/provider.ts";
 
 const component = readFileSync(new URL("./controlled-clerk-login.tsx", import.meta.url), "utf8");
 const routingRoute = readFileSync(new URL("../app/api/auth/clerk/login-routing/route.ts", import.meta.url), "utf8");
@@ -14,11 +18,55 @@ const registerPage = readFileSync(new URL("../app/register/page.tsx", import.met
 const authRoot = readFileSync(new URL("./auth-root-provider.tsx", import.meta.url), "utf8");
 const supabaseLogin = readFileSync(new URL("./login-form.tsx", import.meta.url), "utf8");
 
-test("public auth UI uses the explicit build-safe provider while server authority remains AUTH_PROVIDER", () => {
+test("public auth UI uses the explicit provider while server authority remains AUTH_PROVIDER", () => {
   assert.match(provider, /process\.env\.AUTH_PROVIDER/);
   assert.match(provider, /process\.env\.NEXT_PUBLIC_AUTH_PROVIDER/);
-  assert.match(provider, /parseProvider\(process\.env\.NEXT_PUBLIC_AUTH_PROVIDER\) \?\? getAuthProvider\(\)/);
+  assert.match(provider, /validateProductionAuthProviderConfiguration/);
   for (const file of [loginPage, registerPage, authRoot]) assert.match(file, /isPublicClerkAuth\(\)/);
+  assert.match(loginPage, /<ControlledClerkLogin/);
+  assert.match(registerPage, /<ControlledClerkSignup/);
+  assert.match(loginPage, /<LoginForm/);
+  assert.match(registerPage, /<RegisterForm/);
+});
+
+test("production Clerk builds require matching explicit providers and a publishable key", () => {
+  const valid = {
+    NODE_ENV: "production",
+    AUTH_PROVIDER: "clerk",
+    NEXT_PUBLIC_AUTH_PROVIDER: "clerk",
+    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "pk_live_test",
+  };
+  assert.doesNotThrow(() => validateProductionAuthProviderConfiguration(valid));
+  assert.throws(
+    () => validateProductionAuthProviderConfiguration({ ...valid, NEXT_PUBLIC_AUTH_PROVIDER: undefined }),
+    /must both be explicitly set/,
+  );
+  assert.throws(
+    () => validateProductionAuthProviderConfiguration({ ...valid, NEXT_PUBLIC_AUTH_PROVIDER: "supabase" }),
+    /must both be explicitly set/,
+  );
+  assert.throws(
+    () => validateProductionAuthProviderConfiguration({ ...valid, NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: " " }),
+    /publishable_key is required/i,
+  );
+});
+
+test("production Supabase rollback requires explicit matching providers", () => {
+  assert.doesNotThrow(() => validateProductionAuthProviderConfiguration({
+    NODE_ENV: "production",
+    AUTH_PROVIDER: "supabase",
+    NEXT_PUBLIC_AUTH_PROVIDER: "supabase",
+    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: undefined,
+  }));
+  assert.throws(
+    () => validateProductionAuthProviderConfiguration({
+      NODE_ENV: "production",
+      AUTH_PROVIDER: undefined,
+      NEXT_PUBLIC_AUTH_PROVIDER: undefined,
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: undefined,
+    }),
+    /must both be explicitly set/,
+  );
 });
 
 test("Clerk UI never imports or calls the Supabase password path", () => {

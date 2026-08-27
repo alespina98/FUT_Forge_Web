@@ -1,5 +1,9 @@
 ﻿import type { NextConfig } from "next";
 
+import { validateProductionAuthProviderConfiguration } from "./src/lib/auth/provider";
+
+validateProductionAuthProviderConfiguration();
+
 const nextConfig: NextConfig = {
   async headers() {
     return [{ source: "/browser/:path*", headers: [
