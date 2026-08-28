@@ -2,7 +2,7 @@
   "schema": 1,
   "latestVersion": "2.10.5.9",
   "distribution": "direct-download",
-  "distributionNote": "Not a Chrome Web Store release. Install as an unpacked extension (chrome://extensions -> Developer mode -> Load unpacked) after extracting this ZIP, or load it via the browser's extension ZIP install flow if available.",
+  "distributionNote": "Not a Chrome Web Store release: this extension does not auto-update. Install as an unpacked extension (chrome://extensions -> Developer mode -> Load unpacked) after extracting this ZIP. To move to a newer version later, download the new ZIP, extract it over the old folder (or point Load unpacked at the new folder), and click the reload icon for this extension on chrome://extensions - Chrome will not detect or apply updates on its own.",
   "zipUrl": "https://futforgeofficial.com/extension/FUT-Forge-Extension-2.10.5.9.zip",
   "sha256": "a88acbc85b18b36f5eb7cf29912124d252d233c4846b410545ad003eeb54512a",
   "size": 5051952
