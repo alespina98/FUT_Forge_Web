@@ -15,25 +15,20 @@
       "service": "fut-forge-web"
     }
   ],
-  // Analytics storage (see d1/migrations/). database_id is a placeholder -
-  // run `wrangler d1 create futforge-analytics` and replace it with the
-  // real id before deploying. Local dev/preview work with the placeholder
-  // as-is (wrangler's --local/preview D1 emulation doesn't call the API).
+  // Analytics storage (see d1/migrations/).
   "d1_databases": [
     {
       "binding": "ANALYTICS_DB",
       "database_name": "futforge-analytics",
-      "database_id": "REPLACE_WITH_D1_DATABASE_ID",
+      "database_id": "d69aabb8-904e-4073-b6de-4638f376a6b8",
       "migrations_dir": "d1/migrations"
     }
   ],
   // Fixed-window rate-limit counters for POST /api/analytics/events only.
-  // Run `wrangler kv namespace create ANALYTICS_RATE_LIMIT` and replace the
-  // placeholder id before deploying.
   "kv_namespaces": [
     {
       "binding": "ANALYTICS_RATE_LIMIT",
-      "id": "REPLACE_WITH_KV_NAMESPACE_ID"
+      "id": "228af9c9781c42eab4c1d6456a38f03e"
     }
   ]
 }
