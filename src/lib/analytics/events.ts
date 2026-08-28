@@ -20,12 +20,26 @@ export const EVENT_NAMES = [
   "partner_click",
   "sbc_solver_open",
   "sbc_solution_generated",
+  // A Quick Complete / Complete Multiple Times command was issued - fires once per command
+  // regardless of how many challenges it will end up actually submitting. Technical/diagnostic
+  // signal only - never treat this as "N SBCs completed" (see sbc_submitted below for that).
+  "sbc_quick_complete_started",
+  // One real, individually-successful challenge submission (services.SBC.submitChallenge
+  // resolving success, confirmed via inject.js's own per-challenge "Auto-submit completed"
+  // signal) - carries an allowlisted numeric `count` property (see ALLOWED_PROPERTY_KEYS /
+  // schema.ts) so a single operation that completes N challenges (a multi-challenge SBC set, or
+  // Complete Multiple Times run N times) reports count=N in one event instead of N separate ones.
+  // A client too old to know about `count` is treated as count=1 everywhere this is aggregated.
   "sbc_submitted",
   // Only emit sbc_completed when actual SBC completion is confirmed -
   // never as a synonym for sbc_solution_generated (a generated solution
   // may never be submitted, and a submission may fail).
   "sbc_completed",
   "sbc_failed",
+  // The whole multi-challenge SBC set/repeat batch finished (every challenge in it was attempted,
+  // success or failure) - only emitted when that is confirmed from real per-challenge counts, never
+  // inferred from a click or from the number of challenges requested.
+  "sbc_group_completed",
   "evo_open",
   "evo_chain_generated",
   "player_search",
@@ -84,7 +98,17 @@ export const ALL_ACCEPTED_CLIENT_TYPES = [...CLIENT_TYPES, ...Object.keys(LEGACY
 export const ALLOWED_PROPERTY_KEYS = [
   "feature", "reason", "outcome", "method", "priority", "provider", "path", "query",
   "cta", "location", "channel", "trigger", "healthy", "exc_type", "message",
-  "from_version", "to_version", "platform_target", "position", "ea_player_id",
+  "from_version", "to_version", "platform_target", "position", "ea_player_id", "count",
 ] as const;
+
+// Events where a numeric `count` property is semantically meaningful (real, successfully-completed
+// units for that one event, e.g. challenges actually submitted) - enforced in schema.ts so `count`
+// can't be attached to an event where it wouldn't mean anything (e.g. page_view, login_success).
+export const COUNT_ELIGIBLE_EVENTS = new Set<string>(["sbc_submitted", "feature_error"]);
+
+// Generous upper bound consistent with FUT Forge's realistic Quick Complete / repeat limits -
+// guards against a clearly bogus value (a bug or an attempted payload-abuse), not a tight product
+// cap tied to any specific feature limit that could legitimately change.
+export const MAX_REASONABLE_COUNT = 500;
 
 export const CURRENT_EVENT_CONTRACT_VERSION = 1;

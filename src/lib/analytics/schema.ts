@@ -1,6 +1,6 @@
 import { z } from "zod";
 // @ts-expect-error TS5097: direct Node test execution requires the extension.
-import { ALL_ACCEPTED_CLIENT_TYPES, ALLOWED_PROPERTY_KEYS, EVENT_NAMES } from "./events.ts";
+import { ALL_ACCEPTED_CLIENT_TYPES, ALLOWED_PROPERTY_KEYS, COUNT_ELIGIBLE_EVENTS, EVENT_NAMES, MAX_REASONABLE_COUNT } from "./events.ts";
 
 const propertyValue = z.union([z.string().max(500), z.number(), z.boolean(), z.null()]);
 
@@ -27,17 +27,33 @@ const timestamp = z
     message: "timestamp outside the accepted window",
   });
 
-export const eventEnvelopeSchema = z.object({
-  event: z.enum(EVENT_NAMES),
-  event_version: z.number().int().positive().max(100).optional(),
-  event_id: z.string().min(1).max(64).optional(),
-  timestamp,
-  client_type: z.enum(ALL_ACCEPTED_CLIENT_TYPES),
-  client_version: z.string().max(64).nullable().optional(),
-  install_id: z.string().min(1).max(128),
-  session_id: z.string().max(128).nullable().optional(),
-  properties: properties.optional(),
-});
+export const eventEnvelopeSchema = z
+  .object({
+    event: z.enum(EVENT_NAMES),
+    event_version: z.number().int().positive().max(100).optional(),
+    event_id: z.string().min(1).max(64).optional(),
+    timestamp,
+    client_type: z.enum(ALL_ACCEPTED_CLIENT_TYPES),
+    client_version: z.string().max(64).nullable().optional(),
+    install_id: z.string().min(1).max(128),
+    session_id: z.string().max(128).nullable().optional(),
+    properties: properties.optional(),
+  })
+  // `count` means "real completed units for this one event" - only meaningful, and only accepted,
+  // on the specific events the contract documents (see COUNT_ELIGIBLE_EVENTS). Checked here rather
+  // than in the flat per-key allowlist above because validity depends on which event it's attached
+  // to, not just the key name.
+  .superRefine((value, ctx) => {
+    const count = value.properties?.count;
+    if (count === undefined) return;
+    if (!COUNT_ELIGIBLE_EVENTS.has(value.event)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: `properties.count is not valid for event "${value.event}"`, path: ["properties", "count"] });
+      return;
+    }
+    if (typeof count !== "number" || !Number.isInteger(count) || count < 1 || count > MAX_REASONABLE_COUNT) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: `properties.count must be an integer between 1 and ${MAX_REASONABLE_COUNT}`, path: ["properties", "count"] });
+    }
+  });
 
 export const eventBatchSchema = z.object({
   events: z.array(eventEnvelopeSchema).min(1).max(25),

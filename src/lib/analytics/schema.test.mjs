@@ -91,3 +91,30 @@ test("rejects a property key outside the contract's allowlist even if not obviou
   const result = eventEnvelopeSchema.safeParse({ ...base, properties: { totally_made_up_key: "x" } });
   assert.equal(result.success, false);
 });
+
+test("accepts a valid count on sbc_submitted", () => {
+  const result = eventEnvelopeSchema.safeParse({ ...base, event: "sbc_submitted", properties: { count: 7 } });
+  assert.equal(result.success, true);
+});
+
+test("accepts a valid count on feature_error", () => {
+  const result = eventEnvelopeSchema.safeParse({ ...base, event: "feature_error", properties: { feature: "sbc_submit", count: 3 } });
+  assert.equal(result.success, true);
+});
+
+test("rejects count on an event where it is not semantically valid", () => {
+  const result = eventEnvelopeSchema.safeParse({ ...base, event: "page_view", properties: { count: 1 } });
+  assert.equal(result.success, false);
+});
+
+for (const bad of [0, -1, 1.5, 501, "7"]) {
+  test(`rejects an out-of-range or non-integer count: ${JSON.stringify(bad)}`, () => {
+    const result = eventEnvelopeSchema.safeParse({ ...base, event: "sbc_submitted", properties: { count: bad } });
+    assert.equal(result.success, false);
+  });
+}
+
+test("a missing count is fine (legacy clients / non-batched events default to 1 downstream)", () => {
+  const result = eventEnvelopeSchema.safeParse({ ...base, event: "sbc_submitted" });
+  assert.equal(result.success, true);
+});
