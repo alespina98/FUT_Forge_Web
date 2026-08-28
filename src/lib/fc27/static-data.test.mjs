@@ -5,12 +5,16 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 
 // Reproduces the production regression: getAllPlayersStatic() (used by the FC27
-// Auto Build filter-options endpoint) fans out to every shard file at once, and
-// a single transient read failure among them used to be cached forever at module
-// scope - every subsequent request kept rejecting even though the file was fine,
-// which is exactly what emptied the Auto Build league/nation dropdowns in
-// production. These tests assert a failed artifact read is evicted from the
-// cache so the next call gets a fresh attempt instead of a poisoned promise.
+// Auto Build filter-options endpoint) fans out to every shard file at once.
+// Two failure modes were fixed:
+// 1. A failed artifact read used to be cached forever at module scope - every
+//    subsequent request kept rejecting even though the file was fine. json()
+//    now evicts a rejected promise from jsonCache so the next call retries.
+// 2. Even with retries, production still saw ~1 shard out of 160+ fail
+//    intermittently (a different one each time) - getAllPlayersStatic() no
+//    longer lets one bad shard 500 the whole endpoint; it skips it and
+//    returns the rest, self-healing on the next cold start/isolate once the
+//    shard is reachable again.
 
 async function freshModule(root) {
   process.env.FC27_STATIC_DATA_ROOT = root;
@@ -33,7 +37,7 @@ test("a missing manifest self-heals once the file appears (jsonCache eviction)",
   }
 });
 
-test("getAllPlayersStatic() self-heals after one shard is transiently missing", async () => {
+test("getAllPlayersStatic() tolerates one unavailable shard instead of failing the whole endpoint", async () => {
   const dir = await mkdtemp(path.join(tmpdir(), "fc27-static-players-"));
   try {
     const version = "v1";
@@ -45,14 +49,24 @@ test("getAllPlayersStatic() self-heals after one shard is transiently missing", 
     await mkdir(versionDir, { recursive: true });
     await writeFile(path.join(versionDir, "shard-000.json"), JSON.stringify([{ ea_player_id: 1 }]));
     const shard1Path = path.join(versionDir, "shard-001.json");
-    // shard-001.json intentionally left missing on the first attempt.
+    // shard-001.json intentionally left missing.
 
     const mod = await freshModule(dir);
-    await assert.rejects(() => mod.getAllPlayersStatic(), (error) => mod.isFc27ArtifactError(error));
-
-    await writeFile(shard1Path, JSON.stringify([{ ea_player_id: 2 }]));
     const players = await mod.getAllPlayersStatic();
-    assert.deepEqual(players.map((p) => p.ea_player_id).sort(), [1, 2]);
+    assert.deepEqual(players.map((p) => p.ea_player_id), [1]);
+
+    // Within the same module instance (~one warm isolate) the aggregate is
+    // cached, so the gap persists until the next cold start - that's the
+    // deliberate availability-over-completeness tradeoff.
+    await writeFile(shard1Path, JSON.stringify([{ ea_player_id: 2 }]));
+    const stillOne = await mod.getAllPlayersStatic();
+    assert.deepEqual(stillOne.map((p) => p.ea_player_id), [1]);
+
+    // A fresh module instance (simulating the next cold start/isolate) picks
+    // up the now-available shard.
+    const fresh = await freshModule(dir);
+    const healed = await fresh.getAllPlayersStatic();
+    assert.deepEqual(healed.map((p) => p.ea_player_id).sort(), [1, 2]);
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
