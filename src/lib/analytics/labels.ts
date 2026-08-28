@@ -4,6 +4,8 @@
 export const EVENT_LABELS: Record<string, string> = {
   app_open: "Apertura app",
   app_update: "Aggiornamenti app",
+  update_available: "Aggiornamenti disponibili",
+  session_started: "Sessioni avviate",
   login_success: "Accessi riusciti",
   login_failed: "Accessi falliti",
   signup_success: "Nuove registrazioni",
@@ -26,8 +28,11 @@ export const EVENT_LABELS: Record<string, string> = {
   squad_builder_open: "Squad Builder",
   auto_build_started: "Auto Builder avviato",
   auto_build_completed: "Auto Builder",
+  auto_build_failed: "Auto Builder fallito",
   share_squad_created: "Squadre condivise",
   share_squad_opened: "Squadre condivise aperte",
+  club_sync_started: "Sincronizzazione club avviata",
+  club_sync_completed: "Sincronizzazione club completata",
   bookmarklet_open: "Apertura Bookmarklet",
   bookmarklet_authenticated: "Accessi da Bookmarklet",
   feature_error: "Errori di funzione",
@@ -48,8 +53,12 @@ export const EVENT_ICONS: Record<string, string> = {
   squad_builder_open: "target",
   auto_build_started: "bolt",
   auto_build_completed: "star",
+  auto_build_failed: "alert",
   share_squad_created: "share",
   share_squad_opened: "share",
+  club_sync_started: "route",
+  club_sync_completed: "check",
+  update_available: "refresh",
   sbc_solver_open: "tools",
   sbc_solution_generated: "tools",
   sbc_submitted: "tools",
@@ -70,10 +79,15 @@ export function eventIconKey(event: string): string {
 
 export const CLIENT_LABELS: Record<string, string> = {
   web: "Web",
-  desktop: "Desktop",
+  desktop: "Desktop", // synthetic grouped filter value (see platformClause) - never stored
+  desktop_windows: "Desktop Windows",
+  desktop_macos: "Desktop macOS",
   android: "Android",
+  chrome_extension: "Estensione Chrome",
   bookmarklet: "Bookmarklet",
-  extension: "Estensione",
+  // pre-v1 spellings - normalized server-side before storage, kept here only
+  // so any already-rendered/cached client-side data never shows a raw key
+  extension: "Estensione Chrome",
 };
 
 export function clientLabel(value: string): string {
@@ -82,8 +96,11 @@ export function clientLabel(value: string): string {
 
 export const CLIENT_ICONS: Record<string, string> = {
   web: "globe",
-  desktop: "windows",
+  desktop: "devices",
+  desktop_windows: "windows",
+  desktop_macos: "apple",
   android: "android",
+  chrome_extension: "globe",
   bookmarklet: "bookmark",
   extension: "globe",
 };

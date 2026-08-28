@@ -5,8 +5,31 @@ import { checkRateLimit, insertEvents, resolveUserId } from "@/lib/analytics/ser
 
 export const dynamic = "force-dynamic";
 
+// Generous enough for a full 25-event batch with properties, small enough to
+// block payload-size abuse (Section 5: "limite sulla dimensione del payload").
+const MAX_BODY_BYTES = 64 * 1024;
+
 export async function POST(request: Request) {
-  const raw: unknown = await request.json().catch(() => null);
+  const declaredLength = Number(request.headers.get("content-length") ?? "0");
+  if (declaredLength > MAX_BODY_BYTES) {
+    return NextResponse.json({ ok: false, error: { code: "payload_too_large", message: "Request body exceeds the size limit." } }, { status: 413 });
+  }
+
+  const bodyText = await request.text().catch(() => null);
+  if (bodyText === null) {
+    return NextResponse.json({ ok: false, error: { code: "invalid_body", message: "Request body must be readable text." } }, { status: 400 });
+  }
+  // Content-Length can be absent/spoofed; enforce the cap on the bytes actually read too.
+  if (new TextEncoder().encode(bodyText).byteLength > MAX_BODY_BYTES) {
+    return NextResponse.json({ ok: false, error: { code: "payload_too_large", message: "Request body exceeds the size limit." } }, { status: 413 });
+  }
+
+  let raw: unknown;
+  try {
+    raw = JSON.parse(bodyText);
+  } catch {
+    raw = null;
+  }
   if (typeof raw !== "object" || raw === null) {
     return NextResponse.json({ ok: false, error: { code: "invalid_body", message: "Request body must be a JSON object." } }, { status: 400 });
   }

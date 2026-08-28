@@ -3,6 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import { isClerkAuth } from "@/lib/auth/provider";
 import { resolveRequestIdentity } from "@/lib/auth/request-identity";
 import { getAppUserIdFromClerkId } from "@/lib/auth/user-gateway";
+import { normalizeClientType, CURRENT_EVENT_CONTRACT_VERSION } from "./events";
 import type { EventEnvelope } from "./schema";
 
 // Never trust a client-supplied user id - only what the request's own auth
@@ -39,21 +40,32 @@ export async function checkRateLimit(kv: KVNamespace, key: string): Promise<bool
 
 export async function insertEvents(db: D1Database, events: EventEnvelope[], userId: string | null): Promise<void> {
   const now = Date.now();
+  // INSERT OR IGNORE makes a repeated event_id (retry/duplicate-send from a
+  // client's offline queue) a no-op instead of a duplicate row. Events
+  // without an event_id (pre-v1 clients) are never deduplicated - every
+  // NULL is distinct under the column's UNIQUE index, matching plain SQL
+  // semantics, so this is safe to use unconditionally for the whole batch.
   const statement = db.prepare(
-    "INSERT INTO analytics_events (event, ts, received_at, client_type, client_version, install_id, user_id, session_id, properties) VALUES (?,?,?,?,?,?,?,?,?)",
+    "INSERT OR IGNORE INTO analytics_events (event, event_id, event_version, ts, received_at, client_type, client_version, install_id, user_id, session_id, properties) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
   );
-  const batch = events.map((event) =>
-    statement.bind(
-      event.event,
-      event.timestamp ?? now,
-      now,
-      event.client_type,
-      event.client_version ?? null,
-      event.install_id,
-      userId,
-      event.session_id ?? null,
-      event.properties ? JSON.stringify(event.properties) : null,
-    ),
-  );
-  await db.batch(batch);
+  const batch = events.flatMap((event) => {
+    const clientType = normalizeClientType(event.client_type);
+    if (!clientType) return []; // unreachable given schema validation, but never insert an unrecognized platform
+    return [
+      statement.bind(
+        event.event,
+        event.event_id ?? null,
+        event.event_version ?? CURRENT_EVENT_CONTRACT_VERSION,
+        event.timestamp ?? now,
+        now,
+        clientType,
+        event.client_version ?? null,
+        event.install_id,
+        userId,
+        event.session_id ?? null,
+        event.properties ? JSON.stringify(event.properties) : null,
+      ),
+    ];
+  });
+  if (batch.length) await db.batch(batch);
 }

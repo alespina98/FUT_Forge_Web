@@ -1,7 +1,14 @@
 // @ts-expect-error TS5097: direct Node test execution requires the extension.
 import { CLIENT_TYPES } from "./events.ts";
 
+// "desktop" is a synthetic, dashboard-only grouping filter (not a stored
+// client_type - storage always keeps desktop_windows/desktop_macos distinct
+// per the event contract) so admins can view combined desktop adoption
+// without losing the per-OS breakdown elsewhere in the same response.
+const DESKTOP_GROUP = ["desktop_windows", "desktop_macos"];
+
 export function platformClause(platform: string | null): { clause: string; params: string[] } {
+  if (platform === "desktop") return { clause: ` AND client_type IN (${DESKTOP_GROUP.map(() => "?").join(",")})`, params: DESKTOP_GROUP };
   if (!platform || !CLIENT_TYPES.includes(platform as (typeof CLIENT_TYPES)[number])) return { clause: "", params: [] };
   return { clause: " AND client_type = ?", params: [platform] };
 }

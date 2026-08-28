@@ -9,7 +9,15 @@ test("platformClause: unknown/missing platform values produce no filter (default
 });
 
 test("platformClause: a known client type parameterizes the filter", () => {
-  assert.deepEqual(platformClause("desktop"), { clause: " AND client_type = ?", params: ["desktop"] });
+  assert.deepEqual(platformClause("android"), { clause: " AND client_type = ?", params: ["android"] });
+  assert.deepEqual(platformClause("desktop_windows"), { clause: " AND client_type = ?", params: ["desktop_windows"] });
+});
+
+test('platformClause: "desktop" is a synthetic grouping filter matching both desktop OSes, not a stored value', () => {
+  assert.deepEqual(platformClause("desktop"), {
+    clause: " AND client_type IN (?,?)",
+    params: ["desktop_windows", "desktop_macos"],
+  });
 });
 
 test("authClause: authenticated/anonymous/unset", () => {

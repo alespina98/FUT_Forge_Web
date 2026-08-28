@@ -1,5 +1,5 @@
 "use client";
-import type { EventName } from "./events";
+import { CURRENT_EVENT_CONTRACT_VERSION, type EventName } from "./events";
 
 const INSTALL_ID_KEY = "futforge_install_id";
 const SESSION_ID_KEY = "futforge_session_id";
@@ -10,6 +10,8 @@ const SEND_TIMEOUT_MS = 3000;
 
 type QueuedEvent = {
   event: EventName;
+  event_id: string;
+  event_version: number;
   timestamp: number;
   client_type: "web";
   client_version?: string;
@@ -37,15 +39,15 @@ function installId(): string {
   }
 }
 
-function sessionId(): string {
+function sessionId(): { id: string; isNew: boolean } {
   try {
     const existing = sessionStorage.getItem(SESSION_ID_KEY);
-    if (existing) return existing;
+    if (existing) return { id: existing, isNew: false };
     const value = uuid();
     sessionStorage.setItem(SESSION_ID_KEY, value);
-    return value;
+    return { id: value, isNew: true };
   } catch {
-    return "unknown";
+    return { id: "unknown", isNew: false };
   }
 }
 
@@ -85,17 +87,27 @@ function flush(useBeacon: boolean) {
   send(events, useBeacon);
 }
 
+function enqueue(event: EventName, properties?: Record<string, string | number | boolean | null>): void {
+  const session = sessionId();
+  // A fresh session_id means this is the first track() call of the browser
+  // tab session - emit session_started once, before the event that triggered it.
+  if (session.isNew && event !== "session_started") enqueue("session_started", undefined);
+  queue.push({
+    event,
+    event_id: uuid(),
+    event_version: CURRENT_EVENT_CONTRACT_VERSION,
+    timestamp: Date.now(),
+    client_type: "web",
+    install_id: installId(),
+    session_id: session.id,
+    properties,
+  });
+}
+
 export function track(event: EventName, properties?: Record<string, string | number | boolean | null>): void {
   if (typeof window === "undefined") return;
   try {
-    queue.push({
-      event,
-      timestamp: Date.now(),
-      client_type: "web",
-      install_id: installId(),
-      session_id: sessionId(),
-      properties,
-    });
+    enqueue(event, properties);
     if (queue.length >= FLUSH_AT_QUEUE_SIZE) flush(false);
     else scheduleFlush();
   } catch {

@@ -10,7 +10,8 @@ import {
 import { eventLabel, eventIconKey, clientLabel, clientIconKey, isUnknownVersion } from "@/lib/analytics/labels";
 import {
   UserIcon, RegisterIcon, BoltIcon, AlertTriangleIcon, EyeIcon, SearchIcon, TargetIcon, StarIcon, ShareIcon,
-  ToolsIcon, CheckIcon, RouteIcon, BookmarkIcon, WindowsIcon, AndroidIcon, GlobeIcon, DevicesIcon,
+  ToolsIcon, CheckIcon, RouteIcon, BookmarkIcon, WindowsIcon, AndroidIcon, GlobeIcon, DevicesIcon, AppleIcon,
+  RefreshIcon,
 } from "@/components/icons";
 
 function iconFor(key: string, className = "size-4"): ReactNode {
@@ -27,6 +28,8 @@ function iconFor(key: string, className = "size-4"): ReactNode {
     case "bookmark": return <BookmarkIcon className={className} />;
     case "windows": return <WindowsIcon className={className} />;
     case "android": return <AndroidIcon className={className} />;
+    case "apple": return <AppleIcon className={className} />;
+    case "refresh": return <RefreshIcon className={className} />;
     case "globe": return <GlobeIcon className={className} />;
     case "devices": return <DevicesIcon className={className} />;
     default: return <BoltIcon className={className} />;
@@ -82,10 +85,12 @@ const RANGE_OPTIONS = [
 const PLATFORM_OPTIONS = [
   { value: "all", label: "Tutte le piattaforme" },
   { value: "web", label: "Web" },
-  { value: "desktop", label: "Desktop" },
+  { value: "desktop", label: "Desktop (tutte)" }, // synthetic grouped filter - see platformClause
+  { value: "desktop_windows", label: "Desktop Windows" },
+  { value: "desktop_macos", label: "Desktop macOS" },
   { value: "android", label: "Android" },
+  { value: "chrome_extension", label: "Estensione Chrome" },
   { value: "bookmarklet", label: "Bookmarklet" },
-  { value: "extension", label: "Estensione" },
 ];
 
 const AUTH_OPTIONS = [
