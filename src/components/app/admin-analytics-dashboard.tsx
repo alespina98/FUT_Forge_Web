@@ -245,7 +245,7 @@ export function AdminAnalyticsDashboard() {
               <Card title="Funzioni più usate">
                 <RankedList items={featureItems} />
               </Card>
-              <Card title="Dal primo accesso all'utilizzo">
+              <Card title="Dal primo accesso all'utilizzo" subtitle="Ogni fase conta chi ha compiuto quell'azione nel periodo (non solo chi arriva dalla fase precedente) - per questo un utente già registrato può risultare in “Usano una funzione” anche senza un nuovo accesso oggi.">
                 <FunnelSteps stages={funnelStages} />
               </Card>
             </div>
