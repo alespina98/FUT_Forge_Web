@@ -1,10 +1,10 @@
 {
   "schema": 1,
-  "latestVersion": "2.10.5.11",
+  "latestVersion": "2.10.5.12",
   "distribution": "direct-download",
   "distributionNote": "Not a Chrome Web Store release: this extension does not auto-update. Install as an unpacked extension (chrome://extensions -> Developer mode -> Load unpacked) after extracting this ZIP. To move to a newer version later, download the new ZIP, extract it over the old folder (or point Load unpacked at the new folder), and click the reload icon for this extension on chrome://extensions - Chrome will not detect or apply updates on its own.",
-  "zipUrl": "https://futforgeofficial.com/extension/FUT-Forge-Extension-2.10.5.11.zip",
-  "sha256": "dbbcaa6df4753706737cc6ed04f5ad1abca9921acb3c0f9dfb21587bdea770bd",
-  "size": 5058773,
-  "changelog": "2.10.5.11 fixes real in-app feature usage (SBC, Squad Builder, Transfers, Settings) never reaching Analytics - inject.js's usage signals were dispatched but nothing in the isolated world relayed them to the background service worker. 2.10.5.10 fixed a separate issue (app_open/feature_error rejected by the backend schema) and 2.10.5.9 remain available but are superseded."
+  "zipUrl": "https://futforgeofficial.com/extension/FUT-Forge-Extension-2.10.5.12.zip",
+  "sha256": "d2573108263d42a0e87b6e2332f07723c92e4ffac79fdd2e71fe1bc42dcb81d1",
+  "size": 5067120,
+  "changelog": "2.10.5.12 fixes SBC completion counting: Quick Complete / Complete Multiple Times used to count as exactly 1 SBC per command regardless of how many challenges were actually submitted. Analytics now reports the real number of successfully-submitted challenges per operation, separates the technical \"command issued\" signal (sbc_quick_complete_started) from real completions (sbc_submitted), and adds sbc_group_completed for a fully-finished multi-challenge batch. 2.10.5.11 fixed real in-app feature usage never reaching Analytics at all; 2.10.5.10 and 2.10.5.9 remain available but are superseded."
 }
