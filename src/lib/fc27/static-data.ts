@@ -7,22 +7,42 @@ import type { PlayerDetail, PlayerListItem } from "./players";
 type Manifest={datasetVersion:string;playerCount:number;shardCount:number;artifacts:{players:string[];search:string[];rankings:Record<string,string>;entities:Record<string,string>;positions:string;filters:string;sitemaps:string[];meta:string;hiddenGems:string}};
 const root=process.env.FC27_STATIC_DATA_ROOT||path.join(process.cwd(),"public","fc27-data");
 const jsonCache=new Map<string,Promise<any>>();
-export class Fc27ArtifactError extends Error{constructor(public readonly artifact:string,cause:unknown){super(`FC27 static artifact unavailable: ${artifact}`,{cause});this.name="Fc27ArtifactError"}}
+export class Fc27ArtifactError extends Error{readonly artifact:string;constructor(artifact:string,cause:unknown){super(`FC27 static artifact unavailable: ${artifact}`,{cause});this.name="Fc27ArtifactError";this.artifact=artifact}}
 export function isFc27ArtifactError(error:unknown):error is Fc27ArtifactError{return error instanceof Fc27ArtifactError}
+async function assetsFetch(rel:string){
+ const {getCloudflareContext}=await import("@opennextjs/cloudflare");
+ const assets=(getCloudflareContext().env as unknown as {ASSETS?:{fetch(input:Request):Promise<Response>}}).ASSETS;
+ if(!assets)throw new Error("ASSETS binding unavailable");
+ // The ASSETS service binding has occasionally rejected one of many
+ // concurrent internal fetches (e.g. getAllPlayersStatic() fanning out to
+ // 160+ shards at once) even though the underlying file is fine - a single
+ // retry clears that transient case without masking a real 404/500.
+ for(let attempt=0;;attempt++){
+  const response=await assets.fetch(new Request(`https://futforge-assets.invalid/fc27-data/${rel}`));
+  if(response.ok)return response.text();
+  if(attempt>=1)throw new Error(`Static asset returned ${response.status}`);
+ }
+}
 async function assetText(rel:string){
  const file=path.join(/* turbopackIgnore: true */ root,...rel.split("/"));
  try{return await readFile(file,"utf8")}catch(fileError){
-  try{
-   const {getCloudflareContext}=await import("@opennextjs/cloudflare");
-   const assets=(getCloudflareContext().env as unknown as {ASSETS?:{fetch(input:Request):Promise<Response>}}).ASSETS;
-   if(!assets)throw fileError;
-   const response=await assets.fetch(new Request(`https://futforge-assets.invalid/fc27-data/${rel}`));
-   if(!response.ok)throw new Error(`Static asset returned ${response.status}`);
-   return await response.text();
-  }catch{throw fileError}
+  try{return await assetsFetch(rel)}catch{throw fileError}
  }
 }
-async function json<T>(rel:string):Promise<T>{let value=jsonCache.get(rel);if(!value){value=assetText(rel).then(text=>{try{return JSON.parse(text)}catch(error){throw new Fc27ArtifactError(rel,error)}}).catch(error=>{throw error instanceof Fc27ArtifactError?error:new Fc27ArtifactError(rel,error)});jsonCache.set(rel,value)}return value as Promise<T>}
+async function json<T>(rel:string):Promise<T>{
+ let value=jsonCache.get(rel);
+ if(!value){
+  value=assetText(rel).then(text=>{try{return JSON.parse(text)}catch(error){throw new Fc27ArtifactError(rel,error)}}).catch(error=>{
+   // Never let a transient fetch failure permanently poison this cache
+   // entry for the lifetime of the isolate - evict on failure so the next
+   // request gets a fresh attempt instead of a forever-rejected promise.
+   jsonCache.delete(rel);
+   throw error instanceof Fc27ArtifactError?error:new Fc27ArtifactError(rel,error);
+  });
+  jsonCache.set(rel,value);
+ }
+ return value as Promise<T>;
+}
 export const getManifest=()=>json<Manifest>("manifest.json");
 const versionPath=async(rel:string)=>`${(await getManifest()).datasetVersion}/${rel}`;
 export async function readArtifact<T>(rel:string){return json<T>(await versionPath(rel))}
@@ -30,7 +50,12 @@ export async function getPlayerIndex(){return readArtifact<Record<string,number>
 export async function getPlayerByIdStatic(id:number):Promise<PlayerDetail|null>{const index=await getPlayerIndex(),shard=index[String(id)];if(shard===undefined)return null;const rows=await readArtifact<PlayerDetail[]>(`players/shard-${String(shard).padStart(3,"0")}.json`);return rows.find(p=>p.ea_player_id===id)??null}
 export async function getPlayersByIdsStatic(ids:number[]):Promise<PlayerDetail[]>{const index=await getPlayerIndex(),groups=new Map<number,Set<number>>();for(const id of new Set(ids)){const shard=index[String(id)];if(shard!==undefined){if(!groups.has(shard))groups.set(shard,new Set);groups.get(shard)!.add(id)}}const out:PlayerDetail[]=[];await Promise.all([...groups].map(async([shard,wanted])=>{for(const p of await readArtifact<PlayerDetail[]>(`players/shard-${String(shard).padStart(3,"0")}.json`))if(wanted.has(p.ea_player_id))out.push(p)}));return out}
 let allPromise:Promise<PlayerDetail[]>|undefined;
-export async function getAllPlayersStatic(){if(!allPromise)allPromise=getManifest().then(m=>Promise.all(m.artifacts.players.map(p=>readArtifact<PlayerDetail[]>(p))).then(x=>x.flat()));return allPromise}
+export async function getAllPlayersStatic(){
+ if(!allPromise){
+  allPromise=getManifest().then(m=>Promise.all(m.artifacts.players.map(p=>readArtifact<PlayerDetail[]>(p))).then(x=>x.flat())).catch(error=>{allPromise=undefined;throw error});
+ }
+ return allPromise;
+}
 export function toList(p:PlayerDetail):PlayerListItem{return p}
 export function toRanking(p:PlayerDetail){return{ea_player_id:p.ea_player_id,slug:p.slug,display_name:p.display_name,overall:p.overall,position_short_label:p.position_short_label,nationality_name:p.nationality_name,nationality_image_url:p.nationality_image_url,club_name:p.club_name,club_image_url:p.club_image_url,league_name:p.league_name,avatar_url:p.avatar_url,pace:p.pace,shooting:p.shooting,passing:p.passing,dribbling:p.dribbling,defending:p.defending,physicality:p.physicality}}
 export function foldStatic(v:string){return v.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase()}
