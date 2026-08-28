@@ -29,6 +29,7 @@
     "test:analytics": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test --experimental-strip-types src/lib/analytics/*.test.mjs",
     "test:fc27-static-data": "node --conditions react-server --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test --experimental-strip-types src/lib/fc27/static-data.test.mjs",
     "test:fc27-players": "node --conditions react-server --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test --experimental-strip-types src/lib/fc27/players.test.mjs",
+    "test:release": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test --experimental-strip-types src/lib/release.test.mjs",
     "analytics:d1:migrate:local": "wrangler d1 migrations apply ANALYTICS_DB --local",
     "analytics:d1:migrate:remote": "wrangler d1 migrations apply ANALYTICS_DB --remote"
   },

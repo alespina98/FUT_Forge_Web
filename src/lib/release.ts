@@ -1,5 +1,6 @@
 import { cache } from "react";
-import { PRODUCT } from "./copy";
+// @ts-expect-error TS5097: direct Node test execution requires the extension.
+import { PRODUCT } from "./copy.ts";
 
 export const RELEASE_REPOSITORY = "alespina98/FUT_Forge_Releases";
 export const RELEASE_REVALIDATE_SECONDS = 600;
@@ -64,15 +65,43 @@ function macRelease(releases: GitHubRelease[], architecture: "arm64" | "x86_64")
   }
   return fallbackMac(architecture);
 }
-function androidRelease(releases: GitHubRelease[]): ReleaseInfo {
-  const pattern = /^FUT-Forge-Android-(\d+\.\d+\.\d+)\.apk$/i;
-  for (const release of releases) for (const asset of assetsOf(release)) {
-    const filename = text(asset.name); const match = filename?.match(pattern); if (!filename || !match) continue;
-    const downloadUrl = validUrl(asset.browser_download_url, "github.com"); const releaseUrl = validUrl(release.html_url, "github.com"); if (!downloadUrl || !releaseUrl) continue;
-    return { version: match[1], channel: "stable", title: text(release.name) ?? `FUT Forge ${match[1]}`, filename, publishedAt: validDate(release.published_at), downloadUrl, size: typeof asset.size === "number" ? asset.size : null, sha256: digest(asset.digest), architecture: "universal", platform: "Android", minimumPlatform: "Android 8.0 (API 26) or later", notes: releaseNotes(release.body), releaseUrl, source: "github" };
+// The GitHub releases list is sorted by created_at, and every release in this
+// repo was created as a draft on the same date (only published_at differs) -
+// so "first asset matching FUT-Forge-Android-*.apk in API order" does not mean
+// "latest Android release" and previously served a stale APK (e.g. 1.0.9) to
+// site visitors. public/android/version.json is the same manifest the in-app
+// updater already trusts as the single source of truth for "latest Android
+// version" - read that instead of re-deriving it from GitHub's list order.
+type AndroidManifest = { latestVersion?: unknown; apkUrl?: unknown; sha256?: unknown; size?: unknown; publishedAt?: unknown };
+async function readPublicAsset(relPath: string): Promise<string> {
+  try {
+    const { readFile } = await import("node:fs/promises");
+    const path = await import("node:path");
+    return await readFile(path.join(process.cwd(), "public", relPath), "utf8");
+  } catch (fsError) {
+    const { getCloudflareContext } = await import("@opennextjs/cloudflare");
+    const assets = (getCloudflareContext().env as unknown as { ASSETS?: { fetch(input: Request): Promise<Response> } }).ASSETS;
+    if (!assets) throw fsError;
+    const response = await assets.fetch(new Request(`https://futforge-assets.invalid/${relPath}`));
+    if (!response.ok) throw fsError;
+    return await response.text();
   }
-  return fallbackAndroid;
 }
-async function loadReleaseCatalog(): Promise<ReleaseCatalog> { try { const releases = publicReleases(await fetchJson(`https://api.github.com/repos/${RELEASE_REPOSITORY}/releases?per_page=20`)); return { windows: await windowsRelease(releases), macos: { arm64: macRelease(releases, "arm64"), x86_64: macRelease(releases, "x86_64") }, android: androidRelease(releases) }; } catch { return { windows: fallbackRelease, macos: { arm64: fallbackMac("arm64"), x86_64: fallbackMac("x86_64") }, android: fallbackAndroid }; } }
+export async function androidRelease(): Promise<ReleaseInfo> {
+  try {
+    const manifest = JSON.parse(await readPublicAsset("android/version.json")) as AndroidManifest;
+    const version = validVersion(manifest.latestVersion);
+    const downloadUrl = validUrl(manifest.apkUrl, "github.com");
+    if (!version || !downloadUrl) return fallbackAndroid;
+    const filename = downloadUrl.split("/").pop() || `FUT-Forge-Android-${version}.apk`;
+    return { version, channel: "stable", title: `FUT Forge ${version}`, filename, publishedAt: validDate(manifest.publishedAt), downloadUrl, size: typeof manifest.size === "number" ? manifest.size : null, sha256: digest(manifest.sha256), architecture: "universal", platform: "Android", minimumPlatform: "Android 8.0 (API 26) or later", notes: [], releaseUrl: `${releasePage}/tag/android-v${version}`, source: "github" };
+  } catch {
+    return fallbackAndroid;
+  }
+}
+async function loadReleaseCatalog(): Promise<ReleaseCatalog> {
+  const android = await androidRelease();
+  try { const releases = publicReleases(await fetchJson(`https://api.github.com/repos/${RELEASE_REPOSITORY}/releases?per_page=20`)); return { windows: await windowsRelease(releases), macos: { arm64: macRelease(releases, "arm64"), x86_64: macRelease(releases, "x86_64") }, android }; } catch { return { windows: fallbackRelease, macos: { arm64: fallbackMac("arm64"), x86_64: fallbackMac("x86_64") }, android }; }
+}
 export const getReleaseCatalog = cache(loadReleaseCatalog);
 export const getLatestRelease = cache(async () => (await loadReleaseCatalog()).windows);

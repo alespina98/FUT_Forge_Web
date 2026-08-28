@@ -1,26 +1,20 @@
 {
   "schema": 1,
-  "latestVersion": "1.0.18",
-  "latestVersionCode": 19,
+  "latestVersion": "1.0.19",
+  "latestVersionCode": 20,
   "minimumVersionCode": 1,
-  "apkUrl": "https://github.com/alespina98/FUT_Forge_Releases/releases/download/android-v1.0.18/FUT-Forge-Android-1.0.18.apk",
-  "sha256": "c808cce4b959cf338fd9ee9c35cec30887e2c49e45bcf6a85f874d290fdf16eb",
-  "size": 8117381,
+  "apkUrl": "https://github.com/alespina98/FUT_Forge_Releases/releases/download/android-v1.0.19/FUT-Forge-Android-1.0.19.apk",
+  "sha256": "8900402952c60917bb14e1147432b0e2b71f9ca1b460b329cc50878adc8d9936",
+  "size": 8119969,
   "releaseNotes": {
     "it": [
-      "Login nativo FUT Forge su Android con Clerk: email/username + password.",
-      "Registrazione con verifica OTP via email e recupero/reset password.",
-      "Sessione sicura con ripristino automatico, refresh e logout con revoca.",
-      "Rimosso il vecchio login Supabase dalla WebView Android.",
-      "Corretto il rendering/scroll della schermata FUT Forge nella WebView popup."
+      "Corretto un crash all'avvio dovuto a una chiave di configurazione mancante nella build precedente.",
+      "Nessuna modifica alla firma dell'app: stesso certificato di produzione."
     ],
     "en": [
-      "Native FUT Forge sign-in on Android via Clerk: email/username + password.",
-      "Registration with email OTP verification, plus forgot/reset password.",
-      "Secure session restore, refresh rotation, and logout revocation.",
-      "Removed the legacy Supabase password login from the Android WebView.",
-      "Fixed the FUT Forge screen not rendering/scrolling in the popup WebView."
+      "Fixed a startup crash caused by a missing configuration key in the previous build.",
+      "No change to the app signature: same production certificate."
     ]
   },
-  "publishedAt": "2026-08-27T16:10:30Z"
+  "publishedAt": "2026-08-28T17:57:56Z"
 }
