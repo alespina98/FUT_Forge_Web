@@ -1,39 +1,71 @@
+// Italian, human-readable labels for the admin analytics dashboard - never
+// show a raw event/client_type name in the primary UI, only in the
+// collapsed "Dettagli tecnici" table.
 export const EVENT_LABELS: Record<string, string> = {
-  app_open: "App opens",
-  app_update: "App updates",
-  login_success: "Logins",
-  login_failed: "Failed logins",
-  signup_success: "Signups",
-  logout: "Logouts",
-  page_view: "Page views",
-  cta_click: "CTA clicks",
-  desktop_download: "Desktop downloads",
-  android_download: "Android downloads",
-  bookmarklet_install: "Bookmarklet installs",
-  partner_click: "Partner clicks",
-  sbc_solver_open: "SBC Solver opens",
-  sbc_solution_generated: "SBC solutions generated",
-  sbc_submitted: "SBC submissions",
-  sbc_completed: "SBC completions",
-  sbc_failed: "SBC failures",
-  evo_open: "EVO Lab opens",
-  evo_chain_generated: "EVO chains generated",
-  player_search: "Player searches",
-  player_view: "Player views",
-  squad_builder_open: "Squad Builder opens",
-  auto_build_started: "Auto Builds started",
-  auto_build_completed: "Auto Builds generated",
-  share_squad_created: "Shared squads",
-  share_squad_opened: "Shared squads opened",
-  bookmarklet_open: "Bookmarklet opens",
-  bookmarklet_authenticated: "Bookmarklet sign-ins",
-  feature_error: "Feature errors",
-  api_error: "API errors",
-  runtime_error: "Runtime errors",
+  app_open: "Apertura app",
+  app_update: "Aggiornamenti app",
+  login_success: "Accessi riusciti",
+  login_failed: "Accessi falliti",
+  signup_success: "Nuove registrazioni",
+  logout: "Disconnessioni",
+  page_view: "Visualizzazioni pagina",
+  cta_click: "Click sui pulsanti",
+  desktop_download: "Download Desktop",
+  android_download: "Download Android",
+  bookmarklet_install: "Installazioni Bookmarklet",
+  partner_click: "Click sui partner",
+  sbc_solver_open: "Apertura SBC Solver",
+  sbc_solution_generated: "Soluzioni SBC generate",
+  sbc_submitted: "SBC inviate",
+  sbc_completed: "SBC completate",
+  sbc_failed: "SBC fallite",
+  evo_open: "Apertura EVO Lab",
+  evo_chain_generated: "Catene EVO generate",
+  player_search: "Ricerche giocatori",
+  player_view: "Visualizzazione giocatori",
+  squad_builder_open: "Squad Builder",
+  auto_build_started: "Auto Builder avviato",
+  auto_build_completed: "Auto Builder",
+  share_squad_created: "Squadre condivise",
+  share_squad_opened: "Squadre condivise aperte",
+  bookmarklet_open: "Apertura Bookmarklet",
+  bookmarklet_authenticated: "Accessi da Bookmarklet",
+  feature_error: "Errori di funzione",
+  api_error: "Errori API",
+  runtime_error: "Errori di runtime",
 };
 
 export function eventLabel(event: string): string {
   return EVENT_LABELS[event] ?? event;
+}
+
+// Which icon (see src/components/icons.tsx) best represents each event in
+// the "Funzioni più usate" ranking - a string key, not a component, so this
+// module stays framework-free and usable from the server route too.
+export const EVENT_ICONS: Record<string, string> = {
+  player_view: "eye",
+  player_search: "search",
+  squad_builder_open: "target",
+  auto_build_started: "bolt",
+  auto_build_completed: "star",
+  share_squad_created: "share",
+  share_squad_opened: "share",
+  sbc_solver_open: "tools",
+  sbc_solution_generated: "tools",
+  sbc_submitted: "tools",
+  sbc_completed: "check",
+  sbc_failed: "alert",
+  evo_open: "route",
+  evo_chain_generated: "route",
+  bookmarklet_open: "bookmark",
+  bookmarklet_authenticated: "bookmark",
+  feature_error: "alert",
+  api_error: "alert",
+  runtime_error: "alert",
+};
+
+export function eventIconKey(event: string): string {
+  return EVENT_ICONS[event] ?? "bolt";
 }
 
 export const CLIENT_LABELS: Record<string, string> = {
@@ -41,26 +73,33 @@ export const CLIENT_LABELS: Record<string, string> = {
   desktop: "Desktop",
   android: "Android",
   bookmarklet: "Bookmarklet",
-  extension: "Extension",
+  extension: "Estensione",
 };
 
 export function clientLabel(value: string): string {
   return CLIENT_LABELS[value] ?? value;
 }
 
-// Fixed categorical color per platform - never cycled/reassigned, so the same
-// platform reads as the same color across every chart on the dashboard.
-// Values are the dark-mode steps from the validated categorical palette
-// (blue/orange/aqua/yellow/magenta), checked against the admin panel's
-// #070908 surface.
-export const CLIENT_COLORS: Record<string, string> = {
-  web: "#3987e5",
-  desktop: "#d95926",
-  android: "#199e70",
-  bookmarklet: "#c98500",
-  extension: "#d55181",
+export const CLIENT_ICONS: Record<string, string> = {
+  web: "globe",
+  desktop: "windows",
+  android: "android",
+  bookmarklet: "bookmark",
+  extension: "globe",
 };
 
-export function clientColor(value: string): string {
-  return CLIENT_COLORS[value] ?? "#898781";
+export function clientIconKey(value: string): string {
+  return CLIENT_ICONS[value] ?? "devices";
+}
+
+// FUT Forge's own light-dashboard palette (lime/black/gray/red only - no
+// categorical multi-hue set here): platform identity comes from the label,
+// not a color, so every bar/series in this dashboard reads as one system.
+export const CHART_LIME = "#7cb305"; // darker than the raw brand lime (#c8ff3d) - the raw tone is too pale to read as a 2px line/bar on white
+export const CHART_BLACK = "#171b18";
+export const CHART_MUTED = "#8a9086";
+export const CHART_RED = "#dc2626";
+
+export function isUnknownVersion(version: string | null | undefined): boolean {
+  return !version || version === "unknown" || version === "na";
 }

@@ -7,7 +7,7 @@ import { AuthUnavailable } from "@/components/auth-unavailable";
 import { AdminAnalyticsDashboard } from "@/components/app/admin-analytics-dashboard";
 
 export const metadata: Metadata = {
-  title: "Analytics — Admin",
+  title: "Panoramica — Admin",
   robots: { index: false, follow: false },
 };
 
