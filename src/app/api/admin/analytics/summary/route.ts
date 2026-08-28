@@ -12,7 +12,7 @@ const FEATURE_EVENTS = [
   "sbc_solver_open", "sbc_solution_generated", "sbc_submitted", "sbc_completed", "sbc_failed",
   "evo_open", "evo_chain_generated",
   "player_search", "player_view",
-  "squad_builder_open", "auto_build_started", "auto_build_completed",
+  "squad_builder_open", "feature_opened", "auto_build_started", "auto_build_completed",
   "share_squad_created", "share_squad_opened",
   "bookmarklet_open", "bookmarklet_authenticated", "bookmarklet_install",
 ];

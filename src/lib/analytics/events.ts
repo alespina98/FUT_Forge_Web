@@ -31,6 +31,11 @@ export const EVENT_NAMES = [
   "player_search",
   "player_view",
   "squad_builder_open",
+  // Generic "opened this section" signal for features with no dedicated event name of their own
+  // (Transfers, Settings, from the Chrome extension's usage bridge) - distinguished by the
+  // allowlisted "feature" property. Reuse this for a new no-dedicated-name feature rather than
+  // adding another one-off *_open event.
+  "feature_opened",
   "auto_build_started",
   "auto_build_completed",
   "auto_build_failed",
