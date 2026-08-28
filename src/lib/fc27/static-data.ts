@@ -55,6 +55,20 @@ export async function readArtifact<T>(rel:string){return json<T>(await versionPa
 export async function getPlayerIndex(){return readArtifact<Record<string,number>>("players/index.json")}
 export async function getPlayerByIdStatic(id:number):Promise<PlayerDetail|null>{const index=await getPlayerIndex(),shard=index[String(id)];if(shard===undefined)return null;const rows=await readArtifact<PlayerDetail[]>(`players/shard-${String(shard).padStart(3,"0")}.json`);return rows.find(p=>p.ea_player_id===id)??null}
 export async function getPlayersByIdsStatic(ids:number[]):Promise<PlayerDetail[]>{const index=await getPlayerIndex(),groups=new Map<number,Set<number>>();for(const id of new Set(ids)){const shard=index[String(id)];if(shard!==undefined){if(!groups.has(shard))groups.set(shard,new Set);groups.get(shard)!.add(id)}}const out:PlayerDetail[]=[];await Promise.all([...groups].map(async([shard,wanted])=>{for(const p of await readArtifact<PlayerDetail[]>(`players/shard-${String(shard).padStart(3,"0")}.json`))if(wanted.has(p.ea_player_id))out.push(p)}));return out}
+export type SearchIndexRow=PlayerListItem&{normalized_name:string;position_label:string;gender_id:number|null;gender_label:string|null};
+// The canonical search/list/auto-build data source: one pre-built file
+// (search/index.json, produced at generate-public-data.ts build time) with
+// every player and every field fetchPlayers()/auto-squad's pool() need -
+// a single fetch instead of getAllPlayersStatic()'s ~160-way fan-out. That
+// fan-out was the actual cause of a real production bug: the ASSETS binding
+// intermittently rejects a small fraction of many-concurrent-fetch batches,
+// and tolerating a failed shard there silently dropped every player in it
+// from search results (reported missing: Caroline Graham Hansen, Claudia
+// Pina - neither had a shard-specific issue, they were just unlucky enough
+// to land in whichever shard failed on a given warm isolate). A single-file
+// fetch either fully succeeds or fails clearly (see assetsFetch's retries
+// and json()'s cache eviction above) - no silent partial result is possible.
+export async function getSearchIndexStatic(){return readArtifact<SearchIndexRow[]>("search/index.json")}
 // Firing all ~160 shard fetches through the ASSETS binding at once (a plain
 // Promise.all) reliably failed one of them in production - Workers caps how
 // many concurrent subrequests a single invocation can have in flight, well

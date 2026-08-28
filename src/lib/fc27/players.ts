@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 // @ts-nocheck -- Supabase rollback branches remain intentionally unreachable while static recovery is primary.
 import "server-only";
-import { foldStatic, getAllPlayersStatic, getPlayerByIdStatic, getPlayersByIdsStatic, isFc27ArtifactError, toList } from "./static-data";
-import { boundedFc27SupabaseFetch } from "./supabase-fallback";
+import { foldStatic, getAllPlayersStatic, getPlayerByIdStatic, getPlayersByIdsStatic, getSearchIndexStatic, isFc27ArtifactError, toList } from "./static-data.ts";
+import { boundedFc27SupabaseFetch } from "./supabase-fallback.ts";
 
 // Server-only read layer for public.fc27_players - talks to PostgREST
 // directly with the anon/publishable key, the same pattern already
@@ -114,7 +114,7 @@ export async function fetchPlayers(query: PlayersQuery): Promise<PlayersResult> 
   const page = Math.max(1, query.page ?? 1);
   const sortKey = query.sort && isSortKey(query.sort) ? query.sort : DEFAULT_SORT;
 
-  try { const all=await getAllPlayersStatic();
+  try { const all=await getSearchIndexStatic();
   const searchQuery=query.q?.trim(),clubQuery=query.club?.trim();
   const local=all.filter(p=>(!searchQuery||foldStatic([p.display_name,p.first_name,p.last_name,p.common_name,p.nationality_name,p.club_name,p.league_name,p.position_short_label,p.position_label].filter(Boolean).join(" ")).includes(foldStatic(searchQuery)))&&(!query.position||p.position_short_label===query.position)&&(!query.nation||p.nationality_name===query.nation)&&(!query.league||p.league_name===query.league)&&(!clubQuery||foldStatic(p.club_name??"").includes(foldStatic(clubQuery)))&&(!query.skillMoves||p.skill_moves_raw===query.skillMoves)&&(!query.weakFoot||p.weak_foot===query.weakFoot)&&(!query.overallMin||p.overall>=query.overallMin)&&(!query.overallMax||p.overall<=query.overallMax)&&(!query.paceMin||(p.pace??-1)>=query.paceMin)&&(!query.shootingMin||(p.shooting??-1)>=query.shootingMin)&&(!query.passingMin||(p.passing??-1)>=query.passingMin)&&(!query.dribblingMin||(p.dribbling??-1)>=query.dribblingMin)&&(!query.defendingMin||(p.defending??-1)>=query.defendingMin)&&(!query.physicalityMin||(p.physicality??-1)>=query.physicalityMin));
   const field=sortKey.replace(/_(asc|desc)$/,'') as keyof PlayerDetail,desc=sortKey.endsWith('_desc');local.sort((a,b)=>{if(sortKey==='name_asc')return a.display_name.localeCompare(b.display_name)||a.ea_player_id-b.ea_player_id;const av=(a[field] as number|null)??-1,bv=(b[field] as number|null)??-1;return(desc?bv-av:av-bv)||a.rank-b.rank});const staticTotal=local.length,staticPageCount=Math.max(1,Math.ceil(staticTotal/PAGE_SIZE));return{players:local.slice((page-1)*PAGE_SIZE,page*PAGE_SIZE).map(toList),total:staticTotal,page:Math.min(page,staticPageCount),pageSize:PAGE_SIZE,pageCount:staticPageCount}; } catch(error){if(!isFc27ArtifactError(error))throw error;console.warn(`[FC27 DATA] static artifact unavailable: players (${error.artifact})`)}
@@ -170,7 +170,7 @@ export type FilterOptions = { nations: string[]; leagues: string[]; positions: s
 // large for a dropdown -> searchable behavior" guidance without needing
 // this list.
 export async function fetchFilterOptions(): Promise<FilterOptions> {
-  try{const all=await getAllPlayersStatic();return{nations:[...new Set(all.map(p=>p.nationality_name))].sort(),leagues:[...new Set(all.map(p=>p.league_name).filter((x):x is string=>!!x))].sort(),positions:[...new Set(all.map(p=>p.position_short_label))].sort()}}catch(error){if(!isFc27ArtifactError(error))throw error;console.warn(`[FC27 DATA] static artifact unavailable: filters (${error.artifact})`)}
+  try{const all=await getSearchIndexStatic();return{nations:[...new Set(all.map(p=>p.nationality_name))].sort(),leagues:[...new Set(all.map(p=>p.league_name).filter((x):x is string=>!!x))].sort(),positions:[...new Set(all.map(p=>p.position_short_label))].sort()}}catch(error){if(!isFc27ArtifactError(error))throw error;console.warn(`[FC27 DATA] static artifact unavailable: filters (${error.artifact})`)}
   /* rollback fallback */
   const nations = new Set<string>();
   const leagues = new Set<string>();

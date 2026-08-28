@@ -2,14 +2,18 @@ import { NextResponse, type NextRequest } from "next/server";
 import { buildAutoSquad, type AutoSquadFilters, type AutoSquadPlayer, type AutoSquadPriority } from "@/lib/fc27/auto-squad";
 import { calculateMetaRating } from "@/lib/fc27/meta-rating";
 import { FORMATIONS, formationById } from "@/lib/fc27/formations";
-import { getAllPlayersStatic } from "@/lib/fc27/static-data";
+import { getSearchIndexStatic } from "@/lib/fc27/static-data";
 
 const priorities = new Set<AutoSquadPriority>(["meta", "balanced", "chemistry"]);
 const positions = new Set(["GK", "CB", "LB", "RB", "LWB", "RWB", "CDM", "CM", "CAM", "LM", "RM", "LW", "RW", "CF", "ST"]);
 const clean = (value: unknown, max = 80) => typeof value === "string" && value.trim().length <= max ? value.trim() || undefined : undefined;
 const integer = (value: unknown, min: number, max: number) => typeof value === "number" && Number.isInteger(value) && value >= min && value <= max ? value : undefined;
+// Same single-file source as Squad Builder search (getSearchIndexStatic) -
+// previously getAllPlayersStatic()'s ~160-shard fan-out, whose tolerated
+// per-shard failures silently shrank the Auto Build candidate pool the same
+// way it broke search (see static-data.ts's getSearchIndexStatic comment).
 async function pool() {
-  return (await getAllPlayersStatic()).map((player) => ({
+  return (await getSearchIndexStatic()).map((player) => ({
     ea_player_id:player.ea_player_id,slug:player.slug,display_name:player.display_name,common_name:player.common_name,overall:player.overall,rank:player.rank,
     position_short_label:player.position_short_label,alternate_positions:player.alternate_positions,nationality_id:player.nationality_id,nationality_name:player.nationality_name,
     nationality_image_url:player.nationality_image_url,club_id:player.club_id,club_name:player.club_name,club_image_url:player.club_image_url,league_name:player.league_name,

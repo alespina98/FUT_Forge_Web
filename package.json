@@ -25,8 +25,10 @@
     "fc27:download": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/fc27/download-ea-ratings.ts",
     "fc27:sync": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --env-file-if-exists=.env.local --experimental-strip-types scripts/fc27/sync-fc27-players.ts",
     "fc27:generate-public-data": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/fc27/generate-public-data.ts",
+    "fc27:data-integrity": "node --test scripts/fc27/data-integrity.test.mjs",
     "test:analytics": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test --experimental-strip-types src/lib/analytics/*.test.mjs",
     "test:fc27-static-data": "node --conditions react-server --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test --experimental-strip-types src/lib/fc27/static-data.test.mjs",
+    "test:fc27-players": "node --conditions react-server --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test --experimental-strip-types src/lib/fc27/players.test.mjs",
     "analytics:d1:migrate:local": "wrangler d1 migrations apply ANALYTICS_DB --local",
     "analytics:d1:migrate:remote": "wrangler d1 migrations apply ANALYTICS_DB --remote"
   },
