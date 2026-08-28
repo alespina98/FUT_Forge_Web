@@ -165,6 +165,9 @@ export function Fc27PlayerDetailView({ player, baseMetaRating, returnTo, entityL
             <Link href={`/fc27/best/${player.position_short_label.toLowerCase()}`} className="fc27-detail-best-position-link">
               {p.bestPositionAction.replace("{code}", player.position_short_label)}
             </Link>
+            <Link href="/fc27/squad-builder" className="fc27-detail-best-position-link">
+              {locale === "it" ? "Crea una Squadra" : "Build a Squad"}
+            </Link>
 
             {/* skill_moves_raw can exceed 5 (e.g. Mbappe stores 6) while EA's
                 own live ratings page still renders a 5-star max for that

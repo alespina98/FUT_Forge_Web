@@ -35,6 +35,11 @@ export function Fc27PlayersView({
         <h1 className="section-title mt-4">{p.title}</h1>
         <p className="mx-auto mt-5 max-w-xl text-sm leading-6 text-white/50 sm:text-base">{p.subtitle}</p>
         <span className="fc27-count-badge mt-6">{p.badge.replace("{count}", total.toLocaleString(locale === "it" ? "it-IT" : "en-US"))}</span>
+        <p className="mt-4 text-sm text-white/45">
+          <Link href="/fc27/squad-builder" className="font-semibold text-lime">
+            {locale === "it" ? "Trovato chi cerchi? Crea la tua squadra EA FC 27 →" : "Found who you're looking for? Build your EA FC 27 squad →"}
+          </Link>
+        </p>
       </div>
 
       <div className="relative mx-auto mt-12 max-w-7xl">

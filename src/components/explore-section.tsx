@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { Arrow, BoltIcon, DownloadIcon, RegisterIcon, RouteIcon, TargetIcon, ToolsIcon } from "./icons";
+import { Arrow, BoltIcon, DownloadIcon, RegisterIcon, RouteIcon, ShieldIcon, TargetIcon, ToolsIcon } from "./icons";
 import { useI18n } from "./i18n-provider";
 
-const icons = [RouteIcon, ToolsIcon, BoltIcon, TargetIcon, DownloadIcon, RegisterIcon];
+const icons = [RouteIcon, ToolsIcon, BoltIcon, TargetIcon, ShieldIcon, DownloadIcon, RegisterIcon];
 
 export function ExploreSection() {
   const { t } = useI18n();
