@@ -19,6 +19,11 @@ export interface IdentityRepository {
   getRole(clerkUserId:string):Promise<UserRole|null>;
   getTier(clerkUserId:string):Promise<UserTier|null>;
   updateProfile(clerkUserId:string,input:{username:string}):Promise<void>;
+  // Self-service (no actor/admin check) read of a user's own entitlement
+  // overrides - the caller is responsible for having already authenticated
+  // applicationUserId itself. Distinct from getAdminOverrides, which checks
+  // the actor is an admin looking at someone else's account.
+  getEntitlementOverrides(applicationUserId:string):Promise<EntitlementOverride[]>;
   listAdminUsers(input:{actorApplicationUserId:string;search?:string;role?:UserRole;tier?:UserTier;limit:number;offset:number}):Promise<{users:AdminUser[];total:number}>;
   getAdminUser(actorApplicationUserId:string,targetApplicationUserId:string):Promise<AdminUser|null>;
   getAdminOverrides(actorApplicationUserId:string,targetApplicationUserId:string):Promise<EntitlementOverride[]>;

@@ -29,7 +29,12 @@ export type FeatureId =
   | "sbc.pricing"
   | "evo.builder"
   | "club.sync"
-  | "browser.mode";
+  | "browser.mode"
+  | "trader.access"
+  | "trader.auto_bid"
+  | "trader.auto_trade"
+  | "trader.sniping"
+  | "trader.sbc";
 
 export const FEATURE_IDS: readonly FeatureId[] = [
   "sbc.quick_complete",
@@ -39,6 +44,25 @@ export const FEATURE_IDS: readonly FeatureId[] = [
   "evo.builder",
   "club.sync",
   "browser.mode",
+  "trader.access",
+  "trader.auto_bid",
+  "trader.auto_trade",
+  "trader.sniping",
+  "trader.sbc",
+];
+
+// FeatureIds gated behind the single Trader plan (see decision #8: one plan
+// unlocks the whole module - these are internal rollout/kill-switch knobs,
+// never separate commercial tiers). trader.access is the master switch:
+// resolveTraderAccess() (src/lib/trader/access.ts) always ANDs every other
+// trader.* flag with it, so disabling trader.access alone closes the whole
+// module regardless of the sub-flags' individual state.
+export const TRADER_FEATURE_IDS: readonly FeatureId[] = [
+  "trader.access",
+  "trader.auto_bid",
+  "trader.auto_trade",
+  "trader.sniping",
+  "trader.sbc",
 ];
 
 export const FEATURE_LABELS: Record<FeatureId, string> = {
@@ -49,11 +73,25 @@ export const FEATURE_LABELS: Record<FeatureId, string> = {
   "evo.builder": "EVO Builder",
   "club.sync": "Club Sync",
   "browser.mode": "Browser Mode",
+  "trader.access": "Trader — Access",
+  "trader.auto_bid": "Trader — Auto Bid",
+  "trader.auto_trade": "Trader — Auto Trade",
+  "trader.sniping": "Trader — Sniping",
+  "trader.sbc": "Trader — SBC Pricing",
 };
 
 // Every feature is available on every tier today. When a real Premium tier
 // ships, individual entries move from "both" to "PREMIUM" here - no other
 // file needs to change.
+//
+// trader.* is the one deliberate exception: every trader.* id maps to an
+// EMPTY tier list, so resolveFeatureAccess() denies it for every tier by
+// construction - no FREE/PREMIUM account is unlocked by default. The only
+// way to grant it is a per-user entitlement_overrides row (the same
+// mechanism the admin panel already uses for every other feature - see
+// admin-user-detail.tsx), which is exactly the "gestibile manualmente per
+// test, disattivato in produzione" requirement for Milestone 1. Do not add
+// "FREE" or "PREMIUM" here until real Trader billing ships.
 const FEATURE_TIERS: Record<FeatureId, readonly Tier[]> = {
   "sbc.quick_complete": ["FREE", "PREMIUM"],
   "sbc.auto_complete": ["FREE", "PREMIUM"],
@@ -62,6 +100,11 @@ const FEATURE_TIERS: Record<FeatureId, readonly Tier[]> = {
   "evo.builder": ["FREE", "PREMIUM"],
   "club.sync": ["FREE", "PREMIUM"],
   "browser.mode": ["FREE", "PREMIUM"],
+  "trader.access": [],
+  "trader.auto_bid": [],
+  "trader.auto_trade": [],
+  "trader.sniping": [],
+  "trader.sbc": [],
 };
 
 export type EntitlementAccount = { id?: string | null; role?: string | null; tier?: string | null } | null | undefined;
