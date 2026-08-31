@@ -1,8 +1,9 @@
 // Milestone 2 commit audit: proves the minimal backend fix (browser/refresh
 // and browser/logout no longer require Origin===https://www.ea.com, same
 // pattern desktop/refresh and desktop/logout already use with zero Origin
-// check - see device-auth-service.ts) without weakening browser/start or
-// browser/token, which keep the strict EA-origin gate unchanged.
+// check - see device-auth-service.ts). M2.1 applies the same background
+// caller rule to start/token: missing Origin is accepted, while any
+// explicit non-EA Origin remains rejected.
 //
 // ENVIRONMENT LIMITATION (documented, not worked around silently): the
 // route.ts files import NextResponse from "next/server", which Node's ESM
@@ -99,14 +100,24 @@ test("browser/logout route source no longer gates on Origin before calling revok
   assert.doesNotMatch(src, /if\(!headers\)return NextResponse\.json\(\{error:"invalid_origin"\}/, "logout must not reject a missing/non-EA Origin before reaching revokeBrowserSession");
 });
 
-test("browser/start route source is UNCHANGED: still rejects when browserCors(request) returns no headers", () => {
+test("browser/start accepts only EA or a syntactically valid extension service-worker Origin", () => {
   const src = routeSource("browser", "start", "route.ts");
-  assert.match(src, /if\(!headers\)return NextResponse\.json\(\{error:"invalid_origin"\},\{status:403\}\)/, "start must keep its strict EA-origin gate - it anchors a brand-new authorization, unlike refresh/logout");
+  assert.match(src, /browserServiceWorkerOrigin\(origin\)/);
+  assert.doesNotMatch(src, /if\(!headers\)return NextResponse\.json\(\{error:"invalid_origin"\}/);
 });
 
-test("browser/token route source is UNCHANGED: still rejects when browserCors(request) returns no headers", () => {
+test("browser/token accepts only EA or a syntactically valid extension service-worker Origin", () => {
   const src = routeSource("browser", "token", "route.ts");
-  assert.match(src, /if\(!headers\)return NextResponse\.json\(\{error:"invalid_origin"\}/, "token must keep its strict EA-origin gate, unchanged by this fix");
+  assert.match(src, /browserServiceWorkerOrigin\(origin\)/);
+  assert.doesNotMatch(src, /if\(!headers\)return NextResponse\.json\(\{error:"invalid_origin"\}/);
+});
+
+test("service-worker Origin helper accepts missing/valid Chrome extension origins and rejects arbitrary origins", async () => {
+  const {browserServiceWorkerOrigin}=await import("./browser-cors.ts");
+  assert.equal(browserServiceWorkerOrigin(null),true);
+  assert.equal(browserServiceWorkerOrigin(`chrome-extension://${"a".repeat(32)}`),true);
+  assert.equal(browserServiceWorkerOrigin("https://evil.example"),false);
+  assert.equal(browserServiceWorkerOrigin("chrome-extension://not-an-extension-id"),false);
 });
 
 test("browser/profile route source is UNCHANGED: still rejects when browserCors(request) returns no headers", () => {
