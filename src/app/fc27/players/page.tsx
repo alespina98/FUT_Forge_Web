@@ -44,6 +44,8 @@ function parseQuery(sp: RawSearchParams): PlayersQuery {
     dribblingMin: int(sp.dribblingmin),
     defendingMin: int(sp.defendingmin),
     physicalityMin: int(sp.physicalitymin),
+    playStyle: str(sp.ps),
+    playStylePlus: str(sp.psp),
     sort: isSortKey(sortRaw) ? sortRaw : undefined,
     page: int(sp.page),
   };

@@ -38,6 +38,7 @@ type NormalizedPlayer = {
   bio: { skill_moves_raw: number | null; weak_foot: number | null; preferred_foot_code: number | null; preferred_foot_label: null; height_raw: string; weight_raw: string; birthdate_raw: string | null };
   media: { avatar_url: string | null; shield_url: string | null };
   player_abilities_raw: unknown[];
+  playstyles: Array<{ eaId: string; tier: "base" | "plus" }>;
   source: { ea_build_id: string; retrieved_at: string };
 };
 
@@ -170,6 +171,7 @@ function transform(player: NormalizedPlayer): TransformResult {
     detailed_attributes: player.detailed_attributes,
     goalkeeping: player.goalkeeping,
     player_abilities_raw: player.player_abilities_raw,
+    playstyles: player.playstyles ?? [],
     avatar_url: player.media.avatar_url,
     shield_url: player.media.shield_url,
     source_ea_build_id: player.source.ea_build_id,

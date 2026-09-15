@@ -27,7 +27,7 @@ export function Fc27PlayersControls({ t, filterOptions }: { t: Fc27Copy; filterO
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const activeFilterKeys = ["position", "nation", "league", "club", "sk", "wf", "omin", "omax", "pacemin", "shootingmin", "passingmin", "dribblingmin", "defendingmin", "physicalitymin"];
+  const activeFilterKeys = ["position", "nation", "league", "club", "sk", "wf", "omin", "omax", "pacemin", "shootingmin", "passingmin", "dribblingmin", "defendingmin", "physicalitymin", "ps", "psp"];
   const hasActiveFilters = activeFilterKeys.some((key) => searchParams.get(key));
   // Reset button covers search too, not just structured filters - a
   // search-only no-results state still needs a one-click way out.
@@ -123,6 +123,20 @@ export function Fc27PlayersControls({ t, filterOptions }: { t: Fc27Copy; filterO
             <select id="fc27-weakfoot" className="select-dark" value={searchParams.get("wf") ?? ""} onChange={(e) => setParam("wf", e.target.value || null)}>
               <option value="">{t.anyWeakFoot}</option>
               {WEAK_FOOT.map((n) => <option key={n} value={n}>{"★".repeat(n)}</option>)}
+            </select>
+          </div>
+          <div className="fc27-field">
+            <label htmlFor="fc27-playstyle">PlayStyle</label>
+            <select id="fc27-playstyle" className="select-dark" value={searchParams.get("ps") ?? ""} onChange={(e) => setParam("ps", e.target.value || null)}>
+              <option value="">Any PlayStyle</option>
+              {filterOptions.playStyles.map((style) => <option key={style.eaId} value={style.eaId}>{style.label}</option>)}
+            </select>
+          </div>
+          <div className="fc27-field">
+            <label htmlFor="fc27-playstyle-plus">PlayStyle+</label>
+            <select id="fc27-playstyle-plus" className="select-dark" value={searchParams.get("psp") ?? ""} onChange={(e) => setParam("psp", e.target.value || null)}>
+              <option value="">Any PlayStyle+</option>
+              {filterOptions.playStylePluses.map((style) => <option key={style.eaId} value={style.eaId}>{style.label}</option>)}
             </select>
           </div>
           <div className="fc27-field">

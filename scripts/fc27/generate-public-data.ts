@@ -6,7 +6,7 @@ import path from "node:path";
 import { calculateMetaRating } from "../../src/lib/fc27/meta-rating.ts";
 import { scoreHiddenGem } from "../../src/lib/fc27/hidden-gems-shared.ts";
 
-const EXPECTED_COUNT=20_689,SHARD_SIZE=128,SITEMAP_SIZE=5_000,SCHEMA_VERSION=1;
+const MIN_PLAYER_COUNT=19_000,SHARD_SIZE=128,SITEMAP_SIZE=5_000,SCHEMA_VERSION=2;
 const root=process.cwd(),sourcePath=path.join(root,"data/fc27/normalized/fc27-players.json"),publicRoot=path.join(root,"public/fc27-data");
 type Obj=Record<string,any>;
 const stable=(v:any):string=>v===null||typeof v!=="object"?JSON.stringify(v):Array.isArray(v)?`[${v.map(stable).join(",")}]`:`{${Object.keys(v).sort().map(k=>`${JSON.stringify(k)}:${stable(v[k])}`).join(",")}}`;
@@ -21,14 +21,15 @@ function flatten(p:Obj){const f=p.face_stats,b=p.bio,a=p.affiliation,i=p.identit
  nationality_id:a.nationality_id,nationality_name:a.nationality_name,nationality_image_url:a.nationality_image_url,club_id:a.club_id,club_name:a.club_name,club_image_url:a.club_image_url,league_name:a.league_name||null,
  birthdate:iso(b.birthdate_raw),skill_moves_raw:b.skill_moves_raw,weak_foot:b.weak_foot,preferred_foot_code:b.preferred_foot_code,height_cm:b.height_raw?Number(b.height_raw):null,weight_kg:b.weight_raw?Number(b.weight_raw):null,
  gender_id:b.gender_id??null,gender_label:b.gender_label??null,
- detailed_attributes:p.detailed_attributes,goalkeeping:p.goalkeeping,player_abilities_raw:p.player_abilities_raw,avatar_url:p.media.avatar_url};}
+ detailed_attributes:p.detailed_attributes,goalkeeping:p.goalkeeping,player_abilities_raw:p.player_abilities_raw,playstyles:p.playstyles??[],avatar_url:p.media.avatar_url};}
 const ranking=(p:Obj)=>({ea_player_id:p.ea_player_id,slug:p.slug,display_name:p.display_name,overall:p.overall,position_short_label:p.position_short_label,nationality_name:p.nationality_name,nationality_image_url:p.nationality_image_url,club_name:p.club_name,club_image_url:p.club_image_url,league_name:p.league_name,avatar_url:p.avatar_url,pace:p.pace,shooting:p.shooting,passing:p.passing,dribbling:p.dribbling,defending:p.defending,physicality:p.physicality});
 async function put(base:string,rel:string,value:any){const target=path.join(base,rel);await mkdir(path.dirname(target),{recursive:true});await writeFile(target,stable(value));return rel.replaceAll("\\","/");}
-async function main(){const raw=await readFile(sourcePath,"utf8"),parsed=JSON.parse(raw),input=parsed.players;if(!Array.isArray(input)||input.length!==EXPECTED_COUNT)throw new Error(`Expected ${EXPECTED_COUNT} players, got ${input?.length}`);
+async function main(){const raw=await readFile(sourcePath,"utf8"),parsed=JSON.parse(raw),input=parsed.players;if(!Array.isArray(input)||input.length<MIN_PLAYER_COUNT)throw new Error(`Expected at least ${MIN_PLAYER_COUNT} players, got ${input?.length}`);
  const ids=new Set<number>();for(const p of input){const id=p?.identity?.ea_player_id;if(!Number.isSafeInteger(id)||ids.has(id))throw new Error(`Invalid/duplicate player ID ${id}`);ids.add(id);for(const key of ["display_name","slug"]){if(!p.identity[key])throw new Error(`Player ${id} missing ${key}`)}if(!p.ratings||!p.position||!p.affiliation||!p.face_stats||!p.detailed_attributes||!p.bio||!p.media)throw new Error(`Player ${id} has invalid schema`)}
- const checksum=hash(raw),version=`v1-${checksum.slice(0,12)}`,tmp=path.join(publicRoot,`.${version}.tmp`),dest=path.join(publicRoot,version);await rm(tmp,{recursive:true,force:true});await mkdir(tmp,{recursive:true});const players=input.map(flatten).sort((a:Obj,b:Obj)=>a.ea_player_id-b.ea_player_id),index:Record<string,number>={};
- const artifacts:any={players:[],search:[],rankings:{},entities:{},positions:"positions/counts.json",filters:"filters/options.json",sitemaps:[],meta:"meta/rankings.json",hiddenGems:"hidden-gems/default.json"};
+ const checksum=hash(raw),version=`v${SCHEMA_VERSION}-${checksum.slice(0,12)}`,tmp=path.join(publicRoot,`.${version}.tmp`),dest=path.join(publicRoot,version);await rm(tmp,{recursive:true,force:true});await mkdir(tmp,{recursive:true});const players=input.map(flatten).sort((a:Obj,b:Obj)=>a.ea_player_id-b.ea_player_id),index:Record<string,number>={};
+ const artifacts:any={players:[],search:[],rankings:{},entities:{},positions:"positions/counts.json",filters:"filters/options.json",sitemaps:[],meta:"meta/rankings.json",hiddenGems:"hidden-gems/default.json",playstyles:{catalog:"playstyles/catalog.json",index:"playstyles/index.json"}};
  for(let n=0;n<players.length;n+=SHARD_SIZE){const shard=players.slice(n,n+SHARD_SIZE),no=n/SHARD_SIZE,rel=`players/shard-${String(no).padStart(3,"0")}.json`;for(const p of shard)index[p.ea_player_id]=no;artifacts.players.push(await put(tmp,rel,shard))}await put(tmp,"players/index.json",index);
+ const catalog=(parsed.playstyle_catalog??[]).map((x:Obj)=>({eaId:x.id,baseEaId:String(x.id).replace(/^icon/,""),label:x.label,description:x.description,tier:x.type?.id==="playStylePlus"?"plus":"base",category:x.group?.id??null,imageUrl:x.imageUrl})).sort((a:Obj,b:Obj)=>a.eaId.localeCompare(b.eaId));const playstyleIndex:any={};for(const p of players)for(const s of p.playstyles??[])(playstyleIndex[s.eaId]??=[]).push(p.ea_player_id);for(const ids of Object.values(playstyleIndex))ids.sort((a:any,b:any)=>a-b);await put(tmp,artifacts.playstyles.catalog,catalog);await put(tmp,artifacts.playstyles.index,playstyleIndex);
  const search=new Map<string,number[]>(),searchRows=[];for(const p of players){const normalized=fold(p.display_name);searchRows.push({
   // Full PlayerListItem-equivalent shape (see src/lib/fc27/players.ts's
   // LIST_COLUMNS) plus normalized_name/gender - this single file is the

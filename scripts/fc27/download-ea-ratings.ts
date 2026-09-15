@@ -26,7 +26,7 @@ const STATE_PATH = path.join(CACHE_DIR, "state.json");
 const RAW_DIR = path.join(OUT_ROOT, "raw");
 const NORMALIZED_DIR = path.join(OUT_ROOT, "normalized");
 
-const REQUEST_DELAY_MS = 1000;
+const REQUEST_DELAY_MS = 0;
 const MAX_RETRIES = 5;
 const BACKOFF_BASE_MS = 1000;
 const BACKOFF_CAP_MS = 20_000;
@@ -36,6 +36,7 @@ type RawStats = Record<string, { value: number; diff?: number } | null | undefin
 type RawPositionRef = { id: string; label: string; shortLabel: string };
 type RawTeam = { id: number; label: string; imageUrl: string; isPopular?: boolean } | null;
 type RawNationality = { id: number; label: string; imageUrl: string } | null;
+type RawPlayerAbility = { id: string; label: string; description: string; imageUrl: string; type: { id: "playStyle" | "playStylePlus"; label: string }; group?: { id: string; label: string } | null };
 type RawItem = {
   id: number;
   rank: number;
@@ -53,7 +54,7 @@ type RawItem = {
   avatarUrl: string | null;
   shieldUrl: string | null;
   alternatePositions: RawPositionRef[] | null;
-  playerAbilities: unknown[];
+  playerAbilities: RawPlayerAbility[];
   gender: { id: number; label: string } | null;
   nationality: RawNationality;
   team: RawTeam;
@@ -61,7 +62,7 @@ type RawItem = {
   stats: RawStats;
 };
 
-type FetchOutcome = { kind: "ok"; totalItems: number; items: RawItem[] } | { kind: "not_found" };
+type FetchOutcome = { kind: "ok"; totalItems: number; items: RawItem[]; catalog: RawPlayerAbility[] } | { kind: "not_found" };
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -114,10 +115,10 @@ async function fetchPageWithRetry(buildId: string, page: number): Promise<FetchO
     const result = await fetchPageOnce(buildId, page);
     if (result.status === 404) return { kind: "not_found" };
     if (result.status === 200) {
-      const body = result.body as { pageProps?: { ratingDetails?: { totalItems: number; items: RawItem[] } } };
+      const body = result.body as { pageProps?: { ratingDetails?: { totalItems: number; items: RawItem[] }; ratingsFilters?: { playerAbilities?: RawPlayerAbility[] } } };
       const details = body.pageProps?.ratingDetails;
       if (!details) throw new Error(`Page ${page}: response had no pageProps.ratingDetails`);
-      return { kind: "ok", totalItems: details.totalItems, items: details.items };
+      return { kind: "ok", totalItems: details.totalItems, items: details.items, catalog: body.pageProps?.ratingsFilters?.playerAbilities ?? [] };
     }
     attempt++;
     if (attempt > MAX_RETRIES) throw new Error(`Page ${page}: exhausted ${MAX_RETRIES} retries (last HTTP status ${result.status})`);
@@ -164,6 +165,7 @@ async function main() {
   const totalItems = first.totalItems;
   const pageSize = first.items.length;
   const pageCount = Math.ceil(totalItems / pageSize);
+  if (totalItems < 19_000 || pageSize < 1) throw new Error(`EA record count/page size is implausible: ${totalItems}/${pageSize}`);
   console.log(`totalItems=${totalItems} pageSize=${pageSize} pageCount=${pageCount}`);
 
   await writeJsonAtomic(STATE_PATH, { buildId, totalItems, pageSize, pageCount, startedAt: new Date(perf.startedAt).toISOString() });
@@ -198,6 +200,17 @@ async function main() {
     const parsed = JSON.parse(await readFile(path.join(PAGES_DIR, name), "utf8")) as { items: RawItem[] };
     items.push(...parsed.items);
   }
+  const ids = new Set(items.map((item) => item.id));
+  if (pageFiles.length !== pageCount || items.length !== totalItems || ids.size !== items.length) throw new Error(`Incomplete EA pagination: pages=${pageFiles.length}/${pageCount}, records=${items.length}/${totalItems}, uniqueIds=${ids.size}`);
+  const expectedLastPageSize = totalItems - (pageCount - 1) * pageSize;
+  const lastPage = await readCachedPage(pageCount);
+  if (!lastPage || lastPage.length !== expectedLastPageSize) throw new Error(`Last EA page has invalid size: ${lastPage?.length ?? 0}/${expectedLastPageSize}`);
+  const catalog = first.catalog;
+  const catalogIds = new Set(catalog.map((ability) => ability.id));
+  if (catalog.length !== catalogIds.size || catalog.some((ability) => ability.type.id !== "playStyle" && ability.type.id !== "playStylePlus")) throw new Error("EA PlayStyle catalog is invalid");
+  for (const item of items) for (const ability of item.playerAbilities ?? []) {
+    if (!catalogIds.has(ability.id) || (ability.type.id !== "playStyle" && ability.type.id !== "playStylePlus")) throw new Error(`Player ${item.id} has an invalid PlayStyle ${ability.id}`);
+  }
 
   const retrievedAt = new Date().toISOString();
   const dateStamp = retrievedAt.slice(0, 10);
@@ -217,7 +230,7 @@ async function main() {
 
   console.log("Normalizing...");
   const normalized = items.map((item) => normalizePlayer(item, buildId, retrievedAt));
-  const normalizedSnapshot = { generatedAt: retrievedAt, sourceRawFile: path.relative(OUT_ROOT, rawPath), eaBuildId: buildId, count: normalized.length, players: normalized };
+  const normalizedSnapshot = { generatedAt: retrievedAt, sourceRawFile: path.relative(OUT_ROOT, rawPath), eaBuildId: buildId, count: normalized.length, playstyle_catalog: catalog, players: normalized };
   const normalizedPath = path.join(NORMALIZED_DIR, "fc27-players.json");
   await writeJsonAtomic(normalizedPath, normalizedSnapshot);
 
@@ -326,6 +339,7 @@ function normalizePlayer(item: RawItem, buildId: string, retrievedAt: string) {
       player_detail_url_derived: `${ORIGIN}/en/games/ea-sports-fc/ratings/player-ratings/${slugifyName(displayName) || "player"}/${item.id}`,
     },
     player_abilities_raw: item.playerAbilities ?? [],
+    playstyles: (item.playerAbilities ?? []).map((ability) => ({ eaId: ability.id, tier: ability.type.id === "playStylePlus" ? "plus" : "base" })),
     source: { ea_build_id: buildId, retrieved_at: retrievedAt },
   };
 }

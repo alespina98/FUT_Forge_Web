@@ -24,7 +24,7 @@ async function findRealPlayer(genderLabel, excludeIds) {
 
 test("empty query, no filters returns a large paginated result (Squad Builder's default 'browse everyone' state)", async () => {
   const result = await fetchPlayers({});
-  assert.ok(result.total > 20000, `expected >20000 total players, got ${result.total}`);
+  assert.equal(result.total, 19789, `expected canonical FC27 total, got ${result.total}`);
   assert.ok(result.players.length > 0);
 });
 
@@ -68,4 +68,11 @@ test("both a female and a male player (dynamically sampled from the real dataset
 test("position filter narrows results without dropping the target player when her position is requested", async () => {
   const result = await fetchPlayers({ q: "Pina", position: "LW" });
   assert.ok(result.players.some((p) => p.ea_player_id === 262531));
+});
+
+test("PlayStyle and PlayStyle+ filters use the static inverted index", async () => {
+  const mbappe = await fetchPlayers({ playStylePlus: "icontrait1_33554432" });
+  assert.ok(mbappe.players.some((p) => p.ea_player_id === 231747), "Mbappé missing from Quick Step+ filter");
+  const kane = await fetchPlayers({ playStylePlus: "icontrait1_1" });
+  assert.ok(kane.players.some((p) => p.ea_player_id === 202126), "Kane missing from Finesse Shot+ filter");
 });

@@ -4,7 +4,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import type { PlayerDetail, PlayerListItem } from "./players";
 
-type Manifest={datasetVersion:string;playerCount:number;shardCount:number;artifacts:{players:string[];search:string[];rankings:Record<string,string>;entities:Record<string,string>;positions:string;filters:string;sitemaps:string[];meta:string;hiddenGems:string}};
+type Manifest={datasetVersion:string;playerCount:number;shardCount:number;artifacts:{players:string[];search:string[];rankings:Record<string,string>;entities:Record<string,string>;positions:string;filters:string;sitemaps:string[];meta:string;hiddenGems:string;playstyles?:{catalog:string;index:string}}};
 const root=process.env.FC27_STATIC_DATA_ROOT||path.join(process.cwd(),"public","fc27-data");
 const jsonCache=new Map<string,Promise<any>>();
 export class Fc27ArtifactError extends Error{readonly artifact:string;constructor(artifact:string,cause:unknown){super(`FC27 static artifact unavailable: ${artifact}`,{cause});this.name="Fc27ArtifactError";this.artifact=artifact}}
@@ -55,6 +55,9 @@ export async function readArtifact<T>(rel:string){return json<T>(await versionPa
 export async function getPlayerIndex(){return readArtifact<Record<string,number>>("players/index.json")}
 export async function getPlayerByIdStatic(id:number):Promise<PlayerDetail|null>{const index=await getPlayerIndex(),shard=index[String(id)];if(shard===undefined)return null;const rows=await readArtifact<PlayerDetail[]>(`players/shard-${String(shard).padStart(3,"0")}.json`);return rows.find(p=>p.ea_player_id===id)??null}
 export async function getPlayersByIdsStatic(ids:number[]):Promise<PlayerDetail[]>{const index=await getPlayerIndex(),groups=new Map<number,Set<number>>();for(const id of new Set(ids)){const shard=index[String(id)];if(shard!==undefined){if(!groups.has(shard))groups.set(shard,new Set);groups.get(shard)!.add(id)}}const out:PlayerDetail[]=[];await Promise.all([...groups].map(async([shard,wanted])=>{for(const p of await readArtifact<PlayerDetail[]>(`players/shard-${String(shard).padStart(3,"0")}.json`))if(wanted.has(p.ea_player_id))out.push(p)}));return out}
+export type PlayStyleCatalogEntry={eaId:string;baseEaId:string;label:string;description:string;tier:"base"|"plus";category:string|null;imageUrl:string};
+export async function getPlayStyleCatalogStatic(){return readArtifact<PlayStyleCatalogEntry[]>("playstyles/catalog.json")}
+export async function getPlayStyleIndexStatic(){return readArtifact<Record<string,number[]>>("playstyles/index.json")}
 export type SearchIndexRow=PlayerListItem&{normalized_name:string;position_label:string;gender_id:number|null;gender_label:string|null};
 // The canonical search/list/auto-build data source: one pre-built file
 // (search/index.json, produced at generate-public-data.ts build time) with

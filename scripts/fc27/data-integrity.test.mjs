@@ -20,7 +20,9 @@ async function loadDataset() {
   const versionDir = path.join(publicRoot, manifest.datasetVersion);
   const catalogIndex = JSON.parse(await readFile(path.join(versionDir, "players", "index.json"), "utf8"));
   const searchIndex = JSON.parse(await readFile(path.join(versionDir, "search", "index.json"), "utf8"));
-  return { manifest, catalogIndex, searchIndex };
+  const playStyleCatalog = JSON.parse(await readFile(path.join(versionDir, "playstyles", "catalog.json"), "utf8"));
+  const playStyleIndex = JSON.parse(await readFile(path.join(versionDir, "playstyles", "index.json"), "utf8"));
+  return { manifest, catalogIndex, searchIndex, playStyleCatalog, playStyleIndex };
 }
 
 test("search/index.json contains exactly the same player IDs as the source catalog (players/index.json)", async () => {
@@ -39,6 +41,19 @@ test("search/index.json contains exactly the same player IDs as the source catal
     `${missingFromSearch.length} player id(s) exist in the source catalog but are unreachable from Squad Builder search/Auto Build: ${missingFromSearch.slice(0, 20).join(", ")}${missingFromSearch.length > 20 ? "…" : ""}`,
   );
   assert.deepEqual(extraInSearch, [], `${extraInSearch.length} player id(s) in search/index.json do not exist in the source catalog: ${extraInSearch.slice(0, 20).join(", ")}`);
+});
+
+test("FC27 PlayStyle catalog and inverted index are complete and identify known players", async () => {
+  const { manifest, catalogIndex, playStyleCatalog, playStyleIndex } = await loadDataset();
+  assert.equal(manifest.playerCount, 19789);
+  assert.equal(new Set(Object.keys(catalogIndex)).size, 19789);
+  assert.equal(playStyleCatalog.filter((style) => style.tier === "base").length, 36);
+  assert.equal(playStyleCatalog.filter((style) => style.tier === "plus").length, 36);
+
+  const byLabel = new Map(playStyleCatalog.map((style) => [style.label, style.eaId]));
+  for (const [label, id] of [["Quick Step+", 231747], ["Technical+", 277643], ["Finesse Shot+", 202126]]) {
+    assert.ok(playStyleIndex[byLabel.get(label)]?.includes(id), `${label} missing player ${id}`);
+  }
 });
 
 test("search/index.json has no duplicate player IDs", async () => {

@@ -85,6 +85,12 @@ function Chip({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
+type RawPlayStyle = { id?: string; label?: string; description?: string; type?: { id?: string } };
+function playerPlayStyles(player: PlayerDetail, tier: "base" | "plus"): RawPlayStyle[] {
+  const source = Array.isArray(player.player_abilities_raw) ? player.player_abilities_raw as RawPlayStyle[] : [];
+  return source.filter((style) => style.id && style.label && (tier === "plus" ? style.type?.id === "playStylePlus" : style.type?.id === "playStyle"));
+}
+
 export function Fc27PlayerDetailView({ player, baseMetaRating, returnTo, entityLinks }: { player: PlayerDetail; baseMetaRating: number | null; returnTo: string; entityLinks: { nation: string | null; club: string | null; league: string | null } }) {
   const { t, locale } = useI18n();
   const p: DetailCopy = t.fc27PlayerDetailPage;
@@ -108,6 +114,8 @@ export function Fc27PlayerDetailView({ player, baseMetaRating, returnTo, entityL
 
   const footLabel = player.preferred_foot_code === 1 ? p.footRight : player.preferred_foot_code === 2 ? p.footLeft : String(player.preferred_foot_code);
   const altPositions = player.alternate_positions.length > 0 ? player.alternate_positions.map((ap) => ap.short_label).join(", ") : "—";
+  const playStyles = playerPlayStyles(player, "base");
+  const playStylePluses = playerPlayStyles(player, "plus");
 
   return (
     <div className="hero-grid relative overflow-hidden px-4 pb-24 pt-40 sm:px-6 sm:pt-48">
@@ -186,6 +194,10 @@ export function Fc27PlayerDetailView({ player, baseMetaRating, returnTo, entityL
               <Chip label={p.skillMoves} value={`${Math.min(player.skill_moves_raw, 5)}/5`} />
               <Chip label={p.weakFoot} value={`${Math.min(player.weak_foot, 5)}/5`} />
             </div>
+            {(playStyles.length || playStylePluses.length) ? <section className="mt-8" aria-label="PlayStyles">
+              {playStyles.length ? <div><h2 className="text-sm font-semibold uppercase tracking-wide text-white/65">PlayStyles</h2><div className="mt-2 flex flex-wrap gap-2">{playStyles.map((style) => <span key={style.id} title={style.description} className="rounded-full border border-white/15 bg-white/5 px-3 py-1 text-sm">{style.label}</span>)}</div></div> : null}
+              {playStylePluses.length ? <div className={playStyles.length ? "mt-4" : ""}><h2 className="text-sm font-semibold uppercase tracking-wide text-amber-300">PlayStyles+</h2><div className="mt-2 flex flex-wrap gap-2">{playStylePluses.map((style) => <span key={style.id} title={style.description} className="rounded-full border border-amber-300/40 bg-amber-300/10 px-3 py-1 text-sm text-amber-100">{style.label}</span>)}</div></div> : null}
+            </section> : null}
           </div>
         </div>
 
