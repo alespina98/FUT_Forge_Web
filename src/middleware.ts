@@ -10,6 +10,14 @@ import { getAuthProvider } from "@/lib/auth/provider";
 const clerkProxy = clerkMiddleware();
 
 export async function middleware(request: NextRequest, event: NextFetchEvent) {
+  // These are anonymous, public FC27 landing/detail pages.  Do not perform
+  // a Supabase/Clerk session lookup (or emit auth cookies) for them: it adds
+  // one remote operation to every crawl and makes otherwise shared HTML
+  // unsafe to cache.  Authenticated areas and every API route still pass
+  // through the normal provider middleware below.
+  if (/^\/fc27\/(?:players|clubs)(?:\/|$)/.test(request.nextUrl.pathname)) {
+    return NextResponse.next({ request });
+  }
   if (getAuthProvider() === "clerk") return clerkProxy(request, event);
   let response = NextResponse.next({ request });
   const supabase = createServerClient(SUPABASE_URL, SUPABASE_ANON_KEY, {

@@ -4,7 +4,7 @@ import "server-only";
 import { unstable_cache } from "next/cache";
 import type { RankingPlayer } from "./rankings-shared";
 import { entitySlug } from "./entity-slug";
-import { getAllPlayersStatic, isFc27ArtifactError, readArtifact, toRanking } from "./static-data";
+import { getSearchIndexStatic, isFc27ArtifactError, readArtifact } from "./static-data";
 import { boundedFc27SupabaseFetch } from "./supabase-fallback";
 
 const DEFAULT_URL = "https://axjuxmjoowrzmvyhbdhv.supabase.co";
@@ -58,7 +58,17 @@ export async function resolveEntity(kind: EntityKind, slug: string): Promise<Fc2
 }
 
 export async function fetchEntityPlayers(kind: EntityKind, entity: Fc27Entity): Promise<{ players: RankingPlayer[]; total: number }> {
-  try{const staticField=config[kind].field as "nationality_name"|"club_name"|"league_name",staticRows=(await getAllPlayersStatic()).filter(player=>player[staticField]===entity.name).sort((a,b)=>b.overall-a.overall||a.display_name.localeCompare(b.display_name)||a.ea_player_id-b.ea_player_id);return {players:staticRows.slice(0,50).map(toRanking),total:staticRows.length}}catch(error){if(!isFc27ArtifactError(error))throw error;console.warn(`[FC27 DATA] static artifact unavailable: entity-${kind} (${error.artifact})`)}
+  // Entity pages are frequent crawler targets.  The search index contains
+  // every field rendered by a ranking card, so use its single artifact rather
+  // than getAllPlayersStatic(), which reads all ~160 detail shards per cold
+  // isolate.  That fan-out can exceed Worker subrequest/CPU limits.
+  try{
+    const staticField=config[kind].field as "nationality_name"|"club_name"|"league_name";
+    const staticRows=(await getSearchIndexStatic())
+      .filter(player=>player[staticField]===entity.name)
+      .sort((a,b)=>b.overall-a.overall||a.display_name.localeCompare(b.display_name)||a.ea_player_id-b.ea_player_id);
+    return {players:staticRows.slice(0,50),total:staticRows.length};
+  }catch(error){if(!isFc27ArtifactError(error))throw error;console.warn(`[FC27 DATA] static artifact unavailable: entity-${kind} (${error.artifact})`)}
   const params = new URLSearchParams({
     select: "ea_player_id,slug,display_name,overall,position_short_label,nationality_name,nationality_image_url,club_name,club_image_url,league_name,avatar_url,pace,shooting,passing,dribbling,defending,physicality",
     order: "overall.desc,display_name.asc,ea_player_id.asc",

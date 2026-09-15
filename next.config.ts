@@ -8,12 +8,24 @@ initOpenNextCloudflareForDev();
 
 const nextConfig: NextConfig = {
   async headers() {
-    return [{ source: "/browser/:path*", headers: [
-      { key: "Access-Control-Allow-Origin", value: "*" },
-      { key: "Cross-Origin-Resource-Policy", value: "cross-origin" },
-      { key: "X-Content-Type-Options", value: "nosniff" },
-      { key: "Cache-Control", value: "public, max-age=60, s-maxage=60" },
-    ] }];
+    return [
+      { source: "/browser/:path*", headers: [
+        { key: "Access-Control-Allow-Origin", value: "*" },
+        { key: "Cross-Origin-Resource-Policy", value: "cross-origin" },
+        { key: "X-Content-Type-Options", value: "nosniff" },
+        { key: "Cache-Control", value: "public, max-age=60, s-maxage=60" },
+      ] },
+      // Only anonymous FC27 player/club pages advertise shared caching.
+      // The Cloudflare Cache Rule documented in the audit report must also
+      // be limited to GET/HEAD and these prefixes; APIs and account/admin
+      // routes intentionally receive no shared-cache directive.
+      { source: "/fc27/players/:path*", headers: [
+        { key: "Cache-Control", value: "public, max-age=60, s-maxage=3600, stale-while-revalidate=86400" },
+      ] },
+      { source: "/fc27/clubs/:path*", headers: [
+        { key: "Cache-Control", value: "public, max-age=60, s-maxage=3600, stale-while-revalidate=86400" },
+      ] },
+    ];
   },
   async redirects() {
     // /app/login and /app/register moved to top-level /login and /register
