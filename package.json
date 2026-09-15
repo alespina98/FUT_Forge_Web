@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "prebuild": "npm run cf:typegen",
+    "prebuild:cloudflare": "npm run cf:typegen",
     "build": "next build",
     "build:cloudflare": "opennextjs-cloudflare build",
     "preview:cloudflare": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
@@ -11,6 +13,7 @@
     "cf:typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
     "start": "next start",
     "lint": "eslint",
+    "pretypecheck": "npm run cf:typegen",
     "typecheck": "tsc --noEmit",
     "test:leaks": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test --experimental-strip-types src/lib/leaks/*.test.mjs src/lib/leaks/ingestion/*.test.mjs",
     "test:trader": "node --conditions react-server --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test --experimental-strip-types src/lib/trader/*.test.mjs",
