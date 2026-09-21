@@ -5,6 +5,16 @@
   "main": ".open-next/worker.js",
   "compatibility_date": "2026-08-26",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  // Cloudflare's edge checks its cache before invoking this Worker on every
+  // request; a HIT is served with zero Worker CPU. Only safe because every
+  // GET response this Worker can return now carries an explicit
+  // Cache-Control (audited 2026-09-21: see git log for the full route-by-
+  // route classification) - public/cacheable for /fc27/players, /fc27/clubs
+  // and /fc27/compare only, private/no-store everywhere else, including
+  // every API route. Do not flip this back on casually if that invariant
+  // ever regresses - an unprotected personal GET becomes cross-user
+  // cacheable the moment this is true.
+  "cache": { "enabled": true },
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"
