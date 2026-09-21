@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Fc27RankingsView } from "@/components/fc27/rankings-view";
+import { Fc27MaintenanceNotice } from "@/components/fc27/maintenance-notice";
 import { fetchFilterOptions } from "@/lib/fc27/players";
 import { fetchRankings, type RankingQuery } from "@/lib/fc27/rankings";
+import { fc27HeavyFanoutDisabled } from "@/lib/fc27/maintenance";
 import { isRankingStat } from "@/lib/fc27/rankings-shared";
 import { copy, siteCopy } from "@/lib/copy";
 import { JsonLd } from "@/components/json-ld";
@@ -16,6 +18,7 @@ export const metadata: Metadata = {
 type Params=Record<string,string|string[]|undefined>;
 function value(v:string|string[]|undefined){const x=Array.isArray(v)?v[0]:v;return x?.trim()||undefined;}
 export default async function Fc27RankingsPage({searchParams}:{searchParams:Promise<Params>}){
+  if(fc27HeavyFanoutDisabled())return <Fc27MaintenanceNotice featureEn="Rankings" featureIt="Classifiche"/>;
   const sp=await searchParams;const raw=value(sp.stat);const stat=isRankingStat(raw)?raw:"overall";
   const query:RankingQuery={stat,position:value(sp.position),nation:value(sp.nation),club:value(sp.club),league:value(sp.league)};
   const [players,options]=await Promise.all([fetchRankings(query),fetchFilterOptions()]);

@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { JsonLd } from "@/components/json-ld";
 import { Fc27MetaRankingsView } from "@/components/fc27/meta-rankings-view";
+import { Fc27MaintenanceNotice } from "@/components/fc27/maintenance-notice";
 import { copy, siteCopy } from "@/lib/copy";
 import { fetchMetaRankings, META_POSITION_FILTERS, type MetaPositionFilter } from "@/lib/fc27/meta-rankings";
+import { fc27HeavyFanoutDisabled } from "@/lib/fc27/maintenance";
 import { rankingPageJsonLd } from "@/lib/fc27/structured-data";
 
 const title = "EA FC 27 Base Meta Ratings & Meta Player Rankings | FUT Forge";
@@ -11,6 +13,7 @@ export const metadata: Metadata = { title:{absolute:title},description,alternate
 
 function validPosition(value: string | string[] | undefined): MetaPositionFilter | undefined { const raw=Array.isArray(value)?value[0]:value; return META_POSITION_FILTERS.includes(raw as MetaPositionFilter)?raw as MetaPositionFilter:undefined; }
 export default async function MetaRankingsPage({searchParams}:{searchParams:Promise<Record<string,string|string[]|undefined>>}){
+  if(fc27HeavyFanoutDisabled())return <Fc27MaintenanceNotice featureEn="Meta Rankings" featureIt="Classifiche Meta"/>;
   const position=validPosition((await searchParams).position);const players=await fetchMetaRankings(position);const c=copy.en.fc27MetaRankingsPage;
   const jsonLd=rankingPageJsonLd({path:"/fc27/meta-rankings",name:title,description,breadcrumbName:c.label,players});
   return <><JsonLd data={jsonLd}/><div className="overflow-hidden"><Fc27MetaRankingsView players={players} position={position}/></div></>;

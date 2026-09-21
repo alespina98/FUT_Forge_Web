@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { Fc27StatFinderView } from "@/components/fc27/stat-finder-view";
+import { Fc27MaintenanceNotice } from "@/components/fc27/maintenance-notice";
 import { copy, siteCopy } from "@/lib/copy";
 import { fetchFilterOptions } from "@/lib/fc27/players";
 import { fetchStatFinder } from "@/lib/fc27/stat-finder";
+import { fc27HeavyFanoutDisabled } from "@/lib/fc27/maintenance";
 import { DETAIL_GROUPS, FACE_FILTERS, GK_FILTERS, isStatFinderSort, type NumericParam, type StatFinderQuery } from "@/lib/fc27/stat-finder-shared";
 import { JsonLd } from "@/components/json-ld";
 import { pageJsonLd } from "@/lib/fc27/structured-data";
@@ -14,6 +16,7 @@ function numeric(value:string|undefined,max=99){if(!value||!/^[0-9]+$/.test(valu
 const numericNames=["ovrMin","ovrMax","skillMovesMin","weakFootMin",...FACE_FILTERS.map(x=>x[0]),...GK_FILTERS.map(x=>x[0]),...Object.values(DETAIL_GROUPS).flatMap(g=>g.map(x=>x[0]))] as NumericParam[];
 
 export default async function Fc27StatFinderPage({searchParams}:{searchParams:Promise<Params>}){
+  if(fc27HeavyFanoutDisabled())return <Fc27MaintenanceNotice featureEn="Stat Finder" featureIt="Stat Finder"/>;
   const raw=await searchParams;const options=await fetchFilterOptions();const positionRaw=first(raw.position)?.toUpperCase();const position=positionRaw&&options.positions.includes(positionRaw)?positionRaw:undefined;
   const numericValues:Partial<Record<NumericParam,number>>={};const initial:Record<string,string>={};
   for(const name of numericNames){const max=name==="skillMovesMin"||name==="weakFootMin"?5:99;const value=numeric(first(raw[name]),max);if(value){numericValues[name]=value;initial[name]=String(value);}}
