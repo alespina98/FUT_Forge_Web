@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Fc27BestPositionView } from "@/components/fc27/best-position-view";
+import { Fc27MaintenanceNotice } from "@/components/fc27/maintenance-notice";
 import { FC27_POSITIONS, isFc27Position, positionSlug, type Fc27Position } from "@/lib/fc27/best-positions";
 import { fetchRankings } from "@/lib/fc27/rankings";
+import { fc27HeavyFanoutDisabled } from "@/lib/fc27/maintenance";
 import { copy, siteCopy } from "@/lib/copy";
 import { JsonLd } from "@/components/json-ld";
 import { rankingPageJsonLd } from "@/lib/fc27/structured-data";
@@ -20,6 +22,7 @@ export async function generateMetadata({params}:Props):Promise<Metadata>{
 
 export default async function Fc27BestPositionPage({params}:Props){
   const raw=(await params).position; if(!isFc27Position(raw)) notFound(); const position=raw.toUpperCase() as Fc27Position;
+  if(fc27HeavyFanoutDisabled())return <Fc27MaintenanceNotice featureEn="Best Players" featureIt="Migliori Giocatori"/>;
   const players=await fetchRankings({stat:"overall",position});
   const name=copy.en.fc27BestPage.positions[position];const path=`/fc27/best/${raw.toLowerCase()}`;
   const title=copy.en.fc27BestPage.metaTitle.replace("{position}",name).replace("{code}",position);

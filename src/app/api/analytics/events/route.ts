@@ -65,13 +65,24 @@ export async function POST(request: Request) {
 
   const { env } = getCloudflareContext();
   const rateLimitKey = events[0]?.install_id || request.headers.get("cf-connecting-ip") || "anonymous";
-  const allowed = await checkRateLimit(env.ANALYTICS_RATE_LIMIT, rateLimitKey);
-  if (!allowed) {
-    return json({ ok: false, error: { code: "rate_limited", message: "Too many analytics events." } }, 429);
+  try {
+    const allowed = await checkRateLimit(env.ANALYTICS_RATE_LIMIT, rateLimitKey);
+    if (!allowed) {
+      return json({ ok: false, error: { code: "rate_limited", message: "Too many analytics events." } }, 429);
+    }
+
+    const userId = await resolveUserId(request);
+    await insertEvents(env.ANALYTICS_DB, events, userId);
+
+    return json({ ok: true, accepted: events.length }, 200);
+  } catch (error) {
+    // Analytics is explicitly best-effort (see lib/analytics/client.ts's own
+    // "Analytics must never break the caller" comment) - a KV or D1 write
+    // hitting its own daily operation quota must not throw an uncaught
+    // exception out of this route (observed in production as "Error: KV
+    // put() limit exceeded for the day" from checkRateLimit's kv.put()).
+    // Drop the batch and report a clean, already-handled response instead.
+    console.error("[analytics] rate-limit/insert failed - dropping batch", error);
+    return json({ ok: false, error: { code: "analytics_unavailable", message: "Analytics is temporarily unavailable." } }, 503);
   }
-
-  const userId = await resolveUserId(request);
-  await insertEvents(env.ANALYTICS_DB, events, userId);
-
-  return json({ ok: true, accepted: events.length }, 200);
 }
