@@ -39,6 +39,10 @@ yarn-error.log*
 # vercel
 .vercel
 
+# Local, sensitive one-off administration audit artifacts
+/qa-artifacts/clerk-username-backfill-*.json
+/qa-artifacts/clerk-username-backfill-*.csv
+
 # generated FC27 data-import snapshots (large, reproducible - not source)
 /data/fc27/
 
