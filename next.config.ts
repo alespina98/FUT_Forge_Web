@@ -25,6 +25,14 @@ const nextConfig: NextConfig = {
       { source: "/fc27/clubs/:path*", headers: [
         { key: "Cache-Control", value: "public, max-age=60, s-maxage=3600, stale-while-revalidate=86400" },
       ] },
+      // /fc27/compare is equally anonymous/public/read-only (no auth, no
+      // personalization) but its two-player-id query string is effectively
+      // unbounded cardinality and was never given a cache directive, so
+      // every request - crawler or repeat visitor - was a guaranteed
+      // Worker invocation. Same directive as players/clubs above.
+      { source: "/fc27/compare", headers: [
+        { key: "Cache-Control", value: "public, max-age=60, s-maxage=3600, stale-while-revalidate=86400" },
+      ] },
     ];
   },
   async redirects() {
