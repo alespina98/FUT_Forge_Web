@@ -27,15 +27,22 @@ function isoDay(date: Date): string {
 // expose a scheduled() export out of the box) - call this from an external
 // scheduler (Cloudflare dashboard Cron Trigger hitting this URL, or a GitHub
 // Actions scheduled workflow) with `Authorization: Bearer $CRON_SECRET`.
+//
+// This GET has real DELETE/INSERT side effects on every call - beyond the
+// usual no-store-for-privacy reasoning, a cached "hit" here would mean the
+// rollup/retention pruning silently stops running. Explicit no-store, not
+// just the Authorization-header auto-bypass Workers Cache already gives it.
+const NO_STORE = { "cache-control": "private, no-store, max-age=0" } as const;
+
 export async function GET(request: Request) {
   const secret = process.env.CRON_SECRET;
-  if (!secret || !authorized(request, secret)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!secret || !authorized(request, secret)) return NextResponse.json({ error: "Unauthorized" }, { status: 401, headers: NO_STORE });
 
   const requestedDay = new URL(request.url).searchParams.get("day");
   const day = requestedDay ?? isoDay(new Date(Date.now() - 24 * 60 * 60 * 1000));
   const { start, end } = dayBoundsMs(day);
   if (Number.isNaN(start)) {
-    return NextResponse.json({ ok: false, error: { code: "invalid_day", message: "day must be YYYY-MM-DD" } }, { status: 400 });
+    return NextResponse.json({ ok: false, error: { code: "invalid_day", message: "day must be YYYY-MM-DD" } }, { status: 400, headers: NO_STORE });
   }
 
   const { env } = getCloudflareContext();
@@ -51,5 +58,5 @@ export async function GET(request: Request) {
   const cutoff = Date.now() - RETENTION_DAYS * 24 * 60 * 60 * 1000;
   const deleted = await env.ANALYTICS_DB.prepare("DELETE FROM analytics_events WHERE ts < ?").bind(cutoff).run();
 
-  return NextResponse.json({ ok: true, day, pruned: deleted.meta?.changes ?? 0 });
+  return NextResponse.json({ ok: true, day, pruned: deleted.meta?.changes ?? 0 }, { headers: NO_STORE });
 }

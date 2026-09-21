@@ -23,6 +23,26 @@ export async function middleware(request: NextRequest, event: NextFetchEvent) {
   // Authenticated areas and every API route still pass through the normal
   // provider middleware below.
   if (/^\/fc27\//.test(request.nextUrl.pathname)) {
+    // Canonicalize /fc27/compare's ?a=/?b= order so the cache correctness
+    // for this page never depends on a Cloudflare plan feature (sort query
+    // string parameters) that may not be available - a=X&b=Y and b=Y&a=X
+    // render identically (page.tsx reads params.a/params.b, order-independent)
+    // but are different cache keys unless collapsed to one canonical URL here.
+    // Only touches requests with exactly these two params in the "wrong"
+    // order; anything else (missing a/b, extra params, invalid values) is
+    // left to the page's own validation.
+    if (request.nextUrl.pathname === "/fc27/compare") {
+      const sp = request.nextUrl.searchParams;
+      const a = sp.get("a"), b = sp.get("b");
+      if (a !== null && b !== null && [...sp.keys()].length === 2) {
+        const canonical = `a=${encodeURIComponent(a)}&b=${encodeURIComponent(b)}`;
+        if (sp.toString() !== canonical) {
+          const url = request.nextUrl.clone();
+          url.search = canonical;
+          return NextResponse.redirect(url, 307);
+        }
+      }
+    }
     return NextResponse.next({ request });
   }
   // A failure in the auth provider call below (network blip, upstream rate

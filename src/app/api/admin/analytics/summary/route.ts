@@ -21,12 +21,14 @@ const VISIT_EVENTS = ["page_view", "app_open"];
 const LIVE_WINDOW_MS = 5 * 60 * 1000;
 const SERVICE_HEALTH_WINDOW_MS = 60 * 60 * 1000;
 
+const NO_STORE = { "cache-control": "private, no-store, max-age=0" } as const;
+
 export async function GET(request: Request) {
   try {
     await requireClerkAdmin();
   } catch (error) {
     const status = error instanceof AdminAccessError ? error.status : 503;
-    return NextResponse.json({ ok: false, error: { code: "admin_access_denied", message: "Admin access is required." } }, { status });
+    return NextResponse.json({ ok: false, error: { code: "admin_access_denied", message: "Admin access is required." } }, { status, headers: NO_STORE });
   }
 
   const url = new URL(request.url);
@@ -164,5 +166,5 @@ export async function GET(request: Request) {
     versions: versions.results,
     errorsDetailed: errorsDetailed.results,
     detail: detail.results,
-  });
+  }, { headers: NO_STORE });
 }
