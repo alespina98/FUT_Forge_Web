@@ -1,20 +1,22 @@
 {
   "schema": 1,
-  "latestVersion": "1.0.19",
-  "latestVersionCode": 20,
+  "latestVersion": "1.0.20",
+  "latestVersionCode": 21,
   "minimumVersionCode": 1,
-  "apkUrl": "https://github.com/alespina98/FUT_Forge_Releases/releases/download/android-v1.0.19/FUT-Forge-Android-1.0.19.apk",
-  "sha256": "8900402952c60917bb14e1147432b0e2b71f9ca1b460b329cc50878adc8d9936",
-  "size": 8119969,
+  "apkUrl": "https://github.com/alespina98/FUT_Forge_Releases/releases/download/android-v1.0.20/FUT-Forge-Android-1.0.20.apk",
+  "sha256": "0eb9eae81b82a4f75bd50a2cb06b14e14c5d6b57d41b1bf94179b1d9c48020bd",
+  "size": 8163044,
   "releaseNotes": {
     "it": [
-      "Corretto un crash all'avvio dovuto a una chiave di configurazione mancante nella build precedente.",
+      "Nuova sezione Gallery: tracker dei set FUT Gallery con gradi, Gallery Tokens e acquisto delle carte mancanti.",
+      "Snipe: refresh della ricerca migliorato; SBC: rispettati i requisiti OVR minimo/massimo.",
       "Nessuna modifica alla firma dell'app: stesso certificato di produzione."
     ],
     "en": [
-      "Fixed a startup crash caused by a missing configuration key in the previous build.",
+      "New Gallery section: FUT Gallery set tracker with grades, Gallery Tokens and buying missing cards.",
+      "Snipe: improved search refresh; SBC: minimum/maximum OVR requirements enforced.",
       "No change to the app signature: same production certificate."
     ]
   },
-  "publishedAt": "2026-08-28T17:57:56Z"
+  "publishedAt": "2026-09-25T23:15:43Z"
 }
